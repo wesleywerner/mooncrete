@@ -32,6 +32,7 @@ class MoonModel(object):
         self.state = StateMachine()
         self.is_pumping = False
         self.paused = False
+        self.event_chain = []
 
     def notify(self, event):
         """
@@ -41,6 +42,7 @@ class MoonModel(object):
 
         if isinstance(event, TickEvent):
             if not self.paused:
+                self.unchain_events()
                 pass
                 
         elif isinstance(event, QuitEvent):
@@ -105,3 +107,23 @@ class MoonModel(object):
         """
         
         self.change_state(STATE_PHASE1)
+        # queues the help state to only post after our model gets unpaused.
+        self.chain_event(StateEvent(STATE_HELP))
+        
+    def chain_event(self, next_event):
+        """
+        Chains an event to be posted on the next (unpaused) Tick.
+        
+        """
+        
+        self.paused = True
+        self.event_chain.insert(0, next_event)
+    
+    def unchain_events(self):
+        """
+        Removes events from the chain and post them.
+        
+        """
+        
+        if self.event_chain:
+            self.evman.Post(self.event_chain.pop())
