@@ -115,14 +115,16 @@ class MoonView(object):
         
         """
         
-        menu_panel = Panel((100, 300))
+        menu_panel = Panel((100, 300), self.game_area)
         menu_panel.show_position = (0, 0)
         menu_panel.hide_position = (-100, 0)
+        menu_panel.position = (0, 0)
         self.panels['menu'] = menu_panel
 
-        score_panel = Panel((100, 50))
+        score_panel = Panel((100, 50), self.game_area)
         score_panel.show_position = (300, 0)
         score_panel.hide_position = (300, -50)
+        score_panel.position = (300, -50)
         score_panel.hide()
         self.panels['score'] = score_panel
 
@@ -187,7 +189,7 @@ class Panel(object):
     
     """
     
-    def __init__(self, size):
+    def __init__(self, size, boundary):
         self.size = size
         self.image = pygame.Surface(size)
         self.image.set_colorkey(color.magenta)
@@ -202,16 +204,12 @@ class Panel(object):
         self.showing = True
         # True while we are moving
         self.busy = False
-        # calculate our out-of-bounds areas from the main screen size
-        screen_size = pygame.display.get_surface().get_size()
-        self.oob_left = - size[0]
-        self.oob_right = screen_size[1]
-        self.oob_top = - size[1]
-        self.oob_bottom = screen_size[1]
+        # the boundary where we are allowed to draw.
+        self._boundary = boundary
     
     @property
     def show_position(self):
-        return self.show_pos
+        return self.show_position
     
     @show_position.setter
     def show_position(self, value):
@@ -222,7 +220,7 @@ class Panel(object):
     
     @property
     def hide_position(self):
-        return self.hide_pos
+        return self.hide_position
     
     @hide_position.setter
     def hide_position(self, value):
@@ -230,6 +228,17 @@ class Panel(object):
             self._hide_position = value
         else:
             self._hide_position = pygame.Rect(value, self.size)
+    
+    @property
+    def position(self):
+        return self.rect
+    
+    @position.setter
+    def position(self, value):
+        if type(value) is pygame.Rect:
+            self.rect = value
+        else:
+            self.rect = pygame.Rect(value, self.size)
     
     @property
     def destination(self):
@@ -265,4 +274,6 @@ class Panel(object):
         """
         
         self.move()
-        target.blit(self.image, self.rect)
+        if self.rect.colliderect(self._boundary):
+            # only draw us if we are inside the image boundary
+            target.blit(self.image, self.rect)
