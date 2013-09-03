@@ -11,6 +11,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program. If not, see http://www.gnu.org/licenses/.
 
+blue = (0, 0, 128)
 black = (0, 0, 0)
 white = (255, 255, 255)
 magenta = (255, 0, 255)
