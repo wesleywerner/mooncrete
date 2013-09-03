@@ -47,3 +47,5 @@ class MoonController(object):
                         self.evman.Post(QuitEvent())
                     elif event.key == K_F11:
                         self.view.toggle_fullscreen()
+                    elif event.key == K_F2:
+                        self.view.hidemenu()
