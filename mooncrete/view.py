@@ -117,7 +117,7 @@ class MoonView(object):
         
         menu_panel = Panel((100, 300), self.game_area)
         menu_panel.show_position = (0, 0)
-        menu_panel.hide_position = (-100, 0)
+        menu_panel.hide_position = (500, 0)
         menu_panel.position = (0, 0)
         self.panels['menu'] = menu_panel
 
@@ -166,8 +166,10 @@ class MoonView(object):
         self.image.fill((0, 128, 0))
 
         # update panels
+        self.transitioning = False
         for key, panel in self.panels.items():
-            panel.draw(self.image)
+            if panel.draw(self.image):
+                self.transitioning = True
         
         pix = self.smallfont.render('hello, world!', False, color.white, color.magenta)
         pix.set_colorkey(color.magenta)
@@ -206,6 +208,8 @@ class Panel(object):
         self.busy = False
         # the boundary where we are allowed to draw.
         self._boundary = boundary
+        # True while we are busy moving panels around
+        self.transitioning = False
     
     @property
     def show_position(self):
@@ -259,10 +263,13 @@ class Panel(object):
         
         """
         
+        print(self.rect, self.destination)
         if self.rect != self.destination:
             x_diff = self.destination.left - self.rect.left
             y_diff = self.destination.top - self.rect.top
-            self.rect = self.rect.move(int(x_diff / 10), int(y_diff / 10))
+            self.rect = self.rect.move(x_diff // 5, y_diff // 5)
+            if (abs(x_diff) < 5) and (abs(y_diff) < 5):
+                self.rect = self.destination
             self.busy = True
         else:
             self.busy = False
@@ -270,6 +277,7 @@ class Panel(object):
     def draw(self, target):
         """
         Draw us on the target surface.
+        Returns True if the panel is busy moving
         
         """
         
@@ -277,3 +285,4 @@ class Panel(object):
         if self.rect.colliderect(self._boundary):
             # only draw us if we are inside the image boundary
             target.blit(self.image, self.rect)
+        return self.busy
