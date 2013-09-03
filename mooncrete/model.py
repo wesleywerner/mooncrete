@@ -44,9 +44,24 @@ class MoonModel(object):
                 pass
                 
         elif isinstance(event, QuitEvent):
-            trace.write('engine shutting down...')
+            trace.write('Engine shutting down...')
             self.is_pumping = False
             self.paused = True
+
+    def change_state(self, new_state):
+        """
+        Change the model state, and notify the other peeps about this.
+        
+        """
+        
+        if new_state:
+            self.state.push(new_state)
+            self.evman.Post(StateEvent(new_state))
+        else:
+            last_state = self.state.pop()
+            if not last_state:
+                # there is nothing left to pump
+                self.evman.Post(QuitEvent())
 
     def run(self):
         """
@@ -56,9 +71,10 @@ class MoonModel(object):
         
         """
         
-        trace.write('starting the engine pump...')
+        trace.write('Initializing...')
         self.evman.Post(InitializeEvent())
-        self.state.push(STATE_MENU)
+        trace.write('Starting the engine pump...')
+        self.change_state(STATE_MENU)
         self.is_pumping = True
         while self.is_pumping:
             self.evman.Post(TickEvent())
