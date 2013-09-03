@@ -60,6 +60,15 @@ class MoonView(object):
 
         elif isinstance(event, InitializeEvent):
             self.initialize()
+            
+        elif isinstance(event, StateEvent):
+            if event.state == STATE_PHASE1:
+                self.panels['menu'].hide()
+            elif event.state == STATE_HELP:
+                self.panels['score'].show()
+            elif event.state == STATE_MENU:
+                self.panels['menu'].show()
+                self.panels['score'].hide()
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -179,13 +188,6 @@ class MoonView(object):
         self.screen.blit(self.image, self.game_area)
         pygame.display.flip()
     
-    def hidemenu(self):
-        for key, panel in self.panels.items():
-            if panel.showing:
-                panel.hide()
-            else:
-                panel.show()
-
 class Panel(object):
     """
     Provides a movable image that have hide and show positions, it
