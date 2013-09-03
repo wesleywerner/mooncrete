@@ -58,8 +58,11 @@ class MoonModel(object):
             self.state.push(new_state)
             self.evman.Post(StateEvent(new_state))
         else:
-            last_state = self.state.pop()
-            if not last_state:
+            self.state.pop()
+            new_state = self.state.peek()
+            if new_state:
+                self.evman.Post(StateEvent(new_state))
+            else:
                 # there is nothing left to pump
                 self.evman.Post(QuitEvent())
 
@@ -86,3 +89,19 @@ class MoonModel(object):
         # If you'd like to know more on using the mvc pattern in games
         # see my tutorial on this at:
         # https://github.com/wesleywerner/mvc-game-design :]
+
+    def escape_state(self):
+        """
+        Escape from the current state.
+        
+        """
+        
+        self.change_state(None)
+
+    def begin_or_continue(self):
+        """
+        Begins a new game or continue one in progress.
+        
+        """
+        
+        self.change_state(STATE_PHASE1)
