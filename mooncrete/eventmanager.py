@@ -72,3 +72,13 @@ class InitializeEvent(Event):
 
     def __init__(self):
         self.name = 'Initialize event'
+
+
+class StateEvent(Event):
+
+    def __init__(self, state):
+        self.name = 'State event'
+        self.state = state
+
+    def __str__(self):
+        return ('%s: %s' % (self.name, str(self.state)))
