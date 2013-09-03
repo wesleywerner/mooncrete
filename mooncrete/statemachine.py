@@ -12,7 +12,7 @@
 #  along with this program. If not, see http://www.gnu.org/licenses/.
 
 
-STATE_MENU = 0
+STATE_MENU = 42
 STATE_PHASE1 = 1
 STATE_PHASE2 = 2
 STATE_PHASE3 = 3
