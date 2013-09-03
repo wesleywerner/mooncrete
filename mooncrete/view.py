@@ -43,6 +43,7 @@ class MoonView(object):
         self.font = None
         self.image = None
         self.sprites = {}
+        self.panels = {}
         self.windowsize = None
 
     def notify(self, event):
@@ -105,6 +106,25 @@ class MoonView(object):
         self.smallfont = pygame.font.Font(
             os.path.join('..','data','DejaVuSansMono-Bold.ttf'), 16)
         #self.background = image.load('background.png').convert()
+        
+        self.create_panels()
+
+    def create_panels(self):
+        """
+        Build game panels that move around and show at various model states.
+        
+        """
+        
+        menu_panel = Panel((100, 300))
+        menu_panel.show_position = (0, 0)
+        menu_panel.hide_position = (-100, 0)
+        self.panels['menu'] = menu_panel
+
+        score_panel = Panel((100, 50))
+        score_panel.show_position = (300, 0)
+        score_panel.hide_position = (300, -50)
+        score_panel.hide()
+        self.panels['score'] = score_panel
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
@@ -142,9 +162,107 @@ class MoonView(object):
             pass
 
         self.image.fill((0, 128, 0))
+
+        # update panels
+        for key, panel in self.panels.items():
+            panel.draw(self.image)
+        
         pix = self.smallfont.render('hello, world!', False, color.white, color.magenta)
         pix.set_colorkey(color.magenta)
         self.image.blit(pix, (15, 15))
         self.screen.blit(self.image, self.game_area)
         pygame.display.flip()
+    
+    def hidemenu(self):
+        for key, panel in self.panels.items():
+            if panel.showing:
+                panel.hide()
+            else:
+                panel.show()
+
+class Panel(object):
+    """
+    Provides a movable image that have hide and show positions, it
+    moves towards these destinations depending on it's current state.
+    
+    """
+    
+    def __init__(self, size):
+        self.size = size
+        self.image = pygame.Surface(size)
+        self.image.set_colorkey(color.magenta)
+        self.image.fill(color.blue)
+        # current draw position
+        self.rect = pygame.Rect((0, 0), size)
+        # show position
+        self._show_position = pygame.Rect((0, 0), size)
+        # hide position
+        self._hide_position = pygame.Rect((0, 0), size)
+        # are we showing or hiding
+        self.showing = True
+        # True while we are moving
+        self.busy = False
+        # calculate our out-of-bounds areas from the main screen size
+        screen_size = pygame.display.get_surface().get_size()
+        self.oob_left = - size[0]
+        self.oob_right = screen_size[1]
+        self.oob_top = - size[1]
+        self.oob_bottom = screen_size[1]
+    
+    @property
+    def show_position(self):
+        return self.show_pos
+    
+    @show_position.setter
+    def show_position(self, value):
+        if type(value) is pygame.Rect:
+            self._show_position = value
+        else:
+            self._show_position = pygame.Rect(value, self.size)
+    
+    @property
+    def hide_position(self):
+        return self.hide_pos
+    
+    @hide_position.setter
+    def hide_position(self, value):
+        if type(value) is pygame.Rect:
+            self._hide_position = value
+        else:
+            self._hide_position = pygame.Rect(value, self.size)
+    
+    @property
+    def destination(self):
+        if self.showing:
+            return self._show_position
+        else:
+            return self._hide_position
+    
+    def show(self):
+        self.showing = True
         
+    def hide(self):
+        self.showing = False
+    
+    def move(self):
+        """
+        Update our position if necessary.
+        
+        """
+        
+        if self.rect != self.destination:
+            x_diff = self.destination.left - self.rect.left
+            y_diff = self.destination.top - self.rect.top
+            self.rect = self.rect.move(int(x_diff / 10), int(y_diff / 10))
+            self.busy = True
+        else:
+            self.busy = False
+
+    def draw(self, target):
+        """
+        Draw us on the target surface.
+        
+        """
+        
+        self.move()
+        target.blit(self.image, self.rect)
