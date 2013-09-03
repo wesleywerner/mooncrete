@@ -37,10 +37,16 @@ class MoonController(object):
         """
 
         if isinstance(event, TickEvent):
+            
+            # update the model pause state
+            self.model.paused = self.view.transitioning
+            
             for event in pygame.event.get():
+            
                 # always handle window closing events
                 if event.type == QUIT:
                     self.evman.Post(QuitEvent())
+
                 # all key downs
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
