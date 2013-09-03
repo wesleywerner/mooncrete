@@ -50,8 +50,10 @@ class MoonController(object):
                 # all key downs
                 if event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
-                        self.evman.Post(QuitEvent())
+                        self.model.escape_state()
                     elif event.key == K_F11:
                         self.view.toggle_fullscreen()
                     elif event.key == K_F2:
                         self.view.hidemenu()
+                    elif event.key == K_SPACE:
+                        self.model.begin_or_continue()
