@@ -45,6 +45,8 @@ class MoonView(object):
         self.sprites = {}
         self.panels = {}
         self.windowsize = None
+        # True while we are busy moving panels around
+        self.transitioning = False
 
     def notify(self, event):
         """
@@ -208,8 +210,6 @@ class Panel(object):
         self.busy = False
         # the boundary where we are allowed to draw.
         self._boundary = boundary
-        # True while we are busy moving panels around
-        self.transitioning = False
     
     @property
     def show_position(self):
@@ -263,7 +263,6 @@ class Panel(object):
         
         """
         
-        print(self.rect, self.destination)
         if self.rect != self.destination:
             x_diff = self.destination.left - self.rect.left
             y_diff = self.destination.top - self.rect.top
