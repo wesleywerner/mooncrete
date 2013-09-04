@@ -73,9 +73,12 @@ class MoonModel(object):
 
         """
 
-        if isinstance(event, StepGameEvent):
+        if isinstance(event, TickEvent):
             if not self.paused:
                 self._unchain_events()
+
+        elif isinstance(event, StepGameEvent):
+            if not self.paused:
                 self.step_game()
 
         elif isinstance(event, QuitEvent):
@@ -149,6 +152,7 @@ class MoonModel(object):
             self._reset_scores()
             self._clear_puzzle_grid()
             self.change_state(STATE_PHASE1)
+            #self.change_state(STATE_HELP)
             if self.auto_help:
                 self._chain_event(StateEvent(STATE_HELP))
         else:
@@ -173,7 +177,11 @@ class MoonModel(object):
         """
 
         if self.event_chain:
-            self.evman.Post(self.event_chain.pop())
+            event = self.event_chain.pop()
+            if isinstance(event, StateEvent):
+                self.change_state(event.state)
+            else:
+                self.evman.Post(event)
 
     def _reset_scores(self):
         """
@@ -210,6 +218,8 @@ class MoonModel(object):
 
         """
 
+        if self.paused:
+            return
         state = self.state.peek()
         if state in (STATE_PHASE1, STATE_PHASE2):
             self._update_puzzle_grid()
