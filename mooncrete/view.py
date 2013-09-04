@@ -64,11 +64,13 @@ class MoonView(object):
         elif isinstance(event, StateEvent):
             if event.state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3):
                 self.panels['menu'].hide()
+                self.panels['puzzle'].show()
             elif event.state == STATE_HELP:
-                self.panels['score'].show()
+                #self.panels['score'].show()
+                pass
             elif event.state == STATE_MENU:
                 self.panels['menu'].show()
-                self.panels['score'].hide()
+                self.panels['puzzle'].hide()
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -132,12 +134,12 @@ class MoonView(object):
         menu_panel.position = (0, 0)
         self.panels['menu'] = menu_panel
 
-        score_panel = Panel((100, 50), self.game_area)
-        score_panel.show_position = (300, 0)
-        score_panel.hide_position = (300, -50)
-        score_panel.position = (300, -50)
-        score_panel.hide()
-        self.panels['score'] = score_panel
+        puzzle_panel = Panel((500, 500), self.game_area)
+        puzzle_panel.show_position = (self.game_area.width - 500, 0)
+        puzzle_panel.hide_position = (self.game_area.width, 0)
+        #puzzle_panel.position = (300, -50)
+        puzzle_panel.hide()
+        self.panels['puzzle'] = puzzle_panel
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
