@@ -21,6 +21,33 @@ from statemachine import *
 from eventmanager import *
 
 
+PUZZLE_SIZE = (5, 5)
+CALCIUM_BARREL = 1
+WATER_BARREL = 2
+EMPTY_BARREL = 3
+MOONROCKS = 4
+RADAR_BITS = 10
+RADAR_DISH = 11
+RADAR = 12
+TURRET_BASE = 20
+TURRET_AMMO = 21
+TURRET = 22
+MOONCRETE_SLAB = 30
+BUILDING = 40
+PHASE1_PIECES = (CALCIUM_BARREL, WATER_BARREL, EMPTY_BARREL)
+PHASE2_PIECES = (RADAR_BITS, RADAR_DISH, TURRET_BASE, TURRET_AMMO, MOONROCKS)
+FLOTSAM = (EMPTY_BARREL, MOONROCKS)
+
+class PuzzleBlock(object):
+    def __init__(self):
+        self.block_type = None
+        self.x = None
+        self.y = None
+
+    @property
+    def id(self):
+        return id(self)
+
 class MoonModel(object):
     """
     Handles game logic. Everything data lives in here.
@@ -34,6 +61,11 @@ class MoonModel(object):
         self.is_pumping = False
         self.paused = False
         self.event_chain = []
+        self._puzzle_grid = None
+        self.player_score = 0
+        self.player_level = 0
+        self.player_wave = 0
+        self.auto_help = True
 
     def notify(self, event):
         """
@@ -50,24 +82,6 @@ class MoonModel(object):
             trace.write('Engine shutting down...')
             self.is_pumping = False
             self.paused = True
-
-    def change_state(self, new_state):
-        """
-        Change the model state, and notify the other peeps about this.
-
-        """
-
-        if new_state:
-            self.state.push(new_state)
-            self.evman.Post(StateEvent(new_state))
-        else:
-            self.state.pop()
-            new_state = self.state.peek()
-            if new_state:
-                self.evman.Post(StateEvent(new_state))
-            else:
-                # there is nothing left to pump
-                self.evman.Post(QuitEvent())
 
     def run(self):
         """
@@ -93,6 +107,26 @@ class MoonModel(object):
         # see my tutorial on this at:
         # https://github.com/wesleywerner/mvc-game-design :]
 
+#-- Model State Management -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    def change_state(self, new_state):
+        """
+        Change the model state, and notify the other peeps about this.
+
+        """
+
+        if new_state:
+            self.state.push(new_state)
+            self.evman.Post(StateEvent(new_state))
+        else:
+            self.state.pop()
+            new_state = self.state.peek()
+            if new_state:
+                self.evman.Post(StateEvent(new_state))
+            else:
+                # there is nothing left to pump
+                self.evman.Post(QuitEvent())
+
     def escape_state(self):
         """
         Escape from the current state.
@@ -101,15 +135,21 @@ class MoonModel(object):
 
         self.change_state(None)
 
-    def begin_or_continue(self):
+    def new_game(self):
         """
         Begins a new game or continue one in progress.
 
         """
 
-        self.change_state(STATE_PHASE1)
-        # queues the help state to only post after our model gets unpaused.
-        self.chain_event(StateEvent(STATE_HELP))
+        if not self._puzzle_grid:
+            # there is no game to continue
+            self.reset_scores()
+            self.clear_puzzle_grid()
+            self.change_state(STATE_PHASE1)
+            if self.auto_help:
+                self.chain_event(StateEvent(STATE_HELP))
+        else:
+            self.change_state(self.player_phase)
 
     def chain_event(self, next_event):
         """
@@ -129,82 +169,82 @@ class MoonModel(object):
         if self.event_chain:
             self.evman.Post(self.event_chain.pop())
 
+    def reset_scores(self):
+        """
+        Spam spam spam spam spam spam spam.
+        """
 
-CALCIUM_BARREL = 1
-WATER_BARREL = 2
-EMPTY_BARREL = 3
-MOONROCKS = 4
-RADAR_CIRCUITS = 10
-RADAR_DISH = 11
-RADAR = 12
-TURRET_BASE = 20
-TURRET_MUNITION = 21
-TURRET = 22
-MOONCRETE_SLAB_1 = 30
-MOONCRETE_SLAB_2 = 30
-BUILDING_1 = 40
-BUILDING_2 = 40
-PHASE1_PIECES = (CALCIUM_BARREL, WATER_BARREL, EMPTY_BARREL)
-PHASE2_PIECES = (RADAR_CIRCUITS, RADAR_DISH, TURRET_BASE, TURRET_MUNITION, MOONROCKS)
+        trace.write('reset player scores')
+        self.player_score = 0
+        self.player_level = 1
+        self.player_phase = STATE_PHASE1
 
+    def next_phase(self):
+        """
+        Moves to the next phase.
 
-class PuzzleBlock(object):
-    """
-    Contains information for a single puzzle block.
+        """
 
-    """
-
-    def __init__(self):
-        self.block_type = None
-        self.x = None
-        self.y = None
+        # TODO post game messages in phase changes
+        if self.player_phase == STATE_PHASE1:
+            self.player_phase = STATE_PHASE2
+            self.change_state(STATE_PHASE2)
+        elif self.player_phase == STATE_PHASE2:
+            self.player_phase = STATE_PHASE3
+            self.change_state(STATE_PHASE3)
+        elif self.player_phase == STATE_PHASE3:
+            self.player_level += 1
+            self.player_phase = STATE_PHASE1
+            self.change_state(STATE_PHASE1)
 
 
-class PuzzleGrid(object):
-    """
-    Contains the puzzle grid information and handles play logic.
 
-    """
+#-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    def __init__(
-                self,
-                size,
-                block_spawned_callback,
-                block_moved_callback,
-                block_removed_callback,
-                grid_full_callback,
-                ):
-        self.size = size
-        self.grid = None
-        self.clear_grid()
-        self.block_spawned_callback = block_spawned_callback
-        self.block_moved_callback = block_moved_callback
-        self.block_removed_callback = block_removed_callback
-        self.grid_full_callback = grid_full_callback
+    def clear_puzzle_grid(self):
+        trace.write('clearing puzzle grid')
+        self._puzzle_grid = [[None,] * PUZZLE_SIZE[1]
+                for i in range(0, PUZZLE_SIZE[0])]
 
-    def clear_grid(self):
-        self.grid = [[None,] * size[1] for i in range(0, size[0])]
+    def drop_random_blocks(self, block_type_list):
+        """
+        Drop an amount of random block types into the grid, as obstructions
+        to the player. These are fast fallers and are not controlled by the
+        player keys.
 
-    def in_bounds(self, x, y):
-        return (x >= 0 and x < self.size[0] and y >= 0 and y < self.size[1])
+        """
 
-    def move_a_block(self, block, x_offset, y_offset):
+        trace.write('adding %s random blocks to the puzzle grid' % (amount,))
+
+        amount = 2
+        if self.player_level > 5:
+            amount = 3
+        if self.player_level > 10:
+            amount = 4
+
+        for n in range(0, amount):
+            self.spawn_block(block_type_list)
+
+    def puzzle_in_bounds(self, x, y):
+        return (x >= 0 and x < PUZZLE_SIZE[0] and y >= 0 and y < PUZZLE_SIZE[1])
+
+    def move_block(self, block, x_offset, y_offset):
         """
         Move a block by the given offset.
-        Handles collisions with other blocks.
+        Handles collisions with other blocks, generates events on these.
         """
 
         x = block.x + y_offset
         y = block.y + x_offset
-        if self.in_bounds(x, y):
-            collider = self.grid[x][y]
+        if self.puzzle_in_bounds(x, y):
+            collider = self._puzzle_grid[x][y]
             if collider:
                 # do type checking
                 pass
             else:
-                self.grid[block.x][block.y] = None
+                self._puzzle_grid[block.x][block.y] = None
                 block.y = y
-                self.grid[block.x][block.y] = block
+                self._puzzle_grid[block.x][block.y] = block
                 self.block_moved_callback(block)
 
     def update(self):
@@ -213,12 +253,10 @@ class PuzzleGrid(object):
 
         """
 
-        for v in range(self.size[1], -1, -1):
-            for u in range(self.size[0], -1, -1):
-                block = self.grid[x][y]
-                x = block.x
-                y = block.y + 1
-                self.move_block(block, x, y)
+        for v in range(PUZZLE_SIZE[1], -1, -1):
+            for u in range(PUZZLE_SIZE[0], -1, -1):
+                block = self._puzzle_grid[x][y]
+                self.move_block(block, 0, 1)
 
     def spawn_block(self, block_types):
         """
@@ -227,18 +265,59 @@ class PuzzleGrid(object):
         """
 
         # find the first open starting position.
-        locs = range(0, self.size[0] - 1)
+        locs = range(0, PUZZLE_SIZE[0] - 1)
         random.shuffle(locs)
         while len(locs) > 0:
             x = locs.pop()
             y = 0
-            if not self.grid[x][y]:
+            if not self._puzzle_grid[x][y]:
                 block = PuzzleBlock()
                 block.block_type = random.choice(block_types)
                 block.x = x
                 block.y = y
-                self.grid[x][y] = block
+                self._puzzle_grid[x][y] = block
                 self.block_spawned_callback(block)
                 return True
         # if no positions are left the grid is full.
-        self.grid_full_callback()
+        self._puzzle_grid_full_callback()
+
+    def block_spawned_callback(self, block):
+        """
+        An interface to link block actions with system events.
+
+        """
+
+        trace.write('block %s was spawned' % (block.id,))
+        pass
+
+    def block_moved_callback(self, block):
+        """
+        An interface to link block actions with system events.
+
+        """
+
+        trace.write('block %s was moved %s' % (block.id, str(block.x, block.y)))
+        pass
+
+    def block_removed_callback(self, block):
+        """
+        An interface to link block actions with system events.
+
+        """
+
+        trace.write('block %s was removed' % (block.id,))
+        pass
+
+    def grid_full_callback(self):
+        """
+        An interface to link block actions with system events.
+
+        """
+
+        trace.write('The puzzle grid is full. Spam spam spam.')
+        pass
+
+
+
+#-- Arcade Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
