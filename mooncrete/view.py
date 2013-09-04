@@ -24,6 +24,7 @@ from eventmanager import *
 
 
 FPS = 30
+PUZZLE_BLOCK_SIZE = 100
 
 
 class MoonView(object):
@@ -42,7 +43,7 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
-        self.sprites = {}
+        self.puzzle_sprites = {}
         self.panels = {}
         self.windowsize = None
         # True while we are busy moving panels around
@@ -71,6 +72,12 @@ class MoonView(object):
             elif event.state == STATE_MENU:
                 self.panels['menu'].show()
                 self.panels['puzzle'].hide()
+
+        elif isinstance(event, PuzzleBlockSpawnedEvent):
+            self.create_puzzle_sprite(event.block)
+
+        elif isinstance(event, PuzzleBlockMovedEvent):
+            self.move_puzzle_sprite(event.block)
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -171,7 +178,7 @@ class MoonView(object):
             pass
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
-            pass
+            self.draw_puzzle_blocks()
 
         elif state == STATE_PHASE3:
             pass
@@ -189,6 +196,28 @@ class MoonView(object):
         self.image.blit(pix, (15, 15))
         self.screen.blit(self.image, self.game_area)
         pygame.display.flip()
+
+    def translate_view_coords(self, position):
+        return (position[0] * PUZZLE_BLOCK_SIZE, position[1] * PUZZLE_BLOCK_SIZE)
+
+    def draw_puzzle_blocks(self):
+        puzzle_image = self.panels['puzzle']
+        puzzle_image.image.fill(color.black)
+        for key, sprite in self.puzzle_sprites.items():
+            sprite.update()
+            sprite.draw(puzzle_image.image)
+
+    def create_puzzle_sprite(self, block):
+        sprite = PuzzleBlockSprite()
+        sprite.rect.topleft = self.translate_view_coords((block.x, block.y))
+        sprite.equalize_starting_position()
+        #sprite.rect.top = - PUZZLE_BLOCK_SIZE
+        self.puzzle_sprites[block.id] = sprite
+
+    def move_puzzle_sprite(self, block):
+        sprite = self.puzzle_sprites[block.id]
+        sprite.destination.topleft = self.translate_view_coords((block.x, block.y))
+
 
 class Panel(object):
     """
@@ -289,3 +318,29 @@ class Panel(object):
             # only draw us if we are inside the image boundary
             target.blit(self.image, self.rect)
         return self.busy
+
+
+class PuzzleBlockSprite(object):
+    """
+    Presents a puzzle block image with a location and sliding movement.
+
+    """
+
+    def __init__(self):
+        self.image = pygame.Surface((PUZZLE_BLOCK_SIZE, PUZZLE_BLOCK_SIZE))
+        self.image.set_colorkey(color.magenta)
+        self.image.fill(color.white)
+        self.rect = pygame.Rect(0, 0, PUZZLE_BLOCK_SIZE, PUZZLE_BLOCK_SIZE)
+        self.destination = self.rect.copy()
+
+    def equalize_starting_position(self):
+        self.destination = self.rect.copy()
+
+    def draw(self, target):
+        target.blit(self.image, self.rect)
+
+    def update(self):
+        if self.rect != self.destination:
+            y_diff = self.destination.top - self.rect.top
+            if y_diff > 0:
+                self.rect.top += 10
