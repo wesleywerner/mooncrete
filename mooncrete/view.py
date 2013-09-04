@@ -2,12 +2,12 @@
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 3 of the License, or
 #  any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program. If not, see http://www.gnu.org/licenses/.
 
@@ -29,7 +29,7 @@ FPS = 30
 class MoonView(object):
     """
     Handles drawing a representation of the model state on screen. humbug!
-    
+
     """
 
     def __init__(self, eventmanager, model):
@@ -51,7 +51,7 @@ class MoonView(object):
     def notify(self, event):
         """
         Called by an event in the message queue.
-        
+
         """
 
         if isinstance(event, TickEvent):
@@ -60,7 +60,7 @@ class MoonView(object):
 
         elif isinstance(event, InitializeEvent):
             self.initialize()
-            
+
         elif isinstance(event, StateEvent):
             if event.state == STATE_PHASE1:
                 self.panels['menu'].hide()
@@ -76,9 +76,9 @@ class MoonView(object):
     def initialize(self):
         """
         Set up for our visuals live here.
-        
+
         """
-        
+
         self.isinitialized = False
         # our coded game size
         self.game_area = pygame.Rect(0, 0, 800, 600)
@@ -109,7 +109,7 @@ class MoonView(object):
 
         # load resources
         self.image = pygame.Surface(self.game_area.size)
-        
+
         # we are done
         self.isinitialized = True
 
@@ -117,15 +117,15 @@ class MoonView(object):
         self.smallfont = pygame.font.Font(
             os.path.join('..','data','DejaVuSansMono-Bold.ttf'), 16)
         #self.background = image.load('background.png').convert()
-        
+
         self.create_panels()
 
     def create_panels(self):
         """
         Build game panels that move around and show at various model states.
-        
+
         """
-        
+
         menu_panel = Panel((100, 300), self.game_area)
         menu_panel.show_position = (0, 0)
         menu_panel.hide_position = (500, 0)
@@ -147,15 +147,15 @@ class MoonView(object):
     def render(self):
         """
         Draw stuff to the screen.
-        
+
         """
-        
+
         if not self.isinitialized:
             # but only if we have been set up :0
             return
 
         state = self.model.state.peek()
-        
+
         if state == STATE_MENU:
             pass
 
@@ -181,20 +181,20 @@ class MoonView(object):
         for key, panel in self.panels.items():
             if panel.draw(self.image):
                 self.transitioning = True
-        
+
         pix = self.smallfont.render('hello, world!', False, color.white, color.magenta)
         pix.set_colorkey(color.magenta)
         self.image.blit(pix, (15, 15))
         self.screen.blit(self.image, self.game_area)
         pygame.display.flip()
-    
+
 class Panel(object):
     """
     Provides a movable image that have hide and show positions, it
     moves towards these destinations depending on it's current state.
-    
+
     """
-    
+
     def __init__(self, size, boundary):
         self.size = size
         self.image = pygame.Surface(size)
@@ -212,59 +212,59 @@ class Panel(object):
         self.busy = False
         # the boundary where we are allowed to draw.
         self._boundary = boundary
-    
+
     @property
     def show_position(self):
         return self.show_position
-    
+
     @show_position.setter
     def show_position(self, value):
         if type(value) is pygame.Rect:
             self._show_position = value
         else:
             self._show_position = pygame.Rect(value, self.size)
-    
+
     @property
     def hide_position(self):
         return self.hide_position
-    
+
     @hide_position.setter
     def hide_position(self, value):
         if type(value) is pygame.Rect:
             self._hide_position = value
         else:
             self._hide_position = pygame.Rect(value, self.size)
-    
+
     @property
     def position(self):
         return self.rect
-    
+
     @position.setter
     def position(self, value):
         if type(value) is pygame.Rect:
             self.rect = value
         else:
             self.rect = pygame.Rect(value, self.size)
-    
+
     @property
     def destination(self):
         if self.showing:
             return self._show_position
         else:
             return self._hide_position
-    
+
     def show(self):
         self.showing = True
-        
+
     def hide(self):
         self.showing = False
-    
+
     def move(self):
         """
         Update our position if necessary.
-        
+
         """
-        
+
         if self.rect != self.destination:
             x_diff = self.destination.left - self.rect.left
             y_diff = self.destination.top - self.rect.top
@@ -279,9 +279,9 @@ class Panel(object):
         """
         Draw us on the target surface.
         Returns True if the panel is busy moving
-        
+
         """
-        
+
         self.move()
         if self.rect.colliderect(self._boundary):
             # only draw us if we are inside the image boundary
