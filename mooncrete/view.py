@@ -211,19 +211,17 @@ class MoonView(object):
         puzzle_image = self.panels['puzzle']
         puzzle_image.image.fill(color.black)
         for key, sprite in self.puzzle_sprites.items():
-            sprite.update()
             sprite.draw(puzzle_image.image)
 
     def create_puzzle_sprite(self, block):
         sprite = PuzzleBlockSprite()
         sprite.rect.topleft = self.translate_view_coords((block.x, block.y))
-        sprite.equalize_starting_position()
-        #sprite.rect.top = - PUZZLE_BLOCK_SIZE
         self.puzzle_sprites[block.id] = sprite
 
     def move_puzzle_sprite(self, block):
         sprite = self.puzzle_sprites[block.id]
-        sprite.destination.topleft = self.translate_view_coords((block.x, block.y))
+        # no sliding motion
+        sprite.rect.topleft = self.translate_view_coords((block.x, block.y))
 
 
 class Panel(object):
@@ -342,23 +340,6 @@ class PuzzleBlockSprite(object):
         self.image.set_colorkey(color.magenta)
         self.image.fill(color.white)
         self.rect = pygame.Rect(0, 0, PUZZLE_BLOCK_SIZE, PUZZLE_BLOCK_SIZE)
-        self.destination = self.rect.copy()
-
-    def equalize_starting_position(self):
-        self.destination = self.rect.copy()
 
     def draw(self, target):
         target.blit(self.image, self.rect)
-
-    def update(self):
-        if self.rect != self.destination:
-            x_diff = self.destination.left - self.rect.left
-            y_diff = self.destination.top - self.rect.top
-            if x_diff > 0:
-                self.rect.left += 10
-            elif x_diff < 0:
-                self.rect.left -= 10
-            if y_diff > 0:
-                self.rect.top += 10
-            elif y_diff < 0:
-                self.rect.top -= 10
