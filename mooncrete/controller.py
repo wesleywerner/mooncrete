@@ -55,3 +55,5 @@ class MoonController(object):
                         self.view.toggle_fullscreen()
                     elif event.key == K_SPACE:
                         self.model.new_game()
+                    elif event.key == K_F2:
+                        self.model._next_phase()
