@@ -75,8 +75,8 @@ class MoonModel(object):
 
         if isinstance(event, TickEvent):
             if not self.paused:
-                self.unchain_events()
-                pass
+                self._unchain_events()
+                self.step_game()
 
         elif isinstance(event, QuitEvent):
             trace.write('Engine shutting down...')
@@ -109,14 +109,17 @@ class MoonModel(object):
 
 #-- Model State Management -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    def change_state(self, new_state):
+    def change_state(self, new_state, swap_state=False):
         """
         Change the model state, and notify the other peeps about this.
 
         """
 
         if new_state:
-            self.state.push(new_state)
+            if swap_state:
+                self.state.swap(new_state)
+            else:
+                self.state.push(new_state)
             self.evman.Post(StateEvent(new_state))
         else:
             self.state.pop()
@@ -143,15 +146,18 @@ class MoonModel(object):
 
         if not self._puzzle_grid:
             # there is no game to continue
-            self.reset_scores()
-            self.clear_puzzle_grid()
+            self._reset_scores()
+            self._clear_puzzle_grid()
             self.change_state(STATE_PHASE1)
             if self.auto_help:
-                self.chain_event(StateEvent(STATE_HELP))
+                self._chain_event(StateEvent(STATE_HELP))
         else:
-            self.change_state(self.player_phase)
+            if self.state.peek() == self.player_phase:
+                self.change_state(None)
+            else:
+                self.change_state(self.player_phase)
 
-    def chain_event(self, next_event):
+    def _chain_event(self, next_event):
         """
         Chains an event to be posted on the next (unpaused) Tick.
 
@@ -160,7 +166,7 @@ class MoonModel(object):
         self.paused = True
         self.event_chain.insert(0, next_event)
 
-    def unchain_events(self):
+    def _unchain_events(self):
         """
         Removes events from the chain and post them.
 
@@ -169,7 +175,7 @@ class MoonModel(object):
         if self.event_chain:
             self.evman.Post(self.event_chain.pop())
 
-    def reset_scores(self):
+    def _reset_scores(self):
         """
         Spam spam spam spam spam spam spam.
         """
@@ -179,34 +185,44 @@ class MoonModel(object):
         self.player_level = 1
         self.player_phase = STATE_PHASE1
 
-    def next_phase(self):
+    def _next_phase(self):
         """
         Moves to the next phase.
 
         """
 
-        # TODO post game messages in phase changes
         if self.player_phase == STATE_PHASE1:
             self.player_phase = STATE_PHASE2
-            self.change_state(STATE_PHASE2)
+            self.change_state(STATE_PHASE2, swap_state=True)
+            self._drop_random_blocks(FLOTSAM)
         elif self.player_phase == STATE_PHASE2:
             self.player_phase = STATE_PHASE3
-            self.change_state(STATE_PHASE3)
+            self.change_state(STATE_PHASE3, swap_state=True)
+            self._drop_random_blocks(FLOTSAM)
         elif self.player_phase == STATE_PHASE3:
             self.player_level += 1
             self.player_phase = STATE_PHASE1
-            self.change_state(STATE_PHASE1)
+            self.change_state(STATE_PHASE1, swap_state=True)
 
+    def step_game(self):
+        """
+        Step the game logic.
 
+        """
+
+        state = self.state.peek()
+        if state in (STATE_PHASE1, STATE_PHASE2):
+            self._update_puzzle_grid()
 
 #-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    def clear_puzzle_grid(self):
+    def _clear_puzzle_grid(self):
         trace.write('clearing puzzle grid')
         self._puzzle_grid = [[None,] * PUZZLE_SIZE[1]
                 for i in range(0, PUZZLE_SIZE[0])]
+        self._drop_random_blocks(FLOTSAM)
 
-    def drop_random_blocks(self, block_type_list):
+    def _drop_random_blocks(self, block_type_list):
         """
         Drop an amount of random block types into the grid, as obstructions
         to the player. These are fast fallers and are not controlled by the
@@ -214,29 +230,28 @@ class MoonModel(object):
 
         """
 
-        trace.write('adding %s random blocks to the puzzle grid' % (amount,))
-
         amount = 2
         if self.player_level > 5:
             amount = 3
         if self.player_level > 10:
             amount = 4
+        trace.write('adding %s random blocks to the puzzle grid' % (amount,))
 
         for n in range(0, amount):
-            self.spawn_block(block_type_list)
+            self._spawn_block(block_type_list)
 
-    def puzzle_in_bounds(self, x, y):
+    def _puzzle_in_bounds(self, x, y):
         return (x >= 0 and x < PUZZLE_SIZE[0] and y >= 0 and y < PUZZLE_SIZE[1])
 
-    def move_block(self, block, x_offset, y_offset):
+    def _move_block(self, block, x_offset, y_offset):
         """
         Move a block by the given offset.
         Handles collisions with other blocks, generates events on these.
         """
 
-        x = block.x + y_offset
-        y = block.y + x_offset
-        if self.puzzle_in_bounds(x, y):
+        x = block.x + x_offset
+        y = block.y + y_offset
+        if self._puzzle_in_bounds(x, y):
             collider = self._puzzle_grid[x][y]
             if collider:
                 # do type checking
@@ -245,27 +260,41 @@ class MoonModel(object):
                 self._puzzle_grid[block.x][block.y] = None
                 block.y = y
                 self._puzzle_grid[block.x][block.y] = block
-                self.block_moved_callback(block)
+                self._block_moved_callback(block)
 
-    def update(self):
+    def _update_puzzle_grid(self):
         """
         Update the puzzle grid, dropping any blocks that are able to.
 
         """
 
-        for v in range(PUZZLE_SIZE[1], -1, -1):
-            for u in range(PUZZLE_SIZE[0], -1, -1):
+        trace.write(self._print_puzzle_grid())
+        for y in reversed(range(0, PUZZLE_SIZE[1])):
+            for x in reversed(range(0, PUZZLE_SIZE[0])):
                 block = self._puzzle_grid[x][y]
-                self.move_block(block, 0, 1)
+                if block:
+                    self._move_block(block, 0, 1)
 
-    def spawn_block(self, block_types):
+    def _print_puzzle_grid(self):
+        grid = []
+        for y in range(0, PUZZLE_SIZE[1]):
+            grid.append('\n')
+            for x in range(0, PUZZLE_SIZE[0]):
+                block = self._puzzle_grid[x][y]
+                if block:
+                    grid.append(str(block.block_type))
+                else:
+                    grid.append('_')
+        return ' '.join(grid)
+
+    def _spawn_block(self, block_types):
         """
         Spawn a block of choice block_types.
 
         """
 
         # find the first open starting position.
-        locs = range(0, PUZZLE_SIZE[0] - 1)
+        locs = range(0, PUZZLE_SIZE[0])
         random.shuffle(locs)
         while len(locs) > 0:
             x = locs.pop()
@@ -276,12 +305,12 @@ class MoonModel(object):
                 block.x = x
                 block.y = y
                 self._puzzle_grid[x][y] = block
-                self.block_spawned_callback(block)
+                self._block_spawned_callback(block)
                 return True
         # if no positions are left the grid is full.
         self._puzzle_grid_full_callback()
 
-    def block_spawned_callback(self, block):
+    def _block_spawned_callback(self, block):
         """
         An interface to link block actions with system events.
 
@@ -290,16 +319,16 @@ class MoonModel(object):
         trace.write('block %s was spawned' % (block.id,))
         pass
 
-    def block_moved_callback(self, block):
+    def _block_moved_callback(self, block):
         """
         An interface to link block actions with system events.
 
         """
 
-        trace.write('block %s was moved %s' % (block.id, str(block.x, block.y)))
+        trace.write('block %s was moved %s' % (block.id, (block.x, block.y)))
         pass
 
-    def block_removed_callback(self, block):
+    def _block_removed_callback(self, block):
         """
         An interface to link block actions with system events.
 
@@ -308,7 +337,7 @@ class MoonModel(object):
         trace.write('block %s was removed' % (block.id,))
         pass
 
-    def grid_full_callback(self):
+    def _puzzle_grid_full_callback(self):
         """
         An interface to link block actions with system events.
 
