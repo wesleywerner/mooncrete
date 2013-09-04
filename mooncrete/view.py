@@ -352,6 +352,13 @@ class PuzzleBlockSprite(object):
 
     def update(self):
         if self.rect != self.destination:
+            x_diff = self.destination.left - self.rect.left
             y_diff = self.destination.top - self.rect.top
+            if x_diff > 0:
+                self.rect.left += 10
+            elif x_diff < 0:
+                self.rect.left -= 10
             if y_diff > 0:
                 self.rect.top += 10
+            elif y_diff < 0:
+                self.rect.top -= 10
