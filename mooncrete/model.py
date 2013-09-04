@@ -317,7 +317,7 @@ class MoonModel(object):
         """
 
         trace.write('block %s was spawned' % (block.id,))
-        pass
+        self.evman.Post(PuzzleBlockSpawnedEvent(block))
 
     def _block_moved_callback(self, block):
         """
@@ -326,7 +326,7 @@ class MoonModel(object):
         """
 
         trace.write('block %s was moved %s' % (block.id, (block.x, block.y)))
-        pass
+        self.evman.Post(PuzzleBlockMovedEvent(block))
 
     def _block_removed_callback(self, block):
         """
