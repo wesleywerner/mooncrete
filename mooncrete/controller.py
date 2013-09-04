@@ -29,6 +29,20 @@ class MoonController(object):
         self.evman.RegisterListener(self)
         self.model = model
         self.view = view
+        self.model_update_delay = 1000
+        self.last_model_update = 0
+
+    def can_step_model(self):
+        """
+        Limits the model update frequency.
+        (Updating each Tick would be too fast a game, of course!)
+
+        """
+
+        ticks = pygame.time.get_ticks()
+        if ticks - self.last_model_update > self.model_update_delay:
+            self.last_model_update = ticks
+            return True
 
     def notify(self, event):
         """
@@ -40,6 +54,10 @@ class MoonController(object):
 
             # update the model pause state
             self.model.paused = self.view.transitioning
+
+            # step the model if it is time
+            if self.can_step_model():
+                self.model.step_game()
 
             for event in pygame.event.get():
 
