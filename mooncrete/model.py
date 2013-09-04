@@ -392,7 +392,6 @@ class MoonModel(object):
             if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
                 self._move_block(b2, x_offset, y_offset)
 
-
     def rotate_puzzle_ccw(self):
         """
         Rotate the active puzzle pieces clockwise.
@@ -423,6 +422,17 @@ class MoonModel(object):
             y = b2.y + y_offset
             if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
                 self._move_block(b2, x_offset, y_offset)
+
+    def move_puzzle_left(self):
+        """
+        Move the active puzzle piece left.
+
+        """
+
+        if self._active_puzzle_pieces:
+            b1, b2 = self._active_puzzle_pieces
+            if not b1 and not b2:
+                return
 
 
     def _block_spawned_callback(self, block):

@@ -95,6 +95,8 @@ class MoonController(object):
             self.model.rotate_puzzle_cw()
         elif event.key in (K_z,):
             self.model.rotate_puzzle_ccw()
+        elif event.key in (K_a, K_LEFT):
+            self.model.move_puzzle_left()
         elif event.key == K_F2:
             self.model._next_phase()
         elif event.key == K_F3:
