@@ -91,8 +91,14 @@ class MoonController(object):
     def puzzle_keys(self, event):
         if event.key == K_ESCAPE:
             self.model.escape_state()
+        elif event.key in (K_x,):
+            self.model.rotate_puzzle_cw()
+        elif event.key in (K_z,):
+            self.model.rotate_puzzle_ccw()
         elif event.key == K_F2:
             self.model._next_phase()
+        elif event.key == K_F3:
+            self.model._create_active_puzzle_pieces()
 
     def arcade_keys(self, event):
         if event.key == K_ESCAPE:
