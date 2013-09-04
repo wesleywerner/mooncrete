@@ -63,14 +63,18 @@ class MoonView(object):
             self.initialize()
 
         elif isinstance(event, StateEvent):
-            if event.state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3):
-                self.panels['menu'].hide()
+            if event.state in (STATE_PHASE1, STATE_PHASE2):
+                self.panels['score'].show()
                 self.panels['puzzle'].show()
+            elif event.state == STATE_PHASE3:
+                self.panels['score'].hide()
+                self.panels['puzzle'].hide()
+                # TODO show the arcade panel
             elif event.state == STATE_HELP:
-                #self.panels['score'].show()
+                # TODO show the help panel
                 pass
             elif event.state == STATE_MENU:
-                self.panels['menu'].show()
+                self.panels['score'].hide()
                 self.panels['puzzle'].hide()
 
         elif isinstance(event, PuzzleBlockSpawnedEvent):
@@ -135,17 +139,16 @@ class MoonView(object):
 
         """
 
-        menu_panel = Panel((100, 300), self.game_area)
-        menu_panel.show_position = (0, 0)
-        menu_panel.hide_position = (500, 0)
-        menu_panel.position = (0, 0)
-        self.panels['menu'] = menu_panel
+        score_panel = Panel((300, 600), self.game_area)
+        score_panel.show_position = (0, 0)
+        score_panel.hide_position = (-300, 0)
+        score_panel.hide(instant=True)
+        self.panels['score'] = score_panel
 
         puzzle_panel = Panel((500, 500), self.game_area)
         puzzle_panel.show_position = (self.game_area.width - 500, 0)
         puzzle_panel.hide_position = (self.game_area.width, 0)
-        #puzzle_panel.position = (300, -50)
-        puzzle_panel.hide()
+        puzzle_panel.hide(instant=True)
         self.panels['puzzle'] = puzzle_panel
 
     def toggle_fullscreen(self):
@@ -164,11 +167,17 @@ class MoonView(object):
             return
 
         state = self.model.state.peek()
+        self.image.fill((0, 128, 0))
 
         if state == STATE_MENU:
             pass
 
         elif state == STATE_HELP:
+            pix = self.smallfont.render(
+                'help screen %s' % (self.model.player_level),
+                False, color.white, color.magenta)
+            pix.set_colorkey(color.magenta)
+            self.image.blit(pix, (50, 150))
             pass
 
         elif state == STATE_LOSE:
@@ -182,8 +191,6 @@ class MoonView(object):
 
         elif state == STATE_PHASE3:
             pass
-
-        self.image.fill((0, 128, 0))
 
         # update panels
         self.transitioning = False
@@ -284,11 +291,15 @@ class Panel(object):
         else:
             return self._hide_position
 
-    def show(self):
+    def show(self, instant=False):
         self.showing = True
+        if instant:
+            self.rect = self._show_position
 
-    def hide(self):
+    def hide(self, instant=False):
         self.showing = False
+        if instant:
+            self.rect = self._hide_position
 
     def move(self):
         """
