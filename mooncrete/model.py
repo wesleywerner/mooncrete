@@ -73,7 +73,7 @@ class MoonModel(object):
 
         """
 
-        if isinstance(event, TickEvent):
+        if isinstance(event, StepGameEvent):
             if not self.paused:
                 self._unchain_events()
                 self.step_game()
