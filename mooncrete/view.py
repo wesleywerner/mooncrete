@@ -62,7 +62,7 @@ class MoonView(object):
             self.initialize()
 
         elif isinstance(event, StateEvent):
-            if event.state == STATE_PHASE1:
+            if event.state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3):
                 self.panels['menu'].hide()
             elif event.state == STATE_HELP:
                 self.panels['score'].show()
