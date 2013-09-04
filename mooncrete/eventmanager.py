@@ -83,3 +83,9 @@ class StateEvent(Event):
     def __str__(self):
         return ('%s: %s' % (self.name, str(self.state)))
 
+
+class StepGameEvent(Event):
+
+    def __init__(self):
+        self.name = 'Step game event'
+
