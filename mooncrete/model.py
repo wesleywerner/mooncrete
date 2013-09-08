@@ -66,7 +66,7 @@ class MoonModel(object):
         self.player_level = 0
         self.player_wave = 0
         self.auto_help = False
-        self._active_puzzle_pieces = None
+        self._active_puzzle_pieces = [None, None]
 
     def notify(self, event):
         """
@@ -250,7 +250,7 @@ class MoonModel(object):
             else:
                 trace.write('There are no pieces for phase %s' % (self.player_phase,))
                 return
-        self._active_puzzle_pieces = None
+        self._active_puzzle_pieces = [None, None]
         b1 = self._spawn_block(block_type_list)
         b2 = self._spawn_block(block_type_list)
         if not b1 or not b2:
@@ -367,30 +367,29 @@ class MoonModel(object):
 
         """
 
-        if self._active_puzzle_pieces:
-            b1, b2 = self._active_puzzle_pieces
-            if not b1 and not b2:
-                return
-            # rotate b2 around b1
-            x_offset, y_offset = None, None
-            if (b1.x < b2.x) and (b1.y == b2.y):
-                x_offset = -1
-                y_offset = 1
-            elif (b1.x == b2.x) and (b1.y < b2.y):
-                x_offset = -1
-                y_offset = -1
-            elif (b1.x > b2.x) and (b1.y == b2.y):
-                x_offset = 1
-                y_offset = -1
-            elif (b1.x == b2.x) and (b1.y > b2.y):
-                x_offset = 1
-                y_offset = 1
-            if not x_offset and not y_offset:
-                return
-            x = b2.x + x_offset
-            y = b2.y + y_offset
-            if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
-                self._move_block(b2, x_offset, y_offset)
+        b1, b2 = self._active_puzzle_pieces
+        if not b1 and not b2:
+            return
+        # rotate b2 around b1
+        x_offset, y_offset = None, None
+        if (b1.x < b2.x) and (b1.y == b2.y):
+            x_offset = -1
+            y_offset = 1
+        elif (b1.x == b2.x) and (b1.y < b2.y):
+            x_offset = -1
+            y_offset = -1
+        elif (b1.x > b2.x) and (b1.y == b2.y):
+            x_offset = 1
+            y_offset = -1
+        elif (b1.x == b2.x) and (b1.y > b2.y):
+            x_offset = 1
+            y_offset = 1
+        if not x_offset and not y_offset:
+            return
+        x = b2.x + x_offset
+        y = b2.y + y_offset
+        if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
+            self._move_block(b2, x_offset, y_offset)
 
     def rotate_puzzle_ccw(self):
         """
@@ -398,30 +397,29 @@ class MoonModel(object):
 
         """
 
-        if self._active_puzzle_pieces:
-            b1, b2 = self._active_puzzle_pieces
-            if not b1 and not b2:
-                return
-            # rotate b2 around b1
-            x_offset, y_offset = None, None
-            if (b1.x < b2.x) and (b1.y == b2.y):
-                x_offset = -1
-                y_offset = -1
-            elif (b1.x == b2.x) and (b1.y < b2.y):
-                x_offset = 1
-                y_offset = -1
-            elif (b1.x > b2.x) and (b1.y == b2.y):
-                x_offset = 1
-                y_offset = 1
-            elif (b1.x == b2.x) and (b1.y > b2.y):
-                x_offset = -1
-                y_offset = 1
-            if not x_offset and not y_offset:
-                return
-            x = b2.x + x_offset
-            y = b2.y + y_offset
-            if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
-                self._move_block(b2, x_offset, y_offset)
+        b1, b2 = self._active_puzzle_pieces
+        if not b1 and not b2:
+            return
+        # rotate b2 around b1
+        x_offset, y_offset = None, None
+        if (b1.x < b2.x) and (b1.y == b2.y):
+            x_offset = -1
+            y_offset = -1
+        elif (b1.x == b2.x) and (b1.y < b2.y):
+            x_offset = 1
+            y_offset = -1
+        elif (b1.x > b2.x) and (b1.y == b2.y):
+            x_offset = 1
+            y_offset = 1
+        elif (b1.x == b2.x) and (b1.y > b2.y):
+            x_offset = -1
+            y_offset = 1
+        if not x_offset and not y_offset:
+            return
+        x = b2.x + x_offset
+        y = b2.y + y_offset
+        if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
+            self._move_block(b2, x_offset, y_offset)
 
     def move_puzzle_left(self):
         """
@@ -429,10 +427,9 @@ class MoonModel(object):
 
         """
 
-        if self._active_puzzle_pieces:
-            b1, b2 = self._active_puzzle_pieces
-            if not b1 and not b2:
-                return
+        b1, b2 = self._active_puzzle_pieces
+        if not b1 and not b2:
+            return
 
 
     def _block_spawned_callback(self, block):
