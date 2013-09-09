@@ -21,7 +21,8 @@ from statemachine import *
 from eventmanager import *
 
 
-PUZZLE_SIZE = (5, 5)
+PUZZLE_WIDTH = 10
+PUZZLE_HEIGHT = 10
 CALCIUM_BARREL = 1
 WATER_BARREL = 2
 EMPTY_BARREL = 3
@@ -61,12 +62,23 @@ class MoonModel(object):
         self.is_pumping = False
         self.paused = False
         self.event_chain = []
-        self._puzzle_grid = None
         self.player_score = 0
         self.player_level = 0
         self.player_wave = 0
-        self.auto_help = False
-        self._active_puzzle_pieces = [None, None]
+        # list of blocks in the puzzle playfield not under player control
+        self._puzzle_playfield = None
+        # matrix of player controlled blocks in their shape
+        self._player_blocks = None
+
+    def _puzzle_block_at(self, x, y):
+        """
+        Get a puzzle block at x y.
+
+        """
+
+        for block in self._puzzle_playfield:
+            if block.x == x and block.y == y:
+                return block
 
     def notify(self, event):
         """
@@ -148,14 +160,14 @@ class MoonModel(object):
 
         """
 
-        if not self._puzzle_grid:
+        if not self._puzzle_playfield:
             # there is no game to continue
             self._reset_scores()
-            self._clear_puzzle_grid()
+            self._puzzle_playfield = []
             self.change_state(STATE_PHASE1)
-            #self.change_state(STATE_HELP)
-            if self.auto_help:
-                self._chain_event(StateEvent(STATE_HELP))
+            self._puzzle_drop_random_blocks(FLOTSAM)
+            ## TODO chain help event
+            #self._chain_event(StateEvent(STATE_HELP))
         else:
             if self.state.peek() == self.player_phase:
                 self.change_state(None)
@@ -203,15 +215,18 @@ class MoonModel(object):
         if self.player_phase == STATE_PHASE1:
             self.player_phase = STATE_PHASE2
             self.change_state(STATE_PHASE2, swap_state=True)
-            self._drop_random_blocks(FLOTSAM)
+            self._puzzle_drop_random_blocks(FLOTSAM)
         elif self.player_phase == STATE_PHASE2:
             self.player_phase = STATE_PHASE3
             self.change_state(STATE_PHASE3, swap_state=True)
-            self._drop_random_blocks(FLOTSAM)
+            self._puzzle_drop_random_blocks(FLOTSAM)
         elif self.player_phase == STATE_PHASE3:
             self.player_level += 1
             self.player_phase = STATE_PHASE1
             self.change_state(STATE_PHASE1, swap_state=True)
+        ## TODO chain help event
+        #if self.player_level == 1:
+            #self._chain_event(StateEvent(STATE_HELP))
 
     def step_game(self):
         """
@@ -223,18 +238,11 @@ class MoonModel(object):
             return
         state = self.state.peek()
         if state in (STATE_PHASE1, STATE_PHASE2):
-            self._update_puzzle_grid()
+            self._puzzle_step()
 
 #-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    def _clear_puzzle_grid(self):
-        trace.write('clearing puzzle grid')
-        self._puzzle_grid = [[None,] * PUZZLE_SIZE[1]
-                for i in range(0, PUZZLE_SIZE[0])]
-        #self._drop_random_blocks(FLOTSAM)
-        self._create_active_puzzle_pieces(PHASE1_PIECES)
-
-    def _create_active_puzzle_pieces(self, block_type_list=None):
+    def _puzzle_spawn_player_piece(self, block_types=None):
         """
         Create a new pair of puzzle pieces and make them active
         for player control.
@@ -242,27 +250,53 @@ class MoonModel(object):
         """
 
         # default block types
-        if not block_type_list:
+        if not block_types:
             if self.player_phase == STATE_PHASE1:
-                block_type_list = PHASE1_PIECES
+                block_types = PHASE1_PIECES
             elif self.player_phase == STATE_PHASE2:
-                block_type_list = PHASE2_PIECES
+                block_types = PHASE2_PIECES
             else:
-                trace.write('There are no pieces for phase %s' % (self.player_phase,))
+                trace.write('There are no puzzle pieces for phase %s' % (self.player_phase,))
                 return
-        self._active_puzzle_pieces = [None, None]
-        b1 = self._spawn_block(block_type_list)
-        b2 = self._spawn_block(block_type_list)
-        if not b1 or not b2:
-            return
-        # ensure they are next door to another
-        if b1.x == PUZZLE_SIZE[0] - 1:
-            self._set_block_xy(b2, PUZZLE_SIZE[0] - 2, b2.y)
-        else:
-            self._set_block_xy(b2, b1.x + 1, b2.y)
-        self._active_puzzle_pieces = [b1, b2]
 
-    def _drop_random_blocks(self, block_type_list):
+        # the player piece is a 2D matrix of the blocks in a shape
+        shapes = (
+                [[0, 1, 0],
+                 [1, 1, 1],
+                ],
+                [[1, 0],
+                 [1, 0],
+                 [1, 1],
+                ],
+                [[1, 1],
+                 [0, 1],
+                ],
+                [[1],
+                 [1],
+                 [1],
+                ],
+            )
+
+        new_shape = random.choice(shapes)
+        # start at top centered
+        start_x = (PUZZLE_WIDTH - len(new_shape[0])) / 2
+        start_y = 0
+
+        # we index the matrix y then x as to translate the shape so it
+        # ends up appearing like drawn above
+        for y, row in enumerate(new_shape):
+            for x, value in enumerate(row):
+                if value:
+                    block = PuzzleBlock()
+                    block.x = start_x + x
+                    block.y = start_y + y
+                    block.block_type = random.choice(block_types)
+                    new_shape[y][x] = block
+                    self._puzzle_block_spawned_callback(block)
+
+        self._player_blocks = new_shape
+
+    def _puzzle_drop_random_blocks(self, block_types):
         """
         Drop an amount of random block types into the grid, as obstructions
         to the player. These are fast fallers and are not controlled by the
@@ -278,90 +312,117 @@ class MoonModel(object):
         trace.write('adding %s random blocks to the puzzle grid' % (amount,))
 
         for n in range(0, amount):
-            self._spawn_block(block_type_list)
+            # find the first open starting position.
+            locs = range(0, PUZZLE_WIDTH)
+            random.shuffle(locs)
+            while len(locs) > 0:
+                x = locs.pop()
+                y = 0
+                if not self._puzzle_block_at(x, y):
+                    block = PuzzleBlock()
+                    block.block_type = random.choice(block_types)
+                    block.x = x
+                    block.y = y
+                    self._puzzle_playfield.append(block)
+                    self._puzzle_block_spawned_callback(block)
+                    break
 
     def _puzzle_in_bounds(self, x, y):
-        return (x >= 0 and x < PUZZLE_SIZE[0] and y >= 0 and y < PUZZLE_SIZE[1])
+        return (x >= 0 and x < PUZZLE_WIDTH and y >= 0 and y < PUZZLE_HEIGHT)
 
-    def _move_block(self, block, x_offset, y_offset):
+    def _puzzle_step(self):
         """
-        Move a block by the given offset.
-        Handles collisions with other blocks, generates events on these.
-        """
-
-        x = block.x + x_offset
-        y = block.y + y_offset
-        if self._puzzle_in_bounds(x, y):
-            collider = self._puzzle_grid[x][y]
-            if collider:
-                # do type checking
-                pass
-            else:
-                self._set_block_xy(block, x, y)
-#                self._block_moved_callback(block)
-
-    def _update_puzzle_grid(self):
-        """
-        Update the puzzle grid, dropping any blocks that are able to.
+        Update the puzzle, dropping any blocks that are able to.
 
         """
 
-        trace.write(self._print_puzzle_grid())
-        for y in reversed(range(0, PUZZLE_SIZE[1])):
-            for x in reversed(range(0, PUZZLE_SIZE[0])):
-                block = self._puzzle_grid[x][y]
+        # auto move playfield blocks from the bottom up, so chain reaction falling
+        # can happend
+        for y in reversed(range(0, PUZZLE_HEIGHT)):
+            for x in reversed(range(0, PUZZLE_HEIGHT)):
+                block = self._puzzle_block_at(x, y)
                 if block:
-                    self._move_block(block, 0, 1)
+                    new_y = block.y + 1
+                    if self._puzzle_in_bounds(block.x, new_y):
+                        collider = self._puzzle_block_at(x, new_y)
+                        if collider:
+                            # do type checking
+                            pass
+                        else:
+                            self._puzzle_update_block_position(block, block.x, new_y)
 
-    def _print_puzzle_grid(self):
+        self._puzzle_move_player_pieces(0, 1)
+
+        trace.write(self._puzzle_print_grid())
+
+    def _puzzle_move_player_pieces(self, x_offset, y_offset):
+        """
+        Move player controlled pieces as a whole.
+
+        """
+
+        if not self._player_blocks:
+            return
+        add_to_playfield = False
+        valid_move = True
+        for row in self._player_blocks:
+            for block in row:
+                if block:
+                    new_x = block.x + x_offset
+                    new_y = block.y + y_offset
+                    if not self._puzzle_in_bounds(new_x, new_y):
+                        valid_move = False
+                        if (x_offset, y_offset) == (0, 1):
+                            # hit the bottom
+                            add_to_playfield = True
+                    else:
+                        collider = self._puzzle_block_at(new_x, new_y)
+                        if collider:
+                            # is moving downwards
+                            if (x_offset, y_offset) == (0, 1):
+                                # hit something at the bottom
+                                add_to_playfield = True
+                            else:
+                                # just a sideways collision
+                                valid_move = False
+
+        if valid_move and not add_to_playfield:
+            for row in self._player_blocks:
+                for block in row:
+                    if block:
+                        self._puzzle_update_block_position(block, block.x + x_offset, block.y + y_offset)
+
+        if add_to_playfield:
+            for row in self._player_blocks:
+                for block in row:
+                    if block:
+                        self._puzzle_playfield.append(block)
+            self._player_blocks = None
+
+    def _puzzle_print_grid(self):
         grid = []
-        for y in range(0, PUZZLE_SIZE[1]):
+        for y in range(0, PUZZLE_HEIGHT):
             grid.append('\n')
-            for x in range(0, PUZZLE_SIZE[0]):
-                block = self._puzzle_grid[x][y]
+            for x in range(0, PUZZLE_HEIGHT):
+                block = self._puzzle_block_at(x, y)
                 if block:
                     grid.append(str(block.block_type))
                 else:
                     grid.append('_')
         return ' '.join(grid)
 
-    def _spawn_block(self, block_types):
-        """
-        Spawn a block of choice block_types.
-
-        """
-
-        # find the first open starting position.
-        locs = range(0, PUZZLE_SIZE[0])
-        random.shuffle(locs)
-        while len(locs) > 0:
-            x = locs.pop()
-            y = 0
-            if not self._puzzle_grid[x][y]:
-                block = PuzzleBlock()
-                block.block_type = random.choice(block_types)
-                block.x = x
-                block.y = y
-                self._puzzle_grid[x][y] = block
-                self._block_spawned_callback(block)
-                return block
-        # if no positions are left the grid is full.
-        self._puzzle_grid_full_callback()
-
-    def _set_block_xy(self, block, x, y):
+    def _puzzle_update_block_position(self, block, x, y):
         """
         Use this to set a block's XY.
         It updates the puzzle grid and the block together.
 
         """
 
-        self._puzzle_grid[block.x][block.y] = None
         block.x = x
         block.y = y
-        self._puzzle_grid[block.x][block.y] = block
-        self._block_moved_callback(block)
+        self._puzzle_block_moved_callback(block)
 
-    def rotate_puzzle_cw(self):
+    def puzzle_rotate_cw(self):
         """
         Rotate the active puzzle pieces clockwise.
 
@@ -388,10 +449,10 @@ class MoonModel(object):
             return
         x = b2.x + x_offset
         y = b2.y + y_offset
-        if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
-            self._move_block(b2, x_offset, y_offset)
+        if (self._puzzle_in_bounds(x, y) and not self._puzzle_block_at(x, y)):
+            self._puzzle_move_block(b2, x_offset, y_offset)
 
-    def rotate_puzzle_ccw(self):
+    def puzzle_rotate_ccw(self):
         """
         Rotate the active puzzle pieces clockwise.
 
@@ -418,21 +479,26 @@ class MoonModel(object):
             return
         x = b2.x + x_offset
         y = b2.y + y_offset
-        if (self._puzzle_in_bounds(x, y) and not self._puzzle_grid[x][y]):
-            self._move_block(b2, x_offset, y_offset)
+        if (self._puzzle_in_bounds(x, y) and not self._puzzle_block_at(x, y)):
+            self._puzzle_move_block(b2, x_offset, y_offset)
 
-    def move_puzzle_left(self):
+    def puzzle_move_left(self):
         """
         Move the active puzzle piece left.
 
         """
 
-        b1, b2 = self._active_puzzle_pieces
-        if not b1 and not b2:
-            return
+        self._puzzle_move_player_pieces(-1, 0)
 
+    def puzzle_move_right(self):
+        """
+        Move the active puzzle piece left.
 
-    def _block_spawned_callback(self, block):
+        """
+
+        self._puzzle_move_player_pieces(1, 0)
+
+    def _puzzle_block_spawned_callback(self, block):
         """
         An interface to link block actions with system events.
 
@@ -441,16 +507,16 @@ class MoonModel(object):
         trace.write('block %s was spawned' % (block.id,))
         self.evman.Post(PuzzleBlockSpawnedEvent(block))
 
-    def _block_moved_callback(self, block):
+    def _puzzle_block_moved_callback(self, block):
         """
         An interface to link block actions with system events.
 
         """
 
-        trace.write('block %s was moved %s' % (block.id, (block.x, block.y)))
+        #trace.write('block %s was moved %s' % (block.id, (block.x, block.y)))
         self.evman.Post(PuzzleBlockMovedEvent(block))
 
-    def _block_removed_callback(self, block):
+    def _puzzle_block_removed_callback(self, block):
         """
         An interface to link block actions with system events.
 

@@ -24,7 +24,7 @@ from eventmanager import *
 
 
 FPS = 30
-PUZZLE_BLOCK_SIZE = 100
+PUZZLE_BLOCK_SIZE = 50
 
 
 class MoonView(object):

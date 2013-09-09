@@ -57,7 +57,7 @@ class MoonController(object):
 
             # step the model if it is time
             if self.can_step_model():
-                self.model.step_game()
+                self.evman.Post(StepGameEvent())
 
             for event in pygame.event.get():
 
@@ -92,15 +92,17 @@ class MoonController(object):
         if event.key == K_ESCAPE:
             self.model.escape_state()
         elif event.key in (K_x,):
-            self.model.rotate_puzzle_cw()
+            self.model.puzzle_rotate_cw()
         elif event.key in (K_z,):
-            self.model.rotate_puzzle_ccw()
+            self.model.puzzle_rotate_ccw()
         elif event.key in (K_a, K_LEFT):
-            self.model.move_puzzle_left()
+            self.model.puzzle_move_left()
+        elif event.key in (K_a, K_RIGHT):
+            self.model.puzzle_move_right()
         elif event.key == K_F2:
             self.model._next_phase()
         elif event.key == K_F3:
-            self.model._create_active_puzzle_pieces()
+            self.model._puzzle_spawn_player_piece()
 
     def arcade_keys(self, event):
         if event.key == K_ESCAPE:
