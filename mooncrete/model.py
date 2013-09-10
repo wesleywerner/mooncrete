@@ -69,6 +69,8 @@ class MoonModel(object):
         self._puzzle_playfield = None
         # matrix of player controlled blocks in their shape
         self._player_blocks = None
+        # player blocks position
+        self._player_blocks_pos = None
 
     def _puzzle_block_at(self, x, y):
         """
@@ -165,7 +167,7 @@ class MoonModel(object):
             self._reset_scores()
             self._puzzle_playfield = []
             self.change_state(STATE_PHASE1)
-            self._puzzle_drop_random_blocks(FLOTSAM)
+            #self._puzzle_drop_random_blocks(FLOTSAM)
             ## TODO chain help event
             #self._chain_event(StateEvent(STATE_HELP))
         else:
@@ -281,6 +283,7 @@ class MoonModel(object):
         # start at top centered
         start_x = (PUZZLE_WIDTH - len(new_shape[0])) / 2
         start_y = 0
+        self._player_blocks_pos = (start_x, start_y)
 
         # we index the matrix y then x as to translate the shape so it
         # ends up appearing like drawn above
@@ -365,6 +368,10 @@ class MoonModel(object):
             return
         add_to_playfield = False
         valid_move = True
+        # TODO replace all this with _puzzle_shape_valid()
+        # keep the add_to_playfield bit on down movement.
+        # also use self._player_blocks_pos to set new position and
+        # some call to update the blocks to match.
         for row in self._player_blocks:
             for block in row:
                 if block:
@@ -411,6 +418,47 @@ class MoonModel(object):
                     grid.append('_')
         return ' '.join(grid)
 
+    def _puzzle_shape_valid(self, shape):
+        """
+        Tests if the given piece array is in bounds and does not collide
+        with any playfield blocks.
+
+        """
+
+        valid_move = True
+        first_block = None
+        for y, row in enumerate(shape):
+            for x, block in enumerate(row):
+                if block:
+                    if not first_block:
+                        first_block = block
+                    new_x = first_block.x + x
+                    new_y = first_block.y + y
+                    if not self._puzzle_in_bounds(new_x, new_y):
+                        valid_move = False
+                    collider = self._puzzle_block_at(new_x, new_y)
+                    if collider:
+                        valid_move = False
+        return valid_move
+
+    def _puzzle_apply_shape(self, shape):
+        """
+        Apply a new shape, transforming the positions of the blocks to suit.
+
+        """
+
+        # TODO only way I see to do this is to persist the previous block id
+        # so we can make copies of blocks to test against new positions
+        # and use those blocks if valid.
+        # OR
+        # reference the first block found in our shape and use that as a reference
+        # to the other blocks. i.e. it becomes our shape top-left.
+        self._player_blocks = shape
+        for y, row in enumerate(shape):
+            for x, block in enumerate(row):
+                if block:
+                    self._puzzle_update_block_position(block, self._player_blocks_pos[0] + x, self._player_blocks_pos[1] + y)
+
     def _puzzle_update_block_position(self, block, x, y):
         """
         Use this to set a block's XY.
@@ -426,61 +474,35 @@ class MoonModel(object):
         """
         Rotate the active puzzle pieces clockwise.
 
+        Rotate by +90:
+        * Transpose
+        * Reverse each row
+
         """
 
-        b1, b2 = self._active_puzzle_pieces
-        if not b1 and not b2:
+        if not self._player_blocks:
             return
-        # rotate b2 around b1
-        x_offset, y_offset = None, None
-        if (b1.x < b2.x) and (b1.y == b2.y):
-            x_offset = -1
-            y_offset = 1
-        elif (b1.x == b2.x) and (b1.y < b2.y):
-            x_offset = -1
-            y_offset = -1
-        elif (b1.x > b2.x) and (b1.y == b2.y):
-            x_offset = 1
-            y_offset = -1
-        elif (b1.x == b2.x) and (b1.y > b2.y):
-            x_offset = 1
-            y_offset = 1
-        if not x_offset and not y_offset:
-            return
-        x = b2.x + x_offset
-        y = b2.y + y_offset
-        if (self._puzzle_in_bounds(x, y) and not self._puzzle_block_at(x, y)):
-            self._puzzle_move_block(b2, x_offset, y_offset)
+        new_shape = list(self._player_blocks)
+        # transpose
+        new_shape.reverse()
+        # reverse each row
+        for row in new_shape:
+            row.reverse()
+        # accepted rotation
+        if self._puzzle_shape_valid(new_shape):
+            trace.write('new shape is valid')
+            self._puzzle_apply_shape(new_shape)
 
     def puzzle_rotate_ccw(self):
         """
         Rotate the active puzzle pieces clockwise.
 
-        """
+        Rotate by -90:
+        * Transpose
+        * Reverse each column
 
-        b1, b2 = self._active_puzzle_pieces
-        if not b1 and not b2:
-            return
-        # rotate b2 around b1
-        x_offset, y_offset = None, None
-        if (b1.x < b2.x) and (b1.y == b2.y):
-            x_offset = -1
-            y_offset = -1
-        elif (b1.x == b2.x) and (b1.y < b2.y):
-            x_offset = 1
-            y_offset = -1
-        elif (b1.x > b2.x) and (b1.y == b2.y):
-            x_offset = 1
-            y_offset = 1
-        elif (b1.x == b2.x) and (b1.y > b2.y):
-            x_offset = -1
-            y_offset = 1
-        if not x_offset and not y_offset:
-            return
-        x = b2.x + x_offset
-        y = b2.y + y_offset
-        if (self._puzzle_in_bounds(x, y) and not self._puzzle_block_at(x, y)):
-            self._puzzle_move_block(b2, x_offset, y_offset)
+        """
+        pass
 
     def puzzle_move_left(self):
         """
