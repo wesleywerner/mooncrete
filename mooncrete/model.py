@@ -10,11 +10,21 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program. If not, see http://www.gnu.org/licenses/.
+#
+###### A note on imports
+# I allow myself the luxury to import * as:
+#   + eventmanager has every class use the "SpamEvent" convention.
+#   + statemachine has all constants named "STATE_SPAM"
+#
+###### A note on data attribute names
+# Data attributes meant only for internal access are prefixed with "_".
+# Not that you _can't_ access them, but you should not change them for fear
+# of treading on the model's workflow.
+#
+# http://docs.python.org/2/tutorial/classes.html#random-remarks
+#
 
-# a note on imports: I allow myself the luxury to import * as
-# + eventmanager has every class use the SpamEvent naming convention.
-# + statemachine has all constants prefixed STATE_SPAM
-
+import copy
 import random
 import trace
 from statemachine import *
@@ -23,31 +33,61 @@ from eventmanager import *
 
 PUZZLE_WIDTH = 10
 PUZZLE_HEIGHT = 10
-CALCIUM_BARREL = 1
-WATER_BARREL = 2
-EMPTY_BARREL = 3
-MOONROCKS = 4
-RADAR_BITS = 10
-RADAR_DISH = 11
-RADAR = 12
-TURRET_BASE = 20
-TURRET_AMMO = 21
-TURRET = 22
-MOONCRETE_SLAB = 30
-BUILDING = 40
+CALCIUM_BARREL = 10
+WATER_BARREL = 11
+EMPTY_BARREL = 12
+MOONROCKS = 13
+RADAR_BITS = 14
+RADAR_DISH = 15
+RADAR = 16
+TURRET_BASE = 17
+TURRET_AMMO = 18
+TURRET = 19
+MOONCRETE_SLAB = 20
+BUILDING = 21
 PHASE1_PIECES = (CALCIUM_BARREL, WATER_BARREL, EMPTY_BARREL)
 PHASE2_PIECES = (RADAR_BITS, RADAR_DISH, TURRET_BASE, TURRET_AMMO, MOONROCKS)
 FLOTSAM = (EMPTY_BARREL, MOONROCKS)
 
-class PuzzleBlock(object):
-    def __init__(self):
-        self.block_type = None
-        self.x = None
-        self.y = None
+TETRIS_SHAPES = [
+    [[1, 1, 1],
+     [0, 1, 0]],
 
-    @property
-    def id(self):
-        return id(self)
+    [[0, 2, 2],
+     [2, 2, 0]],
+
+    [[3, 3, 0],
+     [0, 3, 3]],
+
+    [[4, 0, 0],
+     [4, 4, 4]],
+
+    [[0, 0, 5],
+     [5, 5, 5]],
+
+    [[6, 6, 6, 6]],
+
+    [[7, 7],
+     [7, 7]]
+    ]
+
+
+class Player(object):
+    """
+    Stores player infos like score and level.
+
+    """
+
+    def __init__(self):
+        self.score = 0
+        self.level = 1
+        # current player phase.
+        self.phase = STATE_PHASE1
+        # current puzzle shape the player is controlling.
+        self.puzzle_shape = None
+        # location on the board of the puzzle shape.
+        self.puzzle_location = None
+
 
 class MoonModel(object):
     """
@@ -56,31 +96,37 @@ class MoonModel(object):
     """
 
     def __init__(self, eventmanager):
-        self.evman = eventmanager
-        self.evman.RegisterListener(self)
-        self.state = StateMachine()
-        self.is_pumping = False
+        self._evman = eventmanager
+        self._evman.RegisterListener(self)
+        self._state = StateMachine()
+        self._pumping = False
+
+        # the model can chain events to fire after another.
+        # this is done by inserting an event in the chain queue just after
+        # firing some other events. The model is paused on chaining.
+        # It should unpause via a controller, detailed next...
+        self._event_chain = []
+
+        # A paused model does not process any game related actions.
+        # Even chained events wait in queue until unpaused.
+        # Generally you will want to set this pause flag from a controller
+        # while any views are busy animating themselves (transitions etc).
+        #   Controller -> model.paused = views.is_busy_animating
         self.paused = False
-        self.event_chain = []
-        self.player_score = 0
-        self.player_level = 0
-        self.player_wave = 0
-        # list of blocks in the puzzle playfield not under player control
-        self._puzzle_playfield = None
-        # matrix of player controlled blocks in their shape
-        self._player_blocks = None
-        # player blocks position
-        self._player_blocks_pos = None
 
-    def _puzzle_block_at(self, x, y):
+        # stores current player score and level
+        self.player = None
+        # stores the last game scores for historics
+        self.previous_player = None
+
+    @property
+    def state(self):
         """
-        Get a puzzle block at x y.
+        A property that gives the current model state
 
         """
 
-        for block in self._puzzle_playfield:
-            if block.x == x and block.y == y:
-                return block
+        return self._state.peek()
 
     def notify(self, event):
         """
@@ -94,11 +140,13 @@ class MoonModel(object):
 
         elif isinstance(event, StepGameEvent):
             if not self.paused:
-                self.step_game()
+                state = self._state.peek()
+                if state in (STATE_PHASE1, STATE_PHASE2):
+                    self._puzzle_step()
 
         elif isinstance(event, QuitEvent):
             trace.write('Engine shutting down...')
-            self.is_pumping = False
+            self._pumping = False
             self.paused = True
 
     def run(self):
@@ -110,12 +158,12 @@ class MoonModel(object):
         """
 
         trace.write('Initializing...')
-        self.evman.Post(InitializeEvent())
+        self._evman.Post(InitializeEvent())
         trace.write('Starting the engine pump...')
-        self.change_state(STATE_MENU)
-        self.is_pumping = True
-        while self.is_pumping:
-            self.evman.Post(TickEvent())
+        self._change_state(STATE_MENU)
+        self._pumping = True
+        while self._pumping:
+            self._evman.Post(TickEvent())
 
         # wow that was easy, huh?
         # If you are confused as to where things go from here:
@@ -127,26 +175,33 @@ class MoonModel(object):
 
 #-- Model State Management -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    def change_state(self, new_state, swap_state=False):
+    def _change_state(self, new_state, swap_state=False):
         """
         Change the model state, and notify the other peeps about this.
 
         """
 
         if new_state:
+            # swap the current state for another
             if swap_state:
-                self.state.swap(new_state)
+                self._state.swap(new_state)
             else:
-                self.state.push(new_state)
-            self.evman.Post(StateEvent(new_state))
+                self._state.push(new_state)
+            self._evman.Post(StateEvent(new_state))
         else:
-            self.state.pop()
-            new_state = self.state.peek()
+            # remove the current state. If no states remain we quit.
+            self._state.pop()
+            new_state = self._state.peek()
             if new_state:
-                self.evman.Post(StateEvent(new_state))
+                self._evman.Post(StateEvent(new_state))
             else:
                 # there is nothing left to pump
-                self.evman.Post(QuitEvent())
+                self._evman.Post(QuitEvent())
+
+        ## TODO auto chain help screens for main game phases if this is a new game
+        #if new_state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3) and
+                        #self.player_level == 1:
+            #self._chain_event(StateEvent(STATE_HELP))
 
     def escape_state(self):
         """
@@ -154,27 +209,32 @@ class MoonModel(object):
 
         """
 
-        self.change_state(None)
+        self._change_state(None)
 
-    def new_game(self):
+    def new_or_continue(self):
         """
         Begins a new game or continue one in progress.
 
         """
 
-        if not self._puzzle_playfield:
-            # there is no game to continue
-            self._reset_scores()
-            self._puzzle_playfield = []
-            self.change_state(STATE_PHASE1)
-            #self._puzzle_drop_random_blocks(FLOTSAM)
-            ## TODO chain help event
-            #self._chain_event(StateEvent(STATE_HELP))
+        if not self.player:
+            # start a new game
+            self._reset_game()
+            self._change_state(STATE_PHASE1)
         else:
-            if self.state.peek() == self.player_phase:
-                self.change_state(None)
-            else:
-                self.change_state(self.player_phase)
+            # continue the game with the last known player phase
+            if self.state != self.player.phase:
+                self._change_state(self.player.phase)
+
+    def end_game(self):
+        """
+        Ends the current game.
+
+        """
+
+        # keep a copy of the last game player
+        self.previous_player = copy.copy(self.player)
+        self.player = None
 
     def _chain_event(self, next_event):
         """
@@ -183,7 +243,7 @@ class MoonModel(object):
         """
 
         self.paused = True
-        self.event_chain.insert(0, next_event)
+        self._event_chain.insert(0, next_event)
 
     def _unchain_events(self):
         """
@@ -191,22 +251,13 @@ class MoonModel(object):
 
         """
 
-        if self.event_chain:
-            event = self.event_chain.pop()
+        if self._event_chain:
+            event = self._event_chain.pop()
+            #TODO can we move this isinstance test to the notify() call?
             if isinstance(event, StateEvent):
-                self.change_state(event.state)
+                self._change_state(event.state)
             else:
-                self.evman.Post(event)
-
-    def _reset_scores(self):
-        """
-        Spam spam spam spam spam spam spam.
-        """
-
-        trace.write('reset player scores')
-        self.player_score = 0
-        self.player_level = 1
-        self.player_phase = STATE_PHASE1
+                self._evman.Post(event)
 
     def _next_phase(self):
         """
@@ -216,121 +267,131 @@ class MoonModel(object):
 
         if self.player_phase == STATE_PHASE1:
             self.player_phase = STATE_PHASE2
-            self.change_state(STATE_PHASE2, swap_state=True)
-            self._puzzle_drop_random_blocks(FLOTSAM)
+            self._change_state(STATE_PHASE2, swap_state=True)
         elif self.player_phase == STATE_PHASE2:
             self.player_phase = STATE_PHASE3
-            self.change_state(STATE_PHASE3, swap_state=True)
-            self._puzzle_drop_random_blocks(FLOTSAM)
+            self._change_state(STATE_PHASE3, swap_state=True)
         elif self.player_phase == STATE_PHASE3:
             self.player_level += 1
             self.player_phase = STATE_PHASE1
-            self.change_state(STATE_PHASE1, swap_state=True)
-        ## TODO chain help event
-        #if self.player_level == 1:
-            #self._chain_event(StateEvent(STATE_HELP))
+            self._change_state(STATE_PHASE1, swap_state=True)
+            # TODO post LevelUp event
 
-    def step_game(self):
+    def _reset_game(self):
         """
-        Step the game logic.
+        Ready all game objects for a new fun filled time.
 
         """
 
-        if self.paused:
-            return
-        state = self.state.peek()
-        if state in (STATE_PHASE1, STATE_PHASE2):
-            self._puzzle_step()
+        self.player = Player()
+        self._reset_puzzle()
+        # TODO reset puzzle board
+        # TODO reset arcade field
 
 #-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-    def _puzzle_spawn_player_piece(self, block_types=None):
+    def _puzzle_print_grid(self):
+        if trace.TRACE:
+            grid = []
+            # copy the board and place th player piece inside it
+            matrix = self._merge_board(
+                    self.player.board,
+                    self.player.puzzle_shape,
+                    self.player.puzzle_location
+                    )
+            for y, row in enumerate(matrix):
+                grid.append('\n')
+                for x, val in enumerate(row):
+                    if val:
+                        grid.append(str(val))
+                    else:
+                        grid.append('__')
+            trace.write(' '.join(grid))
+
+    def _reset_puzzle(self):
         """
-        Create a new pair of puzzle pieces and make them active
-        for player control.
-
-        """
-
-        # default block types
-        if not block_types:
-            if self.player_phase == STATE_PHASE1:
-                block_types = PHASE1_PIECES
-            elif self.player_phase == STATE_PHASE2:
-                block_types = PHASE2_PIECES
-            else:
-                trace.write('There are no puzzle pieces for phase %s' % (self.player_phase,))
-                return
-
-        # the player piece is a 2D matrix of the blocks in a shape
-        shapes = (
-                [[0, 1, 0],
-                 [1, 1, 1],
-                ],
-                [[1, 0],
-                 [1, 0],
-                 [1, 1],
-                ],
-                [[1, 1],
-                 [0, 1],
-                ],
-                [[1],
-                 [1],
-                 [1],
-                ],
-            )
-
-        new_shape = random.choice(shapes)
-        # start at top centered
-        start_x = (PUZZLE_WIDTH - len(new_shape[0])) / 2
-        start_y = 0
-        self._player_blocks_pos = (start_x, start_y)
-
-        # we index the matrix y then x as to translate the shape so it
-        # ends up appearing like drawn above
-        for y, row in enumerate(new_shape):
-            for x, value in enumerate(row):
-                if value:
-                    block = PuzzleBlock()
-                    block.x = start_x + x
-                    block.y = start_y + y
-                    block.block_type = random.choice(block_types)
-                    new_shape[y][x] = block
-                    self._puzzle_block_spawned_callback(block)
-
-        self._player_blocks = new_shape
-
-    def _puzzle_drop_random_blocks(self, block_types):
-        """
-        Drop an amount of random block types into the grid, as obstructions
-        to the player. These are fast fallers and are not controlled by the
-        player keys.
+        Reset the puzzle game.
 
         """
 
-        amount = 2
-        if self.player_level > 5:
-            amount = 3
-        if self.player_level > 10:
-            amount = 4
-        trace.write('adding %s random blocks to the puzzle grid' % (amount,))
+        # create a new puzzle board
+        self.player.board = [[0 for x in xrange(PUZZLE_WIDTH)]
+                                for y in xrange(PUZZLE_HEIGHT)]
 
-        for n in range(0, amount):
-            # find the first open starting position.
-            locs = range(0, PUZZLE_WIDTH)
-            random.shuffle(locs)
-            while len(locs) > 0:
-                x = locs.pop()
-                y = 0
-                if not self._puzzle_block_at(x, y):
-                    block = PuzzleBlock()
-                    block.block_type = random.choice(block_types)
-                    block.x = x
-                    block.y = y
-                    self._puzzle_playfield.append(block)
-                    self._puzzle_block_spawned_callback(block)
-                    break
+        # TODO add some random elements for higher levels
+
+        # choose a shape
+        self._puzzle_next_shape()
+
+    def _unshared_copy(self, inList):
+        """
+        Recursive copy list-of-lists.
+        Because deepcopy keeps list references and changing the result
+        also changes the original.
+
+        """
+
+        if isinstance(inList, list):
+            return list(map(self._unshared_copy, inList))
+        return inList
+
+    def _merge_board(self, board, shape, shape_location):
+        """
+        Merge the shape with the board at location and return the new board.
+        """
+        clone = self._unshared_copy(board)
+        x, y = shape_location
+        for cy, row in enumerate(shape):
+            for cx, val in enumerate(row):
+                # NOTE the y-component had a -1
+                # assuming since the origin code added an extra line
+                # of blocking values to detect collisions near the bottom
+                # of the playfield. so if something is fishy, this is it.
+                clone[cy + y - 0][cx + x] += val
+        return clone
+
+    def _puzzle_next_shape(self):
+        """
+        Set the player puzzle shape.
+
+        """
+
+        # list of available piece types for the current phase
+        piece_types = self._puzzle_allowed_block_types(include_flotsam=True)
+        if not piece_types:
+            trace.write('state %s does not have puzzle shapes to choose from' % (state,))
+            return
+
+        # choose a shape and center it
+        new_shape = random.choice(TETRIS_SHAPES)
+        self.player.puzzle_shape = new_shape
+        self.player.puzzle_location = [int(PUZZLE_WIDTH / 2 - len(new_shape[0])/2), 0]
+
+        # replace each shape element with a game piece
+        for cy, row in enumerate(new_shape):
+            for cx, val in enumerate(row):
+                if val:
+                    new_shape[cy][cx] = random.choice(piece_types)
+
+    def _puzzle_allowed_block_types(self, include_flotsam=True):
+        """
+        Give the list of possible block types for the current player phase.
+
+        """
+
+        if self.player.phase == STATE_PHASE1:
+            return PHASE1_PIECES + FLOTSAM if include_flotsam else []
+        if self.player.phase == STATE_PHASE2:
+            return PHASE2_PIECES + FLOTSAM if include_flotsam else []
+
+        trace.write('There are no puzzle pieces for phase %s' % (self.player_phase,))
 
     def _puzzle_in_bounds(self, x, y):
+        """
+        Checks if a point is in playfield boundaries.
+
+        """
+
         return (x >= 0 and x < PUZZLE_WIDTH and y >= 0 and y < PUZZLE_HEIGHT)
 
     def _puzzle_step(self):
@@ -339,222 +400,116 @@ class MoonModel(object):
 
         """
 
-        # auto move playfield blocks from the bottom up, so chain reaction falling
-        # can happend
-        for y in reversed(range(0, PUZZLE_HEIGHT)):
-            for x in reversed(range(0, PUZZLE_HEIGHT)):
-                block = self._puzzle_block_at(x, y)
-                if block:
-                    new_y = block.y + 1
-                    if self._puzzle_in_bounds(block.x, new_y):
-                        collider = self._puzzle_block_at(x, new_y)
-                        if collider:
-                            # do type checking
-                            pass
-                        else:
-                            self._puzzle_update_block_position(block, block.x, new_y)
+        self._puzzle_drop_piece()
+        self._puzzle_print_grid()
 
-        self._puzzle_move_player_pieces(0, 1)
-
-        trace.write(self._puzzle_print_grid())
-
-    def _puzzle_move_player_pieces(self, x_offset, y_offset):
+    def _puzzle_drop_piece(self):
         """
-        Move player controlled pieces as a whole.
+        Drop the player puzzle piece.
 
         """
 
-        if not self._player_blocks:
-            return
-        add_to_playfield = False
-        valid_move = True
-        # TODO replace all this with _puzzle_shape_valid()
-        # keep the add_to_playfield bit on down movement.
-        # also use self._player_blocks_pos to set new position and
-        # some call to update the blocks to match.
-        for row in self._player_blocks:
-            for block in row:
-                if block:
-                    new_x = block.x + x_offset
-                    new_y = block.y + y_offset
-                    if not self._puzzle_in_bounds(new_x, new_y):
-                        valid_move = False
-                        if (x_offset, y_offset) == (0, 1):
-                            # hit the bottom
-                            add_to_playfield = True
-                    else:
-                        collider = self._puzzle_block_at(new_x, new_y)
-                        if collider:
-                            # is moving downwards
-                            if (x_offset, y_offset) == (0, 1):
-                                # hit something at the bottom
-                                add_to_playfield = True
-                            else:
-                                # just a sideways collision
-                                valid_move = False
+        new_loc = self.player.puzzle_location[:]
+        new_loc[1] += 1
 
-        if valid_move and not add_to_playfield:
-            for row in self._player_blocks:
-                for block in row:
-                    if block:
-                        self._puzzle_update_block_position(block, block.x + x_offset, block.y + y_offset)
+        collides = self._puzzle_piece_collides(
+            self.player.board,
+            self.player.puzzle_shape,
+            new_loc
+            )
 
-        if add_to_playfield:
-            for row in self._player_blocks:
-                for block in row:
-                    if block:
-                        self._puzzle_playfield.append(block)
-            self._player_blocks = None
+        if collides:
 
-    def _puzzle_print_grid(self):
-        grid = []
-        for y in range(0, PUZZLE_HEIGHT):
-            grid.append('\n')
-            for x in range(0, PUZZLE_HEIGHT):
-                block = self._puzzle_block_at(x, y)
-                if block:
-                    grid.append(str(block.block_type))
-                else:
-                    grid.append('_')
-        return ' '.join(grid)
+            # merge the shape into the board
+            self.player.board = self._merge_board(
+                self.player.board,
+                self.player.puzzle_shape,
+                self.player.puzzle_location)
 
-    def _puzzle_shape_valid(self, shape):
+            # give the player a new shape to play with
+            self._puzzle_next_shape()
+
+            # TODO check the type of blocks around us to determined
+            # if any of them can combine.
+
+        else:
+            # no collisions, keep the new drop location
+            self.player.puzzle_location = new_loc
+
+    def _puzzle_piece_collides(self, board, shape, offset):
         """
-        Tests if the given piece array is in bounds and does not collide
-        with any playfield blocks.
+        Test if the given shape collides with any solids on the board.
 
         """
 
-        valid_move = True
-        first_block = None
-        for y, row in enumerate(shape):
-            for x, block in enumerate(row):
-                if block:
-                    if not first_block:
-                        first_block = block
-                    new_x = first_block.x + x
-                    new_y = first_block.y + y
-                    if not self._puzzle_in_bounds(new_x, new_y):
-                        valid_move = False
-                    collider = self._puzzle_block_at(new_x, new_y)
-                    if collider:
-                        valid_move = False
-        return valid_move
-
-    def _puzzle_apply_shape(self, shape):
-        """
-        Apply a new shape, transforming the positions of the blocks to suit.
-
-        """
-
-        # TODO only way I see to do this is to persist the previous block id
-        # so we can make copies of blocks to test against new positions
-        # and use those blocks if valid.
-        # OR
-        # reference the first block found in our shape and use that as a reference
-        # to the other blocks. i.e. it becomes our shape top-left.
-        self._player_blocks = shape
-        for y, row in enumerate(shape):
-            for x, block in enumerate(row):
-                if block:
-                    self._puzzle_update_block_position(block, self._player_blocks_pos[0] + x, self._player_blocks_pos[1] + y)
-
-    def _puzzle_update_block_position(self, block, x, y):
-        """
-        Use this to set a block's XY.
-        It updates the puzzle grid and the block together.
-
-        """
-
-        block.x = x
-        block.y = y
-        self._puzzle_block_moved_callback(block)
+        x, y = offset
+        for cy, row in enumerate(shape):
+            for cx, cell in enumerate(row):
+                try:
+                    if cell and board[cy + y][cx + x]:
+                        return True
+                except IndexError:
+                    return True
+        return False
 
     def puzzle_rotate_cw(self):
         """
-        Rotate the active puzzle pieces clockwise.
-
-        Rotate by +90:
-        * Transpose
-        * Reverse each row
+        Rotate the puzzle piece clock wise.
 
         """
 
-        if not self._player_blocks:
+        if self.paused:
             return
-        new_shape = list(self._player_blocks)
-        # transpose
-        new_shape.reverse()
-        # reverse each row
-        for row in new_shape:
-            row.reverse()
-        # accepted rotation
-        if self._puzzle_shape_valid(new_shape):
-            trace.write('new shape is valid')
-            self._puzzle_apply_shape(new_shape)
+        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
+            pass
 
     def puzzle_rotate_ccw(self):
         """
-        Rotate the active puzzle pieces clockwise.
-
-        Rotate by -90:
-        * Transpose
-        * Reverse each column
-
-        """
-        pass
-
-    def puzzle_move_left(self):
-        """
-        Move the active puzzle piece left.
+        Rotate the puzzle piece counter clock wise.
 
         """
 
-        self._puzzle_move_player_pieces(-1, 0)
+        if self.paused:
+            return
+        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
+            pass
 
-    def puzzle_move_right(self):
+    def move_left(self):
         """
-        Move the active puzzle piece left.
-
-        """
-
-        self._puzzle_move_player_pieces(1, 0)
-
-    def _puzzle_block_spawned_callback(self, block):
-        """
-        An interface to link block actions with system events.
+        Move the puzzle piece left.
 
         """
 
-        trace.write('block %s was spawned' % (block.id,))
-        self.evman.Post(PuzzleBlockSpawnedEvent(block))
+        if self.paused:
+            return
+        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
+            pass
 
-    def _puzzle_block_moved_callback(self, block):
+    def move_right(self):
         """
-        An interface to link block actions with system events.
-
-        """
-
-        #trace.write('block %s was moved %s' % (block.id, (block.x, block.y)))
-        self.evman.Post(PuzzleBlockMovedEvent(block))
-
-    def _puzzle_block_removed_callback(self, block):
-        """
-        An interface to link block actions with system events.
+        Move the puzzle piece left.
 
         """
 
-        trace.write('block %s was removed' % (block.id,))
-        pass
+        if self.paused:
+            return
+        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
+            pass
 
-    def _puzzle_grid_full_callback(self):
+    def move_down(self):
         """
-        An interface to link block actions with system events.
+        Move the puzzle piece down.
 
         """
 
-        trace.write('The puzzle grid is full. Spam spam spam.')
-        pass
+        if self.paused:
+            return
+        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
+            pass
+
+## Events to be implemented
+        #self._evman.Post(PuzzleBlockSpawnedEvent(block))
+        #self._evman.Post(PuzzleBlockMovedEvent(block))
 
 
 

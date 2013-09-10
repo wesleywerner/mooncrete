@@ -166,7 +166,7 @@ class MoonView(object):
             # but only if we have been set up :0
             return
 
-        state = self.model.state.peek()
+        state = self.model.state
         self.image.fill((0, 128, 0))
 
         if state == STATE_MENU:
