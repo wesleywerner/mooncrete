@@ -235,6 +235,7 @@ class MoonModel(object):
         # keep a copy of the last game player
         self.previous_player = copy.copy(self.player)
         self.player = None
+        self._change_state(STATE_LOSE, swap_state=True)
 
     def _chain_event(self, next_event):
         """
@@ -272,10 +273,12 @@ class MoonModel(object):
             self.player_phase = STATE_PHASE3
             self._change_state(STATE_PHASE3, swap_state=True)
         elif self.player_phase == STATE_PHASE3:
+            self.player.phase == STATE_LEVELDONE
+            self._change_state(STATE_LEVELDONE, swap_state=True)
+        elif self.player_phase == STATE_LEVELDONE:
             self.player_level += 1
             self.player_phase = STATE_PHASE1
             self._change_state(STATE_PHASE1, swap_state=True)
-            # TODO post LevelUp event
 
     def _reset_game(self):
         """
@@ -291,7 +294,7 @@ class MoonModel(object):
 #-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     def _puzzle_print_grid(self):
-        if trace.TRACE:
+        if trace.TRACE and self.player:
             grid = []
             # copy the board and place th player piece inside it
             matrix = self._merge_board(
@@ -372,6 +375,15 @@ class MoonModel(object):
             for cx, val in enumerate(row):
                 if val:
                     new_shape[cy][cx] = random.choice(piece_types)
+
+        # game over if this new piece collides on entry
+        collides = self._puzzle_piece_collides(
+            self.player.board,
+            self.player.puzzle_shape,
+            self.player.puzzle_location
+            )
+        if collides:
+            self.end_game()
 
     def _puzzle_allowed_block_types(self, include_flotsam=True):
         """

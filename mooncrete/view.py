@@ -183,7 +183,7 @@ class MoonView(object):
         elif state == STATE_LOSE:
             pass
 
-        elif state == STATE_WIN:
+        elif state == STATE_LEVELDONE:
             pass
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
