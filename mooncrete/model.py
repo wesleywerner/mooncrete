@@ -317,6 +317,25 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
+    def puzzle_board_data(self):
+        """
+        Yields the puzzle board data in the form:
+
+            (x, y, value)
+
+        Where value is one of the BLOCK_ constants.
+
+        This can easily be iterated with something like:
+
+            for x, y, v in this_function():
+
+        """
+
+        merged = self._merge_board(self.board, self.puzzle_shape, self.puzzle_location)
+        for y, row in enumerate(merged):
+            for x, cell in enumerate(row):
+                yield (x, y, cell)
+
     def _reset_puzzle(self):
         """
         Reset the puzzle game.
