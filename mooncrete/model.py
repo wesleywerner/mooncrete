@@ -472,7 +472,7 @@ class MoonModel(object):
 
         if self.paused:
             return
-        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
+        if self.state in (STATE_PHASE1, STATE_PHASE2):
             pass
 
     def puzzle_rotate_ccw(self):
@@ -483,8 +483,29 @@ class MoonModel(object):
 
         if self.paused:
             return
-        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
+        if self.state in (STATE_PHASE1, STATE_PHASE2):
             pass
+
+    def _puzzle_move_piece(self, delta_x):
+        """
+        Move the player puzzle piece in a horizontal space.
+
+        """
+
+        x, y = self.player.puzzle_location[:]
+        x += delta_x
+        if x < 0:
+            x = 0
+
+        collides = self._puzzle_piece_collides(
+            self.player.board,
+            self.player.puzzle_shape,
+            [x, y]
+            )
+
+        if not collides:
+            # no collisions, keep the new drop location
+            self.player.puzzle_location = [x, y]
 
     def move_left(self):
         """
@@ -492,10 +513,10 @@ class MoonModel(object):
 
         """
 
-        if self.paused:
+        if self.paused or not self.player:
             return
-        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
-            pass
+        if self.state in (STATE_PHASE1, STATE_PHASE2):
+            self._puzzle_move_piece(-1)
 
     def move_right(self):
         """
@@ -505,8 +526,8 @@ class MoonModel(object):
 
         if self.paused:
             return
-        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
-            pass
+        if self.state in (STATE_PHASE1, STATE_PHASE2):
+            self._puzzle_move_piece(1)
 
     def move_down(self):
         """
@@ -516,8 +537,8 @@ class MoonModel(object):
 
         if self.paused:
             return
-        if self._state.peek() in (STATE_PHASE1, STATE_PHASE2):
-            pass
+        if self.state in (STATE_PHASE1, STATE_PHASE2):
+            self._puzzle_drop_piece()
 
 ## Events to be implemented
         #self._evman.Post(PuzzleBlockSpawnedEvent(block))
