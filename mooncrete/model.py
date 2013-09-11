@@ -508,6 +508,21 @@ class MoonModel(object):
             self.player.puzzle_location = [x, y]
             self._puzzle_print_grid()
 
+    def rotate_puzzle(self):
+
+        new_shape = self._unshared_copy(self.player.puzzle_shape)
+        new_shape = [[new_shape[y][x]
+                    for y in xrange(len(new_shape))]
+                    for x in xrange(len(new_shape[0]) - 1, -1, -1)]
+        collides = self._puzzle_piece_collides(
+            self.player.board,
+            new_shape,
+            self.player.puzzle_location
+            )
+        if not collides:
+            self.player.puzzle_shape = new_shape
+            self._puzzle_print_grid()
+
     def move_left(self):
         """
         Move the puzzle piece left.
