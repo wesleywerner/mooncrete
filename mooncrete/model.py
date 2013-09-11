@@ -413,7 +413,6 @@ class MoonModel(object):
         """
 
         self._puzzle_drop_piece()
-        self._puzzle_print_grid()
 
     def _puzzle_drop_piece(self):
         """
@@ -447,6 +446,7 @@ class MoonModel(object):
         else:
             # no collisions, keep the new drop location
             self.player.puzzle_location = new_loc
+            self._puzzle_print_grid()
 
     def _puzzle_piece_collides(self, board, shape, offset):
         """
@@ -506,6 +506,7 @@ class MoonModel(object):
         if not collides:
             # no collisions, keep the new drop location
             self.player.puzzle_location = [x, y]
+            self._puzzle_print_grid()
 
     def move_left(self):
         """

@@ -29,7 +29,7 @@ class MoonController(object):
         self.evman.RegisterListener(self)
         self.model = model
         self.view = view
-        self.model_update_delay = 300
+        self.model_update_delay = 1000
         self.last_model_update = 0
 
     def can_step_model(self):
@@ -83,24 +83,36 @@ class MoonController(object):
                         self.model.escape_state()
 
     def menu_keys(self, event):
+
         if event.key == K_ESCAPE:
             self.model.escape_state()
+
         elif event.key == K_SPACE:
             self.model.new_or_continue()
 
     def puzzle_keys(self, event):
+
         if event.key == K_ESCAPE:
             self.model.escape_state()
+
         elif event.key in (K_x,):
             self.model.puzzle_rotate_cw()
+
         elif event.key in (K_z,):
             self.model.puzzle_rotate_ccw()
+
         elif event.key in (K_a, K_LEFT):
             self.model.move_left()
+
         elif event.key in (K_a, K_RIGHT):
             self.model.move_right()
+
+        elif event.key in (K_DOWN,):
+            self.model.move_down()
+
         elif event.key == K_F2:
             self.model._next_phase()
+
         elif event.key == K_F3:
             self.model._puzzle_spawn_player_piece()
 
