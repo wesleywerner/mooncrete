@@ -208,10 +208,18 @@ class MoonView(object):
         return (position[0] * PUZZLE_BLOCK_SIZE, position[1] * PUZZLE_BLOCK_SIZE)
 
     def draw_puzzle_blocks(self):
-        puzzle_image = self.panels['puzzle']
-        puzzle_image.image.fill(color.black)
-        for key, sprite in self.puzzle_sprites.items():
-            sprite.draw(puzzle_image.image)
+        pan = self.panels['puzzle']
+        pan.image.fill(color.black)
+        for x, y, v in self.model.puzzle_board_data():
+            if v:
+                rect = pygame.Rect(
+                    x * PUZZLE_BLOCK_SIZE,
+                    y * PUZZLE_BLOCK_SIZE,
+                    PUZZLE_BLOCK_SIZE,
+                    PUZZLE_BLOCK_SIZE
+                    )
+                block_color = (128, (v*10), 128)
+                pygame.draw.rect(pan.image, block_color, rect)
 
     def create_puzzle_sprite(self, block):
         sprite = PuzzleBlockSprite()
