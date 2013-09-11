@@ -96,7 +96,10 @@ class MoonController(object):
             self.model.escape_state()
 
         elif event.key in (K_x,):
-            self.model.rotate_puzzle()
+            self.model.rotate_puzzle(clockwise=True)
+
+        elif event.key in (K_z,):
+            self.model.rotate_puzzle(clockwise=False)
 
         elif event.key in (K_a, K_LEFT):
             self.model.move_left()
