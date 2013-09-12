@@ -300,7 +300,6 @@ class MoonModel(object):
 
         self.player = Player()
         self._reset_puzzle()
-        # TODO reset puzzle board
         # TODO reset arcade field
 
 #-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
