@@ -137,13 +137,17 @@ class MoonView(object):
         """
 
         score_panel = Panel((300, 600), self.game_area)
+        # the score panel is visible at the top-left of the screen
         score_panel.show_position = (0, 0)
+        # and it hides to the left
         score_panel.hide_position = (-300, 0)
         score_panel.hide(instant=True)
         self.panels['score'] = score_panel
 
-        puzzle_panel = Panel((500, 500), self.game_area)
-        puzzle_panel.show_position = (self.game_area.width - 500, 0)
+        puzzle_panel = Panel(PUZZLE_CANVAS_SIZE, self.game_area)
+        # puzle grid is visible at the top-left of the screen
+        puzzle_panel.show_position = (self.game_area.width - PUZZLE_CANVAS_SIZE[0], 0)
+        # and it hides to the right, off-screen
         puzzle_panel.hide_position = (self.game_area.width, 0)
         puzzle_panel.hide(instant=True)
         self.panels['puzzle'] = puzzle_panel
