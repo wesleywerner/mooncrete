@@ -89,24 +89,3 @@ class StepGameEvent(Event):
     def __init__(self):
         self.name = 'Step game event'
 
-
-class PuzzleBlockSpawnedEvent(Event):
-
-    def __init__(self, block):
-        self.name = 'Puzzle block spawned event'
-        self.block = block
-
-    def __str__(self):
-        return ('spawned block type %s (id %s)' %
-                (self.block.block_type, self.block.id))
-
-
-class PuzzleBlockMovedEvent(Event):
-
-    def __init__(self, block):
-        self.name = 'Puzzle block moved event'
-        self.block = block
-
-    def __str__(self):
-        return ('moved block %s to %s' %
-                (self.block.id, (self.block.x, self.block.y)))
