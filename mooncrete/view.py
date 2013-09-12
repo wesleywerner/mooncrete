@@ -24,10 +24,39 @@ from statemachine import *
 from eventmanager import *
 
 
+# Limit drawing to this many frames per second.
 FPS = 30
-PUZZLE_CANVAS_SIZE = (500, 500)
-PUZZLE_BLOCK_SIZE = (PUZZLE_CANVAS_SIZE[0] / model.PUZZLE_WIDTH,
-                     PUZZLE_CANVAS_SIZE[1] / model.PUZZLE_WIDTH)
+
+# The region on the screen where all our drawing happens.
+# This is our window size, or resolution in full-screen.
+DRAW_AREA = pygame.Rect(0, 0, 800, 600)
+
+# The region where puzzle gameplay happens
+PUZZLE_AREA = pygame.Rect(0, 0, 500, 500)
+
+# The region where arcade gameplay happens
+ARCADE_AREA = DRAW_AREA.copy()
+
+# The size to draw each puzzle block.
+PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
+                     PUZZLE_AREA.height / model.PUZZLE_WIDTH)
+
+# The gameplay layout has two types: Puzzle and Arcade.
+# The whole of it is defined as DRAW_AREA.
+#
+# Puzzle:
+#   The PUZZLE_AREA (A) is fixed and the score box (B) is resized to fit.
+#   The mini moonscape view (C) is also resized to fit.
+#
+#
+#   +-------+-------------+
+#   |       | PUZZLE_AREA |
+#   | score |             |
+#   | box   |      A      |
+#   |       |             |
+#   |   B   +-------------+
+#   |       | mini view C |
+#   +-------+-------------+
 
 
 class MoonView(object):
@@ -90,8 +119,6 @@ class MoonView(object):
         """
 
         self.isinitialized = False
-        # our coded game size
-        self.game_area = pygame.Rect(0, 0, 800, 600)
         # destroy existing screens
         if self.screen:
             pygame.display.quit()
@@ -103,7 +130,7 @@ class MoonView(object):
         # TODO custom cursor
         pygame.mouse.set_visible(True)
         # switch the target resolution based on fullscreen mode
-        target_size = self.game_area.size
+        target_size = DRAW_AREA.size
         flags = 0
         if self.fullscreen:
             # use native monitor resolution
@@ -113,12 +140,12 @@ class MoonView(object):
         # TODO calculate the native res to game_area height ratio
         #       and store it for scaling the render later.
         # center the game area within the monitor
-        self.game_area.topleft = (
-            (self.screen.get_width() - self.game_area.width) / 2,
-             (self.screen.get_height() - self.game_area.height) / 2,)
+        DRAW_AREA.topleft = (
+            (self.screen.get_width() - DRAW_AREA.width) / 2,
+             (self.screen.get_height() - DRAW_AREA.height) / 2,)
 
         # load resources
-        self.image = pygame.Surface(self.game_area.size)
+        self.image = pygame.Surface(DRAW_AREA.size)
 
         # we are done
         self.isinitialized = True
@@ -136,7 +163,8 @@ class MoonView(object):
 
         """
 
-        score_panel = Panel((300, 600), self.game_area)
+        score_box_width = DRAW_AREA.width - PUZZLE_AREA.width
+        score_panel = Panel((300, 600), DRAW_AREA)
         # the score panel is visible at the top-left of the screen
         score_panel.show_position = (0, 0)
         # and it hides to the left
@@ -144,11 +172,11 @@ class MoonView(object):
         score_panel.hide(instant=True)
         self.panels['score'] = score_panel
 
-        puzzle_panel = Panel(PUZZLE_CANVAS_SIZE, self.game_area)
+        puzzle_panel = Panel(PUZZLE_AREA.size, DRAW_AREA)
         # puzle grid is visible at the top-left of the screen
-        puzzle_panel.show_position = (self.game_area.width - PUZZLE_CANVAS_SIZE[0], 0)
+        puzzle_panel.show_position = (DRAW_AREA.width - PUZZLE_AREA.width, 0)
         # and it hides to the right, off-screen
-        puzzle_panel.hide_position = (self.game_area.width, 0)
+        puzzle_panel.hide_position = (DRAW_AREA.width, 0)
         puzzle_panel.hide(instant=True)
         self.panels['puzzle'] = puzzle_panel
 
@@ -202,7 +230,7 @@ class MoonView(object):
         pix = self.smallfont.render('hello, world!', False, color.white, color.magenta)
         pix.set_colorkey(color.magenta)
         self.image.blit(pix, (15, 15))
-        self.screen.blit(self.image, self.game_area)
+        self.screen.blit(self.image, DRAW_AREA)
         pygame.display.flip()
 
     def translate_view_coords(self, position):
