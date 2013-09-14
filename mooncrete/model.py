@@ -606,17 +606,17 @@ class MoonModel(object):
                     yneigh = self._puzzle_block_at(x, y + 1)
                     # match blocks if they are not the same value
                     # and both exist in the combination list
-                    if xneigh != this_block and xneigh in combo:
-                        self._puzzle_clear_cell(x, y)
-                        self._puzzle_clear_cell(x + 1, y)
-                        self._arcade_spawn_tile(new_block)
-                        # skip the bottom neighbor test and
-                        # continue with the next board item
-                        continue
                     # match the bottom neighbor
                     if yneigh != this_block and yneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(x, y + 1)
+                        self._arcade_spawn_tile(new_block)
+                        # skip the next test and
+                        # continue with the next board item
+                        continue
+                    if xneigh != this_block and xneigh in combo:
+                        self._puzzle_clear_cell(x, y)
+                        self._puzzle_clear_cell(x + 1, y)
                         self._arcade_spawn_tile(new_block)
 
     def _puzzle_block_at(self, x, y):
