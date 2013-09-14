@@ -286,6 +286,9 @@ class Panel(object):
         self.busy = False
         # the boundary where we are allowed to draw.
         self._boundary = boundary
+        # the size to scale to on render. None means no scale.
+        self._target_size = None
+        self._current_size = size
 
     @property
     def show_position(self):
@@ -327,6 +330,17 @@ class Panel(object):
         else:
             return self._hide_position
 
+    def scale(self, size, instant=False):
+        """
+        Set a new target (w, h) size.
+        The panel will step towards this size (unless instant is True).
+
+        """
+
+        self._target_size = size
+        if instant and size:
+            self._current_size = size
+
     def show(self, instant=False):
         self.showing = True
         if instant:
@@ -353,6 +367,24 @@ class Panel(object):
         else:
             self.busy = False
 
+    def rescale(self):
+        """
+        Update our scale size to match the target scale.
+
+        """
+
+        # if there is a scaled size set, and it does not match our current size
+        if (self._target_size and (self._target_size != self._current_size)):
+            # get the delta between the two and resize our current size
+            # with a fraction of the delta
+            w, h = self._current_size
+            w_diff = self._target_size[0] - w
+            h_diff = self._target_size[1] - h
+            self._current_size = (w + w_diff // 5, h + h_diff // 5)
+            # if the deltas get close enough to a minimum we turn off scaling
+            if (abs(w_diff) < 5) and (abs(h_diff) < 5):
+                self._current_size = self._target_size
+
     def draw(self, target):
         """
         Draw us on the target surface.
@@ -360,10 +392,15 @@ class Panel(object):
 
         """
 
+        self.rescale()
         self.move()
+        # only draw us if we are inside the image boundary
         if self.rect.colliderect(self._boundary):
-            # only draw us if we are inside the image boundary
-            target.blit(self.image, self.rect)
+            if self._target_size:
+                resized = pygame.transform.scale(self.image, self._current_size)
+                target.blit(resized, self.rect)
+            else:
+                target.blit(self.image, self.rect)
         return self.busy
 
 
