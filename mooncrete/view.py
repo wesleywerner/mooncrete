@@ -246,7 +246,11 @@ class MoonView(object):
                     (x * PUZZLE_BLOCK_SIZE[0], y * PUZZLE_BLOCK_SIZE[1]),
                     PUZZLE_BLOCK_SIZE
                     )
-                block_color = (128, (v*10), 128)
+                block_color = (128, 128, 128)
+                if v == model.BLOCK_CALCIUM_BARREL:
+                    block_color = (0, 128, 0)
+                if v == model.BLOCK_WATER_BARREL:
+                    block_color = (0, 0, 128)
                 pygame.draw.rect(pan.image, block_color, rect)
 
 
