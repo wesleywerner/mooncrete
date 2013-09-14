@@ -37,6 +37,8 @@ PUZZLE_AREA = pygame.Rect(0, 0, 500, 500)
 # The region where arcade gameplay happens
 ARCADE_AREA = DRAW_AREA.copy()
 
+#
+
 # The size to draw each puzzle block.
 PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
                      PUZZLE_AREA.height / model.PUZZLE_WIDTH)
@@ -50,13 +52,28 @@ PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
 #
 #
 #   +-------+-------------+
-#   |       | PUZZLE_AREA |
-#   | score |             |
-#   | box   |      A      |
+#   |       |             |
+#   | score | puzzle area |
+#   |  box  |      A      |
 #   |       |             |
 #   |   B   +-------------+
 #   |       | mini view C |
 #   +-------+-------------+
+#
+# Arcade:
+#   The ARCADE mode takes the moonscape panel C and scales it to fit
+#   horizontally into the screen.
+#
+#   +---------------------+
+#   |                     |
+#   |          C          |
+#   |     arcade view     |
+#   |                     |
+#   |       ^ ^ ^ ^ ^ ^ ^ |
+#   |      <              |
+#   +---------------------+
+#
+
 
 
 class MoonView(object):
