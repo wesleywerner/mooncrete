@@ -541,7 +541,6 @@ class MoonModel(object):
         if collides:
 
             # merge the shape into the board
-            trace.write('merging shape with board')
             self.board = self._merge_board(
                 self.board,
                 self.puzzle_shape,
@@ -549,9 +548,6 @@ class MoonModel(object):
 
             # give the player a new shape to play with
             self._puzzle_next_shape()
-
-            # TODO check the type of blocks around us to determined
-            # if any of them can combine.
 
         else:
             # no collisions, keep the new drop location
