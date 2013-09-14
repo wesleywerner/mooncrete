@@ -250,7 +250,15 @@ class MoonView(object):
                 if v == model.BLOCK_CALCIUM_BARREL:
                     block_color = (0, 128, 0)
                 if v == model.BLOCK_WATER_BARREL:
+                    block_color = (0, 64, 0)
+                if v == model.BLOCK_RADAR_BITS:
+                    block_color = (128, 0, 0)
+                if v == model.BLOCK_RADAR_DISH:
+                    block_color = (64, 0, 0)
+                if v == model.BLOCK_TURRET_AMMO:
                     block_color = (0, 0, 128)
+                if v == model.BLOCK_TURRET_BASE:
+                    block_color = (0, 0, 64)
                 pygame.draw.rect(pan.image, block_color, rect)
 
 

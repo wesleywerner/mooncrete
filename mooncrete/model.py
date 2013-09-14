@@ -136,6 +136,13 @@ BLOCK_PAIRS = {
         (BLOCK_TURRET_AMMO, BLOCK_TURRET_BASE),
     }
 
+# can only place blocks on top of other specific block
+BLOCK_BASES = {
+    BLOCK_MOONCRETE_SLAB: BLOCK_MOONROCKS,
+    BLOCK_RADAR: BLOCK_MOONCRETE_SLAB,
+    BLOCK_TURRET: BLOCK_MOONCRETE_SLAB,
+    }
+
 # percentage of jutting moonscape features
 MOONSCAPE_RUGGEDNESS = 0.3
 
@@ -794,6 +801,12 @@ class MoonModel(object):
         # 3. place the tile on the moonscape
         # 4. fire an event with the tile details.
 
+        # get the required base block we can place this block on
+        required_base = BLOCK_BASES.get(block_type, None)
+        if not required_base:
+            trace.write('Warning: block %s does not have a BLOCK_BASES entry.' %
+                        (block_type,))
+
         found_home = False
         for tries in xrange(0, ARCADE_WIDTH):
             if found_home:
@@ -801,7 +814,7 @@ class MoonModel(object):
             x = random.randint(0, ARCADE_WIDTH - 1)
             for y in xrange(0, ARCADE_HEIGHT):
                 base = self._arcade_block_at(x, y + 1)
-                if base == BLOCK_MOONROCKS:
+                if base == required_base:
                     found_home = True
                     self._arcade_field[y][x] = block_type
                     spawn_event = ArcadeBlockSpawnedEvent(
