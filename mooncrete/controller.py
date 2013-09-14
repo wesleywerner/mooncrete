@@ -76,6 +76,8 @@ class MoonController(object):
                         self.puzzle_keys(event)
                     elif state == STATE_PHASE3:
                         self.arcade_keys(event)
+                    elif state == STATE_LEVELDONE:
+                        self.level_done_keys(event)
                     elif state == STATE_HELP:
                         self.help_keys(event)
                     else:
@@ -122,6 +124,14 @@ class MoonController(object):
             self.model.escape_state()
 
         elif event.key == K_F2:
+            self.model._next_phase()
+
+    def level_done_keys(self, event):
+
+        if event.key == K_ESCAPE:
+            self.model.escape_state()
+
+        elif event.key == K_SPACE:
             self.model._next_phase()
 
     def help_keys(self, event):
