@@ -194,8 +194,6 @@ class Player(object):
     def __init__(self):
         self.score = 0
         self.level = 1
-        # current player phase.
-        self.phase = STATE_PHASE1
 
 
 class MoonModel(object):
@@ -240,6 +238,9 @@ class MoonModel(object):
 
         # stores the arcade field
         self.arcade_field = None
+
+        # track the last phase the game was in for continuing games from the menu
+        self._last_phase = STATE_MENU
 
     @property
     def state(self):
@@ -304,6 +305,9 @@ class MoonModel(object):
         """
 
         if new_state:
+            # remember the last game phase
+            if new_state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3):
+                self._last_phase = new_state
             # swap the current state for another
             if swap_state:
                 self._state.swap(new_state)
@@ -341,12 +345,12 @@ class MoonModel(object):
 
         if not self.player:
             # start a new game
-            self._reset_game()
             self._change_state(STATE_PHASE1)
+            self._reset_game()
         else:
             # continue the game with the last known player phase
-            if self.state != self.player.phase:
-                self._change_state(self.player.phase)
+            if self.state != self._last_phase:
+                self._change_state(self._last_phase)
 
     def end_game(self):
         """
@@ -388,19 +392,14 @@ class MoonModel(object):
 
         """
 
-        this_phase = self.player.phase
-        if this_phase == STATE_PHASE1:
-            self.player.phase = STATE_PHASE2
+        if self.state == STATE_PHASE1:
             self._change_state(STATE_PHASE2, swap_state=True)
-        elif this_phase == STATE_PHASE2:
-            self.player.phase = STATE_PHASE3
+        elif self.state == STATE_PHASE2:
             self._change_state(STATE_PHASE3, swap_state=True)
-        elif this_phase == STATE_PHASE3:
-            self.player.phase == STATE_LEVELDONE
+        elif self.state == STATE_PHASE3:
             self._change_state(STATE_LEVELDONE, swap_state=True)
-        elif this_phase == STATE_LEVELDONE:
+        elif self.state == STATE_LEVELDONE:
             self.player.level += 1
-            self.player.phase = STATE_PHASE1
             self._change_state(STATE_PHASE1, swap_state=True)
 
     def _reset_game(self):
@@ -536,10 +535,12 @@ class MoonModel(object):
 
         """
 
-        pieces = include_flotsam and list(FLOTSAM) or []
-        if self.player.phase == STATE_PHASE1:
+        pieces = []
+        if include_flotsam:
+            pieces = list(FLOTSAM)
+        if self.state == STATE_PHASE1:
             pieces = pieces + list(PHASE1_PIECES)
-        if self.player.phase == STATE_PHASE2:
+        if self.state == STATE_PHASE2:
             pieces = pieces + list(PHASE2_PIECES)
         return pieces
 
