@@ -396,7 +396,7 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
-    def puzzle_board_data(self):
+    def puzzle_board_data(self, include_player_shape=True):
         """
         Yields the puzzle board data in the form:
 
@@ -410,8 +410,12 @@ class MoonModel(object):
 
         """
 
-        merged = self._merge_board(self.board, self.puzzle_shape, self.puzzle_location)
-        for y, row in enumerate(merged):
+        if include_player_shape:
+            grid = self._merge_board(
+                        self.board, self.puzzle_shape, self.puzzle_location)
+        else:
+            grid = self.board
+        for y, row in enumerate(grid):
             for x, cell in enumerate(row):
                 yield (x, y, cell)
 
@@ -517,6 +521,7 @@ class MoonModel(object):
         """
 
         self._puzzle_drop_piece()
+        self._puzzle_pair_blocks()
 
     def _puzzle_drop_piece(self):
         """
@@ -536,6 +541,7 @@ class MoonModel(object):
         if collides:
 
             # merge the shape into the board
+            trace.write('merging shape with board')
             self.board = self._merge_board(
                 self.board,
                 self.puzzle_shape,
@@ -580,22 +586,16 @@ class MoonModel(object):
         #   ? are both in a block pair list
         #   remove them and spawn the combined block in the arcade structure
 
-        # limit the search space to one row and one column less than
-        # the board - we test against those values via look-ahead.
-        # accounts for zero-based indexing.
-        x_limit = PUZZLE_WIDTH - 2
-        y_limit = PUZZLE_HEIGHT - 2
         for new_block, combo in BLOCK_PAIRS.items():
-            for x, y, value in self.puzzle_board_data():
-                # this block is in our search space
-                # and it is a possible combination value
-                if (x < x_limit) and (y < y_limit) and (value in combo):
+            for x, y, this_block in self.puzzle_board_data(include_player_shape=False):
+                # if this block is a possible combination value
+                if (this_block in combo):
                     # get the right and bottom neighbors
-                    xneigh = self.board[y][x + 1]
-                    yneigh = self.board[y + 1][x]
+                    xneigh = self._puzzle_block_at(x + 1, y)
+                    yneigh = self._puzzle_block_at(x, y + 1)
                     # match blocks if they are not the same value
                     # and both exist in the combination list
-                    if xneigh != value and xneigh in combo:
+                    if xneigh != this_block and xneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(x + 1, y)
                         self._arcade_spawn_tile(new_block)
@@ -603,10 +603,20 @@ class MoonModel(object):
                         # continue with the next board item
                         continue
                     # match the bottom neighbor
-                    if yneigh != value and yneigh in combo:
+                    if yneigh != this_block and yneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(x, y + 1)
                         self._arcade_spawn_tile(new_block)
+
+    def _puzzle_block_at(self, x, y):
+        """
+        Get the block value at x, y.
+        Returns None if x, y is out of range.
+
+        """
+
+        if x < PUZZLE_WIDTH and y < PUZZLE_HEIGHT:
+            return self.board[y][x]
 
     def _puzzle_clear_cell(self, x, y):
         """
@@ -615,6 +625,8 @@ class MoonModel(object):
         """
 
         # TODO store the old value and fire an event indicating removal.
+        old_value = self.board[y][x]
+        trace.write('removing block %s (%s, %s)' % (old_value, x, y))
         self.board[y][x] = 0
 
     def puzzle_rotate_cw(self):
@@ -715,11 +727,6 @@ class MoonModel(object):
             return
         if self.state in (STATE_PHASE1, STATE_PHASE2):
             self._puzzle_drop_piece()
-
-## Events to be implemented
-        #self._evman.Post(PuzzleBlockSpawnedEvent(block))
-        #self._evman.Post(PuzzleBlockMovedEvent(block))
-
 
 
 #-- Arcade Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
