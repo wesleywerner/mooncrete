@@ -63,7 +63,7 @@
 #
 # Each game step the puzzle piece is dropped down, if there is a collision
 # during this drop, we merge the player piece into the board, and the player
-# is given a new piece to play with. This is handled by the _merge_board()
+# is given a new piece to play with. This is handled by the _puzzle_merge_board()
 # and _puzzle_next_shape() calls.
 #
 # If there is a collision during creating the new piece, it means the board
@@ -382,7 +382,7 @@ class MoonModel(object):
         if trace.TRACE and self.player:
             grid = []
             # copy the board and place th player piece inside it
-            matrix = self._merge_board(
+            matrix = self._puzzle_merge_board(
                     self.board,
                     self.puzzle_shape,
                     self.puzzle_location
@@ -411,7 +411,7 @@ class MoonModel(object):
         """
 
         if include_player_shape:
-            grid = self._merge_board(
+            grid = self._puzzle_merge_board(
                         self.board, self.puzzle_shape, self.puzzle_location)
         else:
             grid = self.board
@@ -446,7 +446,7 @@ class MoonModel(object):
             return list(map(self._unshared_copy, inList))
         return inList
 
-    def _merge_board(self, board, shape, shape_location):
+    def _puzzle_merge_board(self, board, shape, shape_location):
         """
         Merge the shape with the board at location and return the new board.
         """
@@ -542,7 +542,7 @@ class MoonModel(object):
         if collides:
 
             # merge the shape into the board
-            self.board = self._merge_board(
+            self.board = self._puzzle_merge_board(
                 self.board,
                 self.puzzle_shape,
                 self.puzzle_location)
