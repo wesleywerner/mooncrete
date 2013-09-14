@@ -90,7 +90,7 @@ class StepGameEvent(Event):
         self.name = 'Step game event'
 
 
-class ArcadeBlockSpawned(Event):
+class ArcadeBlockSpawnedEvent(Event):
 
     def __init__(
                 self,
