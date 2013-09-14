@@ -265,7 +265,7 @@ class MoonView(object):
             self.draw_puzzle_blocks()
 
         elif state == STATE_PHASE3:
-            pass
+            self.draw_moonscape()
 
         # update panels
         self.transitioning = False
@@ -307,6 +307,29 @@ class MoonView(object):
                     block_color = (0, 0, 64)
                 pygame.draw.rect(pan.image, block_color, rect)
 
+
+    def draw_moonscape(self):
+        """
+        Assemble the moonscape image.
+
+        """
+
+        # clear
+        # draw moon base sprites
+        # draw the pre-rendered moon surface
+        # draw the composite on our the moonscape panel
+        pass
+
+        pan = self.panels['moonscape']
+        pan.image.fill(color.black)
+
+        for x, y, v in self.model.moonscape_data():
+            if v:
+                rect = pygame.Rect(
+                    (x * 5, y * 5),
+                    (5, 5)
+                    )
+                pygame.draw.rect(pan.image, (128, 128, 128), rect)
 
 class Panel(object):
     """
