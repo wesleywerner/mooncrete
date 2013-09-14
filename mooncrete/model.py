@@ -10,19 +10,70 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program. If not, see http://www.gnu.org/licenses/.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# A note on imports
 #
-###### A note on imports
 # I allow myself the luxury to import * as:
 #   + eventmanager has every class use the "SpamEvent" convention.
 #   + statemachine has all constants named "STATE_SPAM"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# A note on data attribute names
 #
-###### A note on data attribute names
 # Data attributes meant only for internal access are prefixed with "_".
 # Not that you _can't_ access them, but you should not change them for fear
 # of treading on the model's workflow.
 #
 # http://docs.python.org/2/tutorial/classes.html#random-remarks
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Puzzle board description
 #
+# The puzzle board data is stored as a list of lists, allowing a 2D grid-like
+# lookup of values. Each value is either 0 (no block) or a number equals one
+# of the BLOCK_ constants.
+#
+# A 3x3 board:
+# [[0, 0, 0],
+#  [0, 0, 0],
+#  [0, 0, 0]]
+#
+# It can be iterated over for each row, then for each value in that row.
+# The puzzle_board_data() function does this and yields the index of each item
+# along with the value, for easily accessing the board data:
+#
+#   for x, y, value in puzzle_board_data():
+#       pass
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Puzzle piece description
+#
+# The puzzle piece the player controls is stored similarly, in a 2D like list
+# of smaller dimensions with the values being those of the BLOCK_ constants.
+#
+# A T-shape block
+# [[1, 1, 1],
+#  [0, 1, 0]]
+#
+# The puzzle_location var stores where the player piece is currently located
+# within the board. The player can move it around, as long as the new location
+# does not collide with any solid values on the board.
+# The _puzzle_move_piece() and _puzzle_piece_collides() calls handle this.
+#
+# Each game step the puzzle piece is dropped down, if there is a collision
+# during this drop, we merge the player piece into the board, and the player
+# is given a new piece to play with. This is handled by the _merge_board()
+# and _puzzle_next_shape() calls.
+#
+# If there is a collision during creating the new piece, it means the board
+# is full to the point where the puzzle has ended.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 
 import copy
 import random
