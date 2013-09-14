@@ -365,18 +365,19 @@ class MoonModel(object):
 
         """
 
-        if self.player_phase == STATE_PHASE1:
-            self.player_phase = STATE_PHASE2
+        this_phase = self.player.phase
+        if this_phase == STATE_PHASE1:
+            self.player.phase = STATE_PHASE2
             self._change_state(STATE_PHASE2, swap_state=True)
-        elif self.player_phase == STATE_PHASE2:
-            self.player_phase = STATE_PHASE3
+        elif this_phase == STATE_PHASE2:
+            self.player.phase = STATE_PHASE3
             self._change_state(STATE_PHASE3, swap_state=True)
-        elif self.player_phase == STATE_PHASE3:
+        elif this_phase == STATE_PHASE3:
             self.player.phase == STATE_LEVELDONE
             self._change_state(STATE_LEVELDONE, swap_state=True)
-        elif self.player_phase == STATE_LEVELDONE:
-            self.player_level += 1
-            self.player_phase = STATE_PHASE1
+        elif this_phase == STATE_LEVELDONE:
+            self.player.level += 1
+            self.player.phase = STATE_PHASE1
             self._change_state(STATE_PHASE1, swap_state=True)
 
     def _reset_game(self):
