@@ -84,27 +84,50 @@ from eventmanager import *
 
 PUZZLE_WIDTH = 10
 PUZZLE_HEIGHT = 10
+
+# different kind of puzzle blocks
 BLOCK_CALCIUM_BARREL = 10
 BLOCK_WATER_BARREL = 11
-BLOCK_EMPTY_BARREL = 12
-BLOCK_MOONROCKS = 13
-BLOCK_RADAR_BITS = 14
-BLOCK_RADAR_DISH = 15
-BLOCK_RADAR = 16
-BLOCK_TURRET_BASE = 17
-BLOCK_TURRET_AMMO = 18
-BLOCK_TURRET = 19
-BLOCK_MOONCRETE_SLAB = 20
-BLOCK_BUILDING = 21
-PHASE1_PIECES = (BLOCK_CALCIUM_BARREL,
-    BLOCK_WATER_BARREL)
-PHASE2_PIECES = (BLOCK_RADAR_BITS,
+BLOCK_MOONCRETE_SLAB = 12
+BLOCK_RADAR_BITS = 13
+BLOCK_RADAR_DISH = 14
+BLOCK_RADAR = 15
+BLOCK_TURRET_BASE = 16
+BLOCK_TURRET_AMMO = 17
+BLOCK_TURRET = 18
+BLOCK_BUILDING = 19
+BLOCK_EMPTY_BARREL = 20
+BLOCK_MOONROCKS = 21
+
+# blocks that make up phase 1 puzzle pieces
+PHASE1_PIECES = (
+    BLOCK_CALCIUM_BARREL,
+    BLOCK_WATER_BARREL,
+    )
+
+# blocks that make up phase 2 puzzle pieces
+PHASE2_PIECES = (
+    BLOCK_RADAR_BITS,
     BLOCK_RADAR_DISH,
     BLOCK_TURRET_BASE,
     BLOCK_TURRET_AMMO,
-    BLOCK_MOONROCKS)
-FLOTSAM = (BLOCK_EMPTY_BARREL,
-    BLOCK_MOONROCKS)
+    )
+
+# block that have no purpose except to obstruct the player
+FLOTSAM = (
+    BLOCK_EMPTY_BARREL,
+    BLOCK_MOONROCKS
+    )
+
+# blocks that when combined make a new block
+BLOCK_PAIRS = {
+    BLOCK_MOONCRETE_SLAB:
+        (BLOCK_CALCIUM_BARREL, BLOCK_WATER_BARREL),
+    BLOCK_RADAR:
+        (BLOCK_RADAR_BITS, BLOCK_RADAR_DISH),
+    BLOCK_TURRET:
+        (BLOCK_TURRET_AMMO, BLOCK_TURRET_BASE),
+    }
 
 TETRIS_SHAPES = [
     [[1, 1, 1],
@@ -545,6 +568,55 @@ class MoonModel(object):
                     return True
         return False
 
+    def _puzzle_pair_blocks(self):
+        """
+        Find and remove matching blocks on the board.
+
+        """
+
+        # for each board value (minus the last column and last row)
+        #   get the values to the A) right and B) bottom.
+        #   ? are the values different
+        #   ? are both in a block pair list
+        #   remove them and spawn the combined block in the arcade structure
+
+        # limit the search space to one row and one column less than
+        # the board - we test against those values via look-ahead.
+        # accounts for zero-based indexing.
+        x_limit = PUZZLE_WIDTH - 2
+        y_limit = PUZZLE_HEIGHT - 2
+        for new_block, combo in BLOCK_PAIRS.items():
+            for x, y, value in self.puzzle_board_data():
+                # this block is in our search space
+                # and it is a possible combination value
+                if (x < x_limit) and (y < y_limit) and (value in combo):
+                    # get the right and bottom neighbors
+                    xneigh = self.board[y][x + 1]
+                    yneigh = self.board[y + 1][x]
+                    # match blocks if they are not the same value
+                    # and both exist in the combination list
+                    if xneigh != value and xneigh in combo:
+                        self._puzzle_clear_cell(x, y)
+                        self._puzzle_clear_cell(x + 1, y)
+                        self._arcade_spawn_tile(new_block)
+                        # skip the bottom neighbor test and
+                        # continue with the next board item
+                        continue
+                    # match the bottom neighbor
+                    if yneigh != value and yneigh in combo:
+                        self._puzzle_clear_cell(x, y)
+                        self._puzzle_clear_cell(x, y + 1)
+                        self._arcade_spawn_tile(new_block)
+
+    def _puzzle_clear_cell(self, x, y):
+        """
+        Clears the board cell at x, y.
+
+        """
+
+        # TODO store the old value and fire an event indicating removal.
+        self.board[y][x] = 0
+
     def puzzle_rotate_cw(self):
         """
         Rotate the puzzle piece clock wise.
@@ -652,3 +724,12 @@ class MoonModel(object):
 
 #-- Arcade Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+    def _arcade_spawn_tile(self, block_type):
+        """
+        Spawn the given block type into the arcade playfield.
+        This call takes care fo finding a place for it.
+
+        """
+
+        pass
+        # TODO fire an event with the new tile details.
