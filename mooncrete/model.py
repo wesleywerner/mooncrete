@@ -69,6 +69,11 @@
 # If there is a collision during creating the new piece, it means the board
 # is full to the point where the puzzle has ended.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+# Arcade Moonscape
+#
+#
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -84,6 +89,8 @@ from eventmanager import *
 
 PUZZLE_WIDTH = 10
 PUZZLE_HEIGHT = 10
+ARCADE_WIDTH = 20
+ARCADE_HEIGHT = 6
 
 # different kind of puzzle blocks
 BLOCK_CALCIUM_BARREL = 10
@@ -128,6 +135,9 @@ BLOCK_PAIRS = {
     BLOCK_TURRET:
         (BLOCK_TURRET_AMMO, BLOCK_TURRET_BASE),
     }
+
+# percentage of jutting moonscape features
+MOONSCAPE_RUGGEDNESS = 0.3
 
 TETRIS_SHAPES = [
     [[1, 1, 1],
@@ -377,7 +387,7 @@ class MoonModel(object):
 
         self.player = Player()
         self._reset_puzzle()
-        # TODO reset arcade field
+        self._reset_arcade()
 
     def _unshared_copy(self, inList):
         """
@@ -643,27 +653,27 @@ class MoonModel(object):
         trace.write('removing block %s (%s, %s)' % (old_value, x, y))
         self._puzzle_board[y][x] = 0
 
-    def puzzle_rotate_cw(self):
-        """
-        Rotate the puzzle piece clock wise.
+    #def puzzle_rotate_cw(self):
+        #"""
+        #Rotate the puzzle piece clock wise.
 
-        """
+        #"""
 
-        if self.paused:
-            return
-        if self.state in (STATE_PHASE1, STATE_PHASE2):
-            pass
+        #if self.paused:
+            #return
+        #if self.state in (STATE_PHASE1, STATE_PHASE2):
+            #pass
 
-    def puzzle_rotate_ccw(self):
-        """
-        Rotate the puzzle piece counter clock wise.
+    #def puzzle_rotate_ccw(self):
+        #"""
+        #Rotate the puzzle piece counter clock wise.
 
-        """
+        #"""
 
-        if self.paused:
-            return
-        if self.state in (STATE_PHASE1, STATE_PHASE2):
-            pass
+        #if self.paused:
+            #return
+        #if self.state in (STATE_PHASE1, STATE_PHASE2):
+            #pass
 
     def _puzzle_move_piece(self, delta_x):
         """
@@ -744,6 +754,42 @@ class MoonModel(object):
 
 
 #-- Arcade Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+    def _reset_arcade(self):
+        """
+        Reset the arcade game.
+
+        """
+
+        # create a new arcade moonscape.
+        # the bottom row will be filled with Moonrock blocks.
+        self._arcade_field = [
+            [BLOCK_MOONROCKS if y == ARCADE_HEIGHT - 1 else 0
+            for x in xrange(ARCADE_WIDTH)]
+            for y in xrange(ARCADE_HEIGHT)]
+
+        # place some random features on the surface
+        for y in xrange(ARCADE_HEIGHT - 2, ARCADE_HEIGHT - 4, -1):
+            for x in xrange(ARCADE_WIDTH):
+                if random.random() < MOONSCAPE_RUGGEDNESS:
+                    is_empty = self._arcade_field[y][x]
+                    has_base = self._arcade_field[y + 1][x]
+                    if not is_empty and has_base:
+                        self._arcade_field[y][x] = BLOCK_MOONROCKS
+
+        self._arcade_print_moonscape()
+
+    def _arcade_print_moonscape(self):
+        if trace.TRACE:
+            grid = []
+            for y, row in enumerate(self._arcade_field):
+                grid.append('\n')
+                for x, val in enumerate(row):
+                    if val:
+                        grid.append(str(val))
+                    else:
+                        grid.append('__')
+            trace.write(' '.join(grid))
 
     def _arcade_spawn_tile(self, block_type):
         """
