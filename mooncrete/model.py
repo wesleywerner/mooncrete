@@ -106,6 +106,22 @@ BLOCK_BUILDING = 19
 BLOCK_EMPTY_BARREL = 20
 BLOCK_MOONROCKS = 21
 
+# our block type names
+BLOCK_NAMES = {
+    BLOCK_CALCIUM_BARREL: 'extracted calcium',
+    BLOCK_WATER_BARREL: 'extracted water',
+    BLOCK_MOONCRETE_SLAB: 'mooncrete slab',
+    BLOCK_RADAR_BITS: 'radar circuits',
+    BLOCK_RADAR_DISH: 'radar base',
+    BLOCK_RADAR: 'radar',
+    BLOCK_TURRET_BASE: 'turret base',
+    BLOCK_TURRET_AMMO: 'turret ammo',
+    BLOCK_TURRET: 'gun turret',
+    BLOCK_BUILDING: 'moon base',
+    BLOCK_EMPTY_BARREL: 'empty barrel',
+    BLOCK_MOONROCKS: 'moon rocks',
+    }
+
 # blocks that make up phase 1 puzzle pieces
 PHASE1_PIECES = (
     BLOCK_CALCIUM_BARREL,
@@ -660,7 +676,8 @@ class MoonModel(object):
 
         # TODO store the old value and fire an event indicating removal.
         old_value = self._puzzle_board[y][x]
-        trace.write('removing block %s (%s, %s)' % (old_value, x, y))
+        trace.write('removing "%s" (%s, %s)' %
+            (BLOCK_NAMES[old_value], x, y))
         self._puzzle_board[y][x] = 0
 
     def _puzzle_move_piece(self, delta_x):
@@ -804,8 +821,8 @@ class MoonModel(object):
         # get the required base block we can place this block on
         required_base = BLOCK_BASES.get(block_type, None)
         if not required_base:
-            trace.write('Warning: block %s does not have a BLOCK_BASES entry.' %
-                        (block_type,))
+            trace.write('Warning: "%s" does not have a BLOCK_BASES entry.' %
+                        (BLOCK_NAMES[block_type],))
 
         found_home = False
         x_range = list(xrange(0, ARCADE_WIDTH))
@@ -819,7 +836,7 @@ class MoonModel(object):
                     found_home = True
                     self._arcade_field[y][x] = block_type
                     spawn_event = ArcadeBlockSpawnedEvent(
-                        source_loc, (x, y), block_type)
+                        source_loc, (x, y), block_type, BLOCK_NAMES[block_type])
                     self._evman.Post(spawn_event)
                     break
                 elif base:
@@ -827,7 +844,7 @@ class MoonModel(object):
                     break
         else:
             # there are no more open moonrocks to build on
-            trace.write('There are no %s blocks to place %s on' %
-                (required_base, block_type))
+            trace.write('There are no "%s" blocks to place "%s" on' %
+                (BLOCK_NAMES[required_base], BLOCK_NAMES[block_type]))
 
         self._arcade_print_moonscape()
