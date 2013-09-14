@@ -31,13 +31,24 @@ FPS = 30
 # This is our window size, or resolution in full-screen.
 DRAW_AREA = pygame.Rect(0, 0, 800, 600)
 
-# The region where puzzle gameplay happens
+# The region where puzzle gameplay happens.
+# It is achored to the top-right of the screen.
+# It hides to the right off-screen.
 PUZZLE_AREA = pygame.Rect(0, 0, 500, 500)
+PUZZLE_AREA.topleft = (DRAW_AREA.width - PUZZLE_AREA.width, 0)
 
 # The region where arcade gameplay happens
-ARCADE_AREA = DRAW_AREA.copy()
+#ARCADE_AREA = DRAW_AREA.copy()
 
-#
+# The mini mooscape lives right below the puzzle area.
+# It has the same width as the puzzle, and uses the remainder draw area height.
+MOONSCAPE_MINI = pygame.Rect(PUZZLE_AREA.bottomleft,
+    (PUZZLE_AREA.width, DRAW_AREA.height - PUZZLE_AREA.height))
+
+# The large moonscape scales to fit the window width.
+# Its height is a ratio of the the big moonscape width & mini moonscape width:
+# Its position is achored to the bottom left of the draw area.
+MOONSCAPE_BIG = pygame.Rect(0, 440, DRAW_AREA.width, 160)
 
 # The size to draw each puzzle block.
 PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
@@ -68,9 +79,9 @@ PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
 #   |                     |
 #   |          C          |
 #   |     arcade view     |
-#   |                     |
-#   |       ^ ^ ^ ^ ^ ^ ^ |
-#   |      <              |
+#   +---------------------+
+#   | moonscape ^  ^  ^  ^|
+#   |       <             |
 #   +---------------------+
 #
 
@@ -115,16 +126,24 @@ class MoonView(object):
             if event.state in (STATE_PHASE1, STATE_PHASE2):
                 self.panels['score'].show()
                 self.panels['puzzle'].show()
+                moonscape = self.panels['moonscape']
+                moonscape.show()
+                moonscape.show_position = MOONSCAPE_MINI.topleft
+                moonscape.scale(MOONSCAPE_MINI.size)
             elif event.state == STATE_PHASE3:
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
-                # TODO show the arcade panel
+                moonscape = self.panels['moonscape']
+                moonscape.show()
+                moonscape.show_position = MOONSCAPE_BIG.topleft
+                moonscape.scale(MOONSCAPE_BIG.size)
             elif event.state == STATE_HELP:
                 # TODO show the help panel
                 pass
             elif event.state == STATE_MENU:
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
+                self.panels['moonscape'].hide()
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -191,11 +210,21 @@ class MoonView(object):
 
         puzzle_panel = Panel(PUZZLE_AREA.size, DRAW_AREA)
         # puzle grid is visible at the top-left of the screen
-        puzzle_panel.show_position = (DRAW_AREA.width - PUZZLE_AREA.width, 0)
+        puzzle_panel.show_position = PUZZLE_AREA.topleft
         # and it hides to the right, off-screen
         puzzle_panel.hide_position = (DRAW_AREA.width, 0)
         puzzle_panel.hide(instant=True)
         self.panels['puzzle'] = puzzle_panel
+
+        moonscape_panel = Panel(MOONSCAPE_BIG.size, DRAW_AREA)
+        # start of as a mini moonscape view
+        moonscape_panel.show_position = MOONSCAPE_MINI.topleft
+        # hide it by moving it down outside the draw area
+        moonscape_panel.hide_position = (MOONSCAPE_MINI.left, DRAW_AREA.height + 1)
+        moonscape_panel.hide(instant=True)
+        self.panels['moonscape'] = moonscape_panel
+        #puzzle_panel.scale((150, 150), instant=False)
+
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
