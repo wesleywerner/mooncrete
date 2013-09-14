@@ -808,10 +808,11 @@ class MoonModel(object):
                         (block_type,))
 
         found_home = False
-        for tries in xrange(0, ARCADE_WIDTH):
+        x_range = list(xrange(0, ARCADE_WIDTH))
+        random.shuffle(x_range)
+        for x in x_range:
             if found_home:
                 break
-            x = random.randint(0, ARCADE_WIDTH - 1)
             for y in xrange(0, ARCADE_HEIGHT):
                 base = self._arcade_block_at(x, y + 1)
                 if base == required_base:
@@ -826,6 +827,7 @@ class MoonModel(object):
                     break
         else:
             # there are no more open moonrocks to build on
-            pass
+            trace.write('There are no %s blocks to place %s on' %
+                (required_base, block_type))
 
         self._arcade_print_moonscape()
