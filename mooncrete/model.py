@@ -197,13 +197,13 @@ class MoonModel(object):
         self.previous_player = None
 
         # stores the puzzle board
-        self.board = None
+        self._puzzle_board = None
 
         # current puzzle shape the player is controlling.
-        self.puzzle_shape = None
+        self._puzzle_shape = None
 
         # location on the board of the puzzle shape.
-        self.puzzle_location = None
+        self._puzzle_location = None
 
         # stores the arcade field
         self.arcade_field = None
@@ -398,9 +398,9 @@ class MoonModel(object):
             grid = []
             # copy the board and place th player piece inside it
             matrix = self._puzzle_merge_board(
-                    self.board,
-                    self.puzzle_shape,
-                    self.puzzle_location
+                    self._puzzle_board,
+                    self._puzzle_shape,
+                    self._puzzle_location
                     )
             for y, row in enumerate(matrix):
                 grid.append('\n')
@@ -427,9 +427,9 @@ class MoonModel(object):
 
         if include_player_shape:
             grid = self._puzzle_merge_board(
-                        self.board, self.puzzle_shape, self.puzzle_location)
+                        self._puzzle_board, self._puzzle_shape, self._puzzle_location)
         else:
-            grid = self.board
+            grid = self._puzzle_board
         for y, row in enumerate(grid):
             for x, cell in enumerate(row):
                 yield (x, y, cell)
@@ -441,7 +441,7 @@ class MoonModel(object):
         """
 
         # create a new puzzle board
-        self.board = [[0 for x in xrange(PUZZLE_WIDTH)]
+        self._puzzle_board = [[0 for x in xrange(PUZZLE_WIDTH)]
                                 for y in xrange(PUZZLE_HEIGHT)]
 
         # TODO add some random elements for higher levels
@@ -478,8 +478,8 @@ class MoonModel(object):
 
         # choose a shape and center it
         new_shape = random.choice(TETRIS_SHAPES)
-        self.puzzle_shape = new_shape
-        self.puzzle_location = [int(PUZZLE_WIDTH / 2 - len(new_shape[0])/2), 0]
+        self._puzzle_shape = new_shape
+        self._puzzle_location = [int(PUZZLE_WIDTH / 2 - len(new_shape[0])/2), 0]
 
         # replace each shape element with a game piece
         for cy, row in enumerate(new_shape):
@@ -489,9 +489,9 @@ class MoonModel(object):
 
         # game over if this new piece collides on entry
         collides = self._puzzle_piece_collides(
-            self.board,
-            self.puzzle_shape,
-            self.puzzle_location
+            self._puzzle_board,
+            self._puzzle_shape,
+            self._puzzle_location
             )
         if collides:
             self.end_game()
@@ -533,29 +533,29 @@ class MoonModel(object):
 
         """
 
-        new_loc = self.puzzle_location[:]
+        new_loc = self._puzzle_location[:]
         new_loc[1] += 1
 
         collides = self._puzzle_piece_collides(
-            self.board,
-            self.puzzle_shape,
+            self._puzzle_board,
+            self._puzzle_shape,
             new_loc
             )
 
         if collides:
 
             # merge the shape into the board
-            self.board = self._puzzle_merge_board(
-                self.board,
-                self.puzzle_shape,
-                self.puzzle_location)
+            self._puzzle_board = self._puzzle_merge_board(
+                self._puzzle_board,
+                self._puzzle_shape,
+                self._puzzle_location)
 
             # give the player a new shape to play with
             self._puzzle_next_shape()
 
         else:
             # no collisions, keep the new drop location
-            self.puzzle_location = new_loc
+            self._puzzle_location = new_loc
             self._puzzle_print_grid()
 
     def _puzzle_drop_board(self):
@@ -569,8 +569,8 @@ class MoonModel(object):
                 if y < PUZZLE_HEIGHT - 1:
                     below = self._puzzle_block_at(x, y + 1)
                     if not below:
-                        self.board[y + 1][x] = self.board[y][x]
-                        self.board[y][x] = 0
+                        self._puzzle_board[y + 1][x] = self._puzzle_board[y][x]
+                        self._puzzle_board[y][x] = 0
 
     def _puzzle_piece_collides(self, board, shape, offset):
         """
@@ -630,7 +630,7 @@ class MoonModel(object):
         """
 
         if x < PUZZLE_WIDTH and y < PUZZLE_HEIGHT:
-            return self.board[y][x]
+            return self._puzzle_board[y][x]
 
     def _puzzle_clear_cell(self, x, y):
         """
@@ -639,9 +639,9 @@ class MoonModel(object):
         """
 
         # TODO store the old value and fire an event indicating removal.
-        old_value = self.board[y][x]
+        old_value = self._puzzle_board[y][x]
         trace.write('removing block %s (%s, %s)' % (old_value, x, y))
-        self.board[y][x] = 0
+        self._puzzle_board[y][x] = 0
 
     def puzzle_rotate_cw(self):
         """
@@ -671,25 +671,25 @@ class MoonModel(object):
 
         """
 
-        x, y = self.puzzle_location[:]
+        x, y = self._puzzle_location[:]
         x += delta_x
         if x < 0:
             x = 0
 
         collides = self._puzzle_piece_collides(
-            self.board,
-            self.puzzle_shape,
+            self._puzzle_board,
+            self._puzzle_shape,
             [x, y]
             )
 
         if not collides:
             # no collisions, keep the new drop location
-            self.puzzle_location = [x, y]
+            self._puzzle_location = [x, y]
             self._puzzle_print_grid()
 
     def rotate_puzzle(self, clockwise=True):
 
-        new_shape = self._unshared_copy(self.puzzle_shape)
+        new_shape = self._unshared_copy(self._puzzle_shape)
 
         if clockwise:
             new_shape = [[new_shape[y][x]
@@ -701,12 +701,12 @@ class MoonModel(object):
                         for x in xrange(len(new_shape[0]) - 1, -1, -1)]
 
         collides = self._puzzle_piece_collides(
-            self.board,
+            self._puzzle_board,
             new_shape,
-            self.puzzle_location
+            self._puzzle_location
             )
         if not collides:
-            self.puzzle_shape = new_shape
+            self._puzzle_shape = new_shape
             self._puzzle_print_grid()
 
     def move_left(self):
