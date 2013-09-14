@@ -849,3 +849,8 @@ class MoonModel(object):
                 (BLOCK_NAMES[required_base], BLOCK_NAMES[block_type]))
 
         self._arcade_print_moonscape()
+
+    def moonscape_data(self):
+        for y, row in enumerate(self._arcade_field):
+            for x, cell in enumerate(row):
+                yield (x, y, cell)
