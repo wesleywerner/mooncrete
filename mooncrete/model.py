@@ -615,22 +615,24 @@ class MoonModel(object):
                 # if this block is a possible combination value
                 if (this_block in combo):
                     # get the right and bottom neighbors
-                    xneigh = self._puzzle_block_at(x + 1, y)
-                    yneigh = self._puzzle_block_at(x, y + 1)
+                    nx = x + 1
+                    ny = y + 1
+                    xneigh = self._puzzle_block_at(nx, y)
+                    yneigh = self._puzzle_block_at(x, ny)
                     # match blocks if they are not the same value
                     # and both exist in the combination list
                     # match the bottom neighbor
                     if yneigh != this_block and yneigh in combo:
                         self._puzzle_clear_cell(x, y)
-                        self._puzzle_clear_cell(x, y + 1)
-                        self._arcade_spawn_tile(new_block)
+                        self._puzzle_clear_cell(x, ny)
+                        self._arcade_spawn_block(new_block, x, ny)
                         # skip the next test and
                         # continue with the next board item
                         continue
                     if xneigh != this_block and xneigh in combo:
                         self._puzzle_clear_cell(x, y)
-                        self._puzzle_clear_cell(x + 1, y)
-                        self._arcade_spawn_tile(new_block)
+                        self._puzzle_clear_cell(nx, y)
+                        self._arcade_spawn_block(new_block, x, y)
 
     def _puzzle_block_at(self, x, y):
         """
@@ -779,6 +781,16 @@ class MoonModel(object):
 
         self._arcade_print_moonscape()
 
+    def _arcade_block_at(self, x, y):
+        """
+        Get the block value at x, y.
+        Returns None if x, y is out of range.
+
+        """
+
+        if x < ARCADE_WIDTH and y < ARCADE_HEIGHT:
+            return self._arcade_field[y][x]
+
     def _arcade_print_moonscape(self):
         if trace.TRACE:
             grid = []
@@ -791,12 +803,36 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
-    def _arcade_spawn_tile(self, block_type):
+    def _arcade_spawn_block(self, block_type, source_x, source_y):
         """
         Spawn the given block type into the arcade playfield.
         This call takes care fo finding a place for it.
 
         """
 
-        pass
-        # TODO fire an event with the new tile details.
+        # 1. pick a random column
+        # 2. move down until we hit a moonrock base
+        # 3. place the tile on the moonscape
+        # 4. fire an event with the tile details.
+
+        found_home = False
+        for tries in xrange(0, ARCADE_WIDTH):
+            if found_home:
+                break
+            x = random.randint(0, ARCADE_WIDTH - 1)
+            for y in xrange(0, ARCADE_HEIGHT):
+                base = self._arcade_block_at(x, y + 1)
+                if base == BLOCK_MOONROCKS:
+                    # our new home
+                    self._arcade_field[y][x] = block_type
+                    found_home = True
+                    # TODO # 4. fire an event with the tile details.
+                    break
+                elif base:
+                    # this is some other kind of block. try another column.
+                    break
+        else:
+            # there are no more open moonrocks to build on
+            pass
+
+        self._arcade_print_moonscape()
