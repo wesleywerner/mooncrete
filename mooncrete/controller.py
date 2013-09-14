@@ -128,10 +128,7 @@ class MoonController(object):
 
     def level_done_keys(self, event):
 
-        if event.key == K_ESCAPE:
-            self.model.escape_state()
-
-        elif event.key == K_SPACE:
+        if event.key in (K_ESCAPE, K_SPACE):
             self.model._next_phase()
 
     def help_keys(self, event):
