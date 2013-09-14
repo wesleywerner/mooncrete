@@ -205,6 +205,9 @@ class MoonModel(object):
         # location on the board of the puzzle shape.
         self.puzzle_location = None
 
+        # stores the arcade field
+        self.arcade_field = None
+
     @property
     def state(self):
         """
@@ -376,6 +379,18 @@ class MoonModel(object):
         self._reset_puzzle()
         # TODO reset arcade field
 
+    def _unshared_copy(self, inList):
+        """
+        Recursive copy list-of-lists.
+        Because deepcopy keeps list references and changing the result
+        also changes the original.
+
+        """
+
+        if isinstance(inList, list):
+            return list(map(self._unshared_copy, inList))
+        return inList
+
 #-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     def _puzzle_print_grid(self):
@@ -433,18 +448,6 @@ class MoonModel(object):
 
         # choose a shape
         self._puzzle_next_shape()
-
-    def _unshared_copy(self, inList):
-        """
-        Recursive copy list-of-lists.
-        Because deepcopy keeps list references and changing the result
-        also changes the original.
-
-        """
-
-        if isinstance(inList, list):
-            return list(map(self._unshared_copy, inList))
-        return inList
 
     def _puzzle_merge_board(self, board, shape, shape_location):
         """
