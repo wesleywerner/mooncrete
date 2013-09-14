@@ -481,9 +481,9 @@ class MoonModel(object):
         """
 
         # list of available piece types for the current phase
-        piece_types = self._puzzle_allowed_block_types(include_flotsam=True)
+        piece_types = self._puzzle_allowed_block_types(include_flotsam=False)
         if not piece_types:
-            trace.write('state %s does not have puzzle shapes to choose from' % (state,))
+            trace.write('state %s does not have puzzle shapes to choose from' % (self.state,))
             return
 
         # choose a shape and center it
@@ -512,12 +512,12 @@ class MoonModel(object):
 
         """
 
+        pieces = include_flotsam and list(FLOTSAM) or []
         if self.player.phase == STATE_PHASE1:
-            return PHASE1_PIECES + FLOTSAM if include_flotsam else []
+            pieces = pieces + list(PHASE1_PIECES)
         if self.player.phase == STATE_PHASE2:
-            return PHASE2_PIECES + FLOTSAM if include_flotsam else []
-
-        trace.write('There are no puzzle pieces for phase %s' % (self.player_phase,))
+            pieces = pieces + list(PHASE2_PIECES)
+        return pieces
 
     def _puzzle_in_bounds(self, x, y):
         """
@@ -625,14 +625,14 @@ class MoonModel(object):
                     if yneigh != this_block and yneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(x, ny)
-                        self._arcade_spawn_block(new_block, x, ny)
+                        self._arcade_spawn_block(new_block, (x, ny))
                         # skip the next test and
                         # continue with the next board item
                         continue
                     if xneigh != this_block and xneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(nx, y)
-                        self._arcade_spawn_block(new_block, x, y)
+                        self._arcade_spawn_block(new_block, (x, y))
 
     def _puzzle_block_at(self, x, y):
         """
@@ -654,28 +654,6 @@ class MoonModel(object):
         old_value = self._puzzle_board[y][x]
         trace.write('removing block %s (%s, %s)' % (old_value, x, y))
         self._puzzle_board[y][x] = 0
-
-    #def puzzle_rotate_cw(self):
-        #"""
-        #Rotate the puzzle piece clock wise.
-
-        #"""
-
-        #if self.paused:
-            #return
-        #if self.state in (STATE_PHASE1, STATE_PHASE2):
-            #pass
-
-    #def puzzle_rotate_ccw(self):
-        #"""
-        #Rotate the puzzle piece counter clock wise.
-
-        #"""
-
-        #if self.paused:
-            #return
-        #if self.state in (STATE_PHASE1, STATE_PHASE2):
-            #pass
 
     def _puzzle_move_piece(self, delta_x):
         """
@@ -803,7 +781,7 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
-    def _arcade_spawn_block(self, block_type, source_x, source_y):
+    def _arcade_spawn_block(self, block_type, source_loc):
         """
         Spawn the given block type into the arcade playfield.
         This call takes care fo finding a place for it.
@@ -823,10 +801,11 @@ class MoonModel(object):
             for y in xrange(0, ARCADE_HEIGHT):
                 base = self._arcade_block_at(x, y + 1)
                 if base == BLOCK_MOONROCKS:
-                    # our new home
-                    self._arcade_field[y][x] = block_type
                     found_home = True
-                    # TODO # 4. fire an event with the tile details.
+                    self._arcade_field[y][x] = block_type
+                    spawn_event = ArcadeBlockSpawnedEvent(
+                        source_loc, (x, y), block_type)
+                    self._evman.Post(spawn_event)
                     break
                 elif base:
                     # this is some other kind of block. try another column.
