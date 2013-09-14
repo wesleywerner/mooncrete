@@ -522,6 +522,7 @@ class MoonModel(object):
 
         self._puzzle_drop_piece()
         self._puzzle_pair_blocks()
+        self._puzzle_drop_board()
 
     def _puzzle_drop_piece(self):
         """
@@ -553,6 +554,20 @@ class MoonModel(object):
             # no collisions, keep the new drop location
             self.puzzle_location = new_loc
             self._puzzle_print_grid()
+
+    def _puzzle_drop_board(self):
+        """
+        Drops any floating board pieces down one position.
+
+        """
+
+        for y in xrange(PUZZLE_HEIGHT - 2, -1, -1):
+            for x in xrange(PUZZLE_WIDTH):
+                if y < PUZZLE_HEIGHT - 1:
+                    below = self._puzzle_block_at(x, y + 1)
+                    if not below:
+                        self.board[y + 1][x] = self.board[y][x]
+                        self.board[y][x] = 0
 
     def _puzzle_piece_collides(self, board, shape, offset):
         """
