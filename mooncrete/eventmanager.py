@@ -124,3 +124,9 @@ class AsteroidSpawnedEvent(Event):
         self.name = 'Asteroid spawned event'
         self.asteroid = asteroid
 
+
+class AsteroidMovedEvent(Event):
+
+    def __init__(self, asteroid):
+        self.name = 'Asteroid move event'
+        self.asteroid = asteroid
