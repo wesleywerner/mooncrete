@@ -248,7 +248,7 @@ class MoonView(object):
             return
 
         state = self.model.state
-        self.image.fill((0, 128, 0))
+        self.image.fill((0, 0, 0))
 
         if state == STATE_MENU:
             pass
@@ -279,7 +279,9 @@ class MoonView(object):
             if panel.draw(self.image):
                 self.transitioning = True
 
-        pix = self.smallfont.render('hello, world!', False, color.white, color.magenta)
+        pix = self.smallfont.render(
+            'Mooncrete -- press space to play',
+            False, color.white, color.magenta)
         pix.set_colorkey(color.magenta)
         self.image.blit(pix, (15, 15))
         self.screen.blit(self.image, DRAW_AREA)
@@ -291,7 +293,7 @@ class MoonView(object):
 
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
-        pan.image.fill(color.black)
+        pan.image.fill(color.gray)
         for x, y, v in self.model.puzzle_board_data():
             if v:
                 rect = pygame.Rect(
@@ -347,7 +349,8 @@ class MoonView(object):
         pan = self.panels['moonscape']
         pan.image.fill(color.magenta)
 
-        pan.image.blit(self.moon_surface, (0, 0))
+        if self.moon_surface:
+            pan.image.blit(self.moon_surface, (0, 0))
 
 class Panel(object):
     """
