@@ -196,6 +196,12 @@ class MoonView(object):
         elif isinstance(event, AsteroidMovedEvent):
             self.move_asteroid(event.asteroid)
 
+        elif isinstance(event, AsteroidDestroyEvent):
+            self.destroy_asteroid(event.asteroid)
+
+        elif isinstance(event, MoonbaseDestroyEvent):
+            self.destroy_moonbase(event.position)
+
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
 
@@ -544,3 +550,23 @@ class MoonView(object):
             x = x * ARCADE_VIEW_MODEL_RATIO[0]
             y = y * ARCADE_VIEW_MODEL_RATIO[1]
             sprite.set_position((x, y))
+
+    def destroy_moonbase(self, position):
+        """
+        Destroy the moonbase at the given position.
+
+        """
+
+        base = self.moonbase_sprites.get(position, None)
+        if base:
+            del self.moonbase_sprites[position]
+            # TODO spawn moonbase destroy animation
+
+    def destroy_asteroid(self, asteroid):
+        """
+        Destroy the given asteroid sprite.
+
+        """
+
+        del self.asteroid_sprites[asteroid.id]
+        # TODO spawn an asteroid destroy animation
