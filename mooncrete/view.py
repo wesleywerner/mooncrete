@@ -500,7 +500,7 @@ class MoonView(object):
             pix.fill(color.copper)
 
         sprite.addimage(pix, 1, -1)
-        sprite.set_position(end_position, shift_speed=4)
+        sprite.set_position(end_position)
 
         # store this sprite using its (x, y) as a unique id
         self.moving_moonbase_sprites[index_position] = sprite
@@ -543,4 +543,4 @@ class MoonView(object):
             x, y = asteroid.position
             x = x * ARCADE_VIEW_MODEL_RATIO[0]
             y = y * ARCADE_VIEW_MODEL_RATIO[1]
-            sprite.set_position((x, y), shift_speed=0)
+            sprite.set_position((x, y))

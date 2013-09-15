@@ -25,7 +25,6 @@ class Sprite(pygame.sprite.Sprite):
         self._hasframes = False
         self.fps = 1
         self.loop = -1
-        self.shift_speed = 0
         self.destination = None
 
     @property
@@ -34,7 +33,7 @@ class Sprite(pygame.sprite.Sprite):
         Test if this sprite is busy moving to a destination position.
         """
 
-        if self.shift_speed and self.destination:
+        if self.destination:
             return self.rect.topleft != self.destination.topleft
 
     def addimage(self, image, fps, loop):
@@ -75,14 +74,13 @@ class Sprite(pygame.sprite.Sprite):
     def update(self, t):
         """
         Update the sprite animation if enough time has passed.
-        Also update the position if it has a shift_speed and destination set.
         t would be pygame.time.get_ticks() passed from the caller.
         Call this each game tick, either manually if this sprite is stored in a list,
         or if you keep sprites in a PyGame.Group object it will be called for you when you
         issue the Group.draw() method.
         """
 
-        if self.shift_speed and self.destination:
+        if self.destination:
             x_diff = self.destination.left - self.rect.left
             y_diff = self.destination.top - self.rect.top
             self.rect = self.rect.move(x_diff // 5, y_diff // 5)
@@ -102,18 +100,11 @@ class Sprite(pygame.sprite.Sprite):
                         self._frame = -1
                 self.image = self._images[self._frame]
 
-    def set_position(self, position, shift_speed=0):
+    def set_position(self, position):
         """
-        Set the sprite position.
-        shift_speed determines the amount of pixels to shift the sprite to
-        it's new location. 0 is an instant jump.
+        Set the sprite destination. It will move towards this position.
         """
 
-        if type(position) is tuple:
+        if position and type(position) is tuple:
             position = pygame.Rect(position, self.rect.size)
-        if shift_speed == 0:
-            self.shift_speed = 0
-            self.rect.topleft = position.topleft
-        else:
-            self.shift_speed = shift_speed
-            self.destination = position
+        self.destination = position
