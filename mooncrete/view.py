@@ -62,8 +62,8 @@ MOONSCAPE_BLOCK_SIZE = (MOONSCAPE_BIG.width // model.MOONSCAPE_WIDTH,
 MOONSCAPE_MINI_SIZE = (MOONSCAPE_MINI.width // model.MOONSCAPE_WIDTH,
                         MOONSCAPE_MINI.height // model.MOONSCAPE_HEIGHT)
 
-ARCADE_VIEW_MODEL_RATIO = (MOONSCAPE_BIG.width // model.ARCADE_WIDTH,
-                            MOONSCAPE_BIG.height // model.ARCADE_HEIGHT)
+ARCADE_VIEW_MODEL_RATIO = (DRAW_AREA.width // model.ARCADE_WIDTH,
+                            DRAW_AREA.height // model.ARCADE_HEIGHT)
 
 # The gameplay layout has two types: Puzzle and Arcade.
 # The whole of it is defined as DRAW_AREA.
@@ -523,6 +523,7 @@ class MoonView(object):
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
         pix.fill(color.red)
         sprite.addimage(pix, 1, -1)
-        sprite.set_position((dx, dy), shift_speed=4)
+        #sprite.set_position((dx, dy), shift_speed=4)
 
         self.asteroid_sprites[asteroid.id] = sprite
+        trace.write('asteroid created at %s' % (rect))
