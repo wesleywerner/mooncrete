@@ -371,9 +371,16 @@ class MoonView(object):
         """
 
         t = pygame.time.get_ticks()
+        remove_list = []
         for key, sprite in self.moving_moonbase_sprites.items():
             sprite.update(t)
             self.image.blit(sprite.image, sprite.rect)
+            if not sprite.is_moving:
+                self.moonbase_sprites[key] = sprite
+                remove_list.append(key)
+        # remove unmoving sprites
+        for remove_key in remove_list:
+            del self.moving_moonbase_sprites[remove_key]
 
     def prerender_moonscape(self):
         """
@@ -439,6 +446,8 @@ class MoonView(object):
 
         sprite.addimage(pix, 1, -1)
         sprite.set_position(end_position, shift_speed=4)
+        # TODO set the sprite draw size to scale with the mini moonbase size.
+        # or not? see how it looks.
 
         # store this sprite using its (x, y) as a unique id
         self.moving_moonbase_sprites[index_position] = sprite
