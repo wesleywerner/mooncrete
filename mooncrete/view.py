@@ -108,6 +108,8 @@ class MoonView(object):
         self.windowsize = None
         # True while we are busy moving panels around
         self.transitioning = False
+        # a pre-rendered image of the game moonscape surface
+        self.moon_surface = None
 
     def notify(self, event):
         """
@@ -144,6 +146,10 @@ class MoonView(object):
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
                 self.panels['moonscape'].hide()
+
+        elif isinstance(event, MoonscapeGeneratedEvent):
+            self.prerender_moonscape()
+            self.draw_moonscape()
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -307,6 +313,25 @@ class MoonView(object):
                     block_color = (0, 0, 64)
                 pygame.draw.rect(pan.image, block_color, rect)
 
+    def prerender_moonscape(self):
+        """
+        Draw the moonscape from the model.
+
+        """
+
+        self.moon_surface = pygame.Surface(MOONSCAPE_BIG.size)
+        self.moon_surface.set_colorkey(color.magenta)
+        self.moon_surface.fill(color.magenta)
+
+        draw_w = MOONSCAPE_BIG.width // model.MOONSCAPE_WIDTH
+        draw_h = MOONSCAPE_BIG.height // model.MOONSCAPE_HEIGHT
+        for x, y, v in self.model.moonscape_data():
+            if v:
+                rect = pygame.Rect(
+                    (x * draw_w, y * draw_h),
+                    (draw_w, draw_h)
+                    )
+                pygame.draw.rect(self.moon_surface, (128, 128, 128), rect)
 
     def draw_moonscape(self):
         """
@@ -318,18 +343,11 @@ class MoonView(object):
         # draw moon base sprites
         # draw the pre-rendered moon surface
         # draw the composite on our the moonscape panel
-        pass
 
         pan = self.panels['moonscape']
-        pan.image.fill(color.black)
+        pan.image.fill(color.magenta)
 
-        for x, y, v in self.model.moonscape_data():
-            if v:
-                rect = pygame.Rect(
-                    (x * 5, y * 5),
-                    (5, 5)
-                    )
-                pygame.draw.rect(pan.image, (128, 128, 128), rect)
+        pan.image.blit(self.moon_surface, (0, 0))
 
 class Panel(object):
     """
