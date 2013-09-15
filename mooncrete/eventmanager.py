@@ -29,7 +29,11 @@ class EventManager(object):
 
     def Post(self, event):
 
-        if type(event) not in (TickEvent, InputEvent, StepGameEvent):
+        if type(event) not in (TickEvent,
+                                InputEvent,
+                                StepGameEvent,
+                                AsteroidMovedEvent
+                                ):
             trace.write(str(event))
         for listener in self.listeners:
             listener.notify(event)
