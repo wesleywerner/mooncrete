@@ -793,6 +793,7 @@ class MoonModel(object):
                     if not is_empty and has_base:
                         self._moonscape[y][x] = BLOCK_MOONROCKS
 
+        self._evman.Post(MoonscapeGeneratedEvent())
         self._arcade_print_moonscape()
 
     def _moonscape_block_at(self, x, y):
