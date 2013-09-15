@@ -193,6 +193,9 @@ class MoonView(object):
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
 
+        elif isinstance(event, AsteroidMovedEvent):
+            self.move_asteroid(event.asteroid)
+
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
 
@@ -462,6 +465,7 @@ class MoonView(object):
         t = pygame.time.get_ticks()
         for key, asteroid in self.asteroid_sprites.items():
             asteroid.update(t)
+            self.image.blit(asteroid.image, asteroid.rect)
 
 
     def create_moonbase_sprite(
@@ -523,7 +527,20 @@ class MoonView(object):
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
         pix.fill(color.red)
         sprite.addimage(pix, 1, -1)
-        #sprite.set_position((dx, dy), shift_speed=4)
 
         self.asteroid_sprites[asteroid.id] = sprite
         trace.write('asteroid created at %s' % (rect))
+
+    def move_asteroid(self, asteroid):
+        """
+        Move the given model asteroid sprite.
+
+        """
+
+        sprite = self.asteroid_sprites.get(asteroid.id, None)
+        if sprite:
+        # convert indexes to screen coordinates
+            x, y = asteroid.position
+            x = x * ARCADE_VIEW_MODEL_RATIO[0]
+            y = y * ARCADE_VIEW_MODEL_RATIO[1]
+            sprite.set_position((x, y), shift_speed=0)
