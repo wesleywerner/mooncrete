@@ -62,6 +62,9 @@ MOONSCAPE_BLOCK_SIZE = (MOONSCAPE_BIG.width // model.MOONSCAPE_WIDTH,
 MOONSCAPE_MINI_SIZE = (MOONSCAPE_MINI.width // model.MOONSCAPE_WIDTH,
                         MOONSCAPE_MINI.height // model.MOONSCAPE_HEIGHT)
 
+ARCADE_VIEW_MODEL_RATIO = (MOONSCAPE_BIG.width // model.ARCADE_WIDTH,
+                            MOONSCAPE_BIG.height // model.ARCADE_HEIGHT)
+
 # The gameplay layout has two types: Puzzle and Arcade.
 # The whole of it is defined as DRAW_AREA.
 #
@@ -111,11 +114,13 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
-        # stores moonbase sprites that get drawn onto the moonscape panel
+        # moonbase sprites that get drawn onto the moonscape panel
         self.moonbase_sprites = {}
-        # stores moving moonbase sprites that get drawn to the screen while
+        # moving moonbase sprites that get drawn to the screen while
         # they are moving towards their destination
         self.moving_moonbase_sprites = {}
+        # asteroids sprites that fly through space towards your base
+        self.asteroid_sprites = {}
         self.panels = {}
         self.windowsize = None
         # True while we are busy moving panels around
@@ -184,6 +189,9 @@ class MoonView(object):
                 event.block_type,
                 event.name
                 )
+
+        elif isinstance(event, AsteroidSpawnedEvent):
+            self.create_asteroid_sprite(event.asteroid)
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -303,19 +311,20 @@ class MoonView(object):
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
+            self.animate_moonbases()
 
         elif state == STATE_PHASE3:
             self.draw_moonscape()
-
-        # animate moonbase sprites.
-        # before drawing the panels, as these live on one of the panels.
-        self.animate_moonbases()
 
         # update panels
         self.transitioning = False
         for key, panel in self.panels.items():
             if panel.draw(self.image):
                 self.transitioning = True
+
+        # draw asteroids after panel updates: these live on the screen surface.
+        if state == STATE_PHASE3:
+            self.draw_asteroids()
 
         # moving moonbases are draw on top of all other panels
         self.draw_moving_moonbases()
@@ -434,15 +443,26 @@ class MoonView(object):
         """
 
         # clear
-        # draw moon base sprites
-        # draw the pre-rendered moon surface
-        # draw the composite on our the moonscape panel
-
         pan = self.panels['moonscape']
         pan.image.fill(color.magenta)
 
+        # draw moon base sprites
+        self.animate_moonbases()
+
+        # draw the pre-rendered moon surface
         if self.moon_surface:
             pan.image.blit(self.moon_surface, (0, 0))
+
+    def draw_asteroids(self):
+        """
+        Animate and draw flying asteroids.
+
+        """
+
+        t = pygame.time.get_ticks()
+        for key, asteroid in self.asteroid_sprites.items():
+            asteroid.update(t)
+
 
     def create_moonbase_sprite(
                         self,
@@ -480,3 +500,29 @@ class MoonView(object):
 
         # store this sprite using its (x, y) as a unique id
         self.moving_moonbase_sprites[index_position] = sprite
+
+    def create_asteroid_sprite(self, asteroid):
+        """
+        Create an asteroid sprite from the given model asteroid object.
+
+        """
+
+        # the model asteroid works in indexes
+        x, y = asteroid.position
+        dx, dy = asteroid.destination
+        # convert indexes to screen coordinates
+        x = x * ARCADE_VIEW_MODEL_RATIO[0]
+        y = y * ARCADE_VIEW_MODEL_RATIO[1]
+        dx = dx * ARCADE_VIEW_MODEL_RATIO[0]
+        dy = dy * ARCADE_VIEW_MODEL_RATIO[1]
+        rect = pygame.Rect(x, y, dx, dy)
+        # construct the sprite
+        sprite = Sprite('asteroid %s' % (asteroid.id,), rect)
+
+        # use a placehold image
+        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
+        pix.fill(color.red)
+        sprite.addimage(pix, 1, -1)
+        sprite.set_position((dx, dy), shift_speed=4)
+
+        self.asteroid_sprites[asteroid.id] = sprite

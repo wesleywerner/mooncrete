@@ -223,7 +223,6 @@ class Asteroid(object):
         segments = helper.get_line_segments(self.position, self.destination)
         if segments:
             self.position = segments[1]
-            trace.write('moved asteroid to %s' % (self.position,))
 
     def id(self):
         return id(self)
@@ -921,6 +920,7 @@ class MoonModel(object):
 
             # move asteroids
             asteroid.move()
+            self._evman.Post(AsteroidMovedEvent(asteroid))
 
             if not self._arcade_in_bounds(asteroid.position):
                 remove_list.append(asteroid)
