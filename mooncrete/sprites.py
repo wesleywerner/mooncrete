@@ -35,7 +35,7 @@ class Sprite(pygame.sprite.Sprite):
         """
 
         if self.shift_speed and self.destination:
-            return self.rect.topleft != self.destination
+            return self.rect.topleft != self.destination.topleft
 
     def addimage(self, image, fps, loop):
         """
@@ -83,14 +83,11 @@ class Sprite(pygame.sprite.Sprite):
         """
 
         if self.shift_speed and self.destination:
-            if self.rect.left < self.destination[0]:
-                self.rect.left += self.shift_speed
-            if self.rect.left > self.destination[0]:
-                self.rect.left -= self.shift_speed
-            if self.rect.top < self.destination[1]:
-                self.rect.top += self.shift_speed
-            if self.rect.top > self.destination[1]:
-                self.rect.top -= self.shift_speed
+            x_diff = self.destination.left - self.rect.left
+            y_diff = self.destination.top - self.rect.top
+            self.rect = self.rect.move(x_diff // 5, y_diff // 5)
+            if (abs(x_diff) < 5) and (abs(y_diff) < 5):
+                self.rect = self.destination
 
         if self.canupdate(t):
             self._last_update = t
@@ -112,6 +109,8 @@ class Sprite(pygame.sprite.Sprite):
         it's new location. 0 is an instant jump.
         """
 
+        if type(position) is tuple:
+            position = pygame.Rect(position, self.rect.size)
         if shift_speed == 0:
             self.shift_speed = 0
             self.rect.topleft = position
