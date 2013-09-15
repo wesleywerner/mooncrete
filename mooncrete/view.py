@@ -54,6 +54,10 @@ MOONSCAPE_BIG = pygame.Rect(0, 440, DRAW_AREA.width, 160)
 PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
                      PUZZLE_AREA.height / model.PUZZLE_WIDTH)
 
+# The size to draw each moonscape block.
+MOONSCAPE_BLOCK_SIZE = (MOONSCAPE_BIG.width // model.MOONSCAPE_WIDTH,
+                        MOONSCAPE_BIG.height // model.MOONSCAPE_HEIGHT)
+
 # The gameplay layout has two types: Puzzle and Arcade.
 # The whole of it is defined as DRAW_AREA.
 #
@@ -287,9 +291,13 @@ class MoonView(object):
         self.screen.blit(self.image, DRAW_AREA)
         pygame.display.flip()
 
-    def translate_view_coords(self, position):
+    def translate_from_puzzle_coords(self, position):
         return (position[0] * PUZZLE_BLOCK_SIZE[0],
-                position[1] * PUZZLE_BLOCK_SIZE[0])
+                position[1] * PUZZLE_BLOCK_SIZE[1])
+
+    def translate_from_moonscape_coords(self, position):
+        return (position[0] * MOONSCAPE_BLOCK_SIZE[0],
+                position[1] * MOONSCAPE_BLOCK_SIZE[1])
 
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
