@@ -953,7 +953,7 @@ class MoonModel(object):
         """
 
         asteroid = Asteroid()
-        asteroid.position = (0, 0)
+        asteroid.position = (random.randint(0, ARCADE_WIDTH), 0)
         asteroid.destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
         self._asteroids.append(asteroid)
         self._evman.Post(AsteroidSpawnedEvent(asteroid))
