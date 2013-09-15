@@ -531,11 +531,12 @@ class MoonView(object):
         rect = pygame.Rect(rect, MOONSCAPE_BLOCK_SIZE)
         # convert the sprite destination position from the moonscape
         dest = self.convert_mini_moonscape_to_screen(turret.position)
-        dest = pygame.Rect(dest, MOONSCAPE_BLOCK_SIZE)
         sprite = Sprite('turret %s' % (turret.id,), rect)
 
+        # store the turret on the sprite
+        sprite.turret = turret
         sprite.final_destination = self.convert_moonscape_to_panel(turret.position)
-        sprite.set_position(dest.topleft)
+        sprite.set_position(dest)
 
         # use a placehold image
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
