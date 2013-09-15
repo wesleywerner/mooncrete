@@ -245,6 +245,26 @@ class Asteroid(object):
     def id(self):
         return id(self)
 
+
+class Turret(object):
+    """
+    A defense against incoming asteroids.
+
+    """
+
+    def __init__(self):
+        self.position = None
+        self.charge = 0
+        self.max_charge = 4
+
+    def recharge(self):
+        if self.charge < self.max_charge:
+            self.charge += 1
+
+    def id(self):
+        return self.position
+
+
 class MoonModel(object):
     """
     Handles game logic. Everything data lives in here.
@@ -290,6 +310,10 @@ class MoonModel(object):
 
         # list of asteroids in the arcade game mode
         self._asteroids = []
+
+        # our gun turrets to defend our base.
+        # a dictionary is used and the key is the moonscape (x, y) position.
+        self._turrets = {}
 
     @property
     def state(self):
@@ -895,7 +919,7 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
-    def _arcade_spawn_block(self, block_type, source_loc):
+    def _arcade_spawn_block(self, block_type, from_position):
         """
         Spawn the given block type into the arcade playfield.
         This call takes care fo finding a place for it.
@@ -923,10 +947,16 @@ class MoonModel(object):
                 base = self._moonscape_block_at(x, y + 1)
                 if base == required_base:
                     found_home = True
-                    self._moonscape[y][x] = block_type
-                    spawn_event = ArcadeBlockSpawnedEvent(
-                        source_loc, (x, y), block_type, BLOCK_NAMES[block_type])
-                    self._evman.Post(spawn_event)
+                    self._arcade_build_moonbase(
+                        from_position=from_position,
+                        destination=(x, y),
+                        block_type=block_type
+                        )
+
+                    #self._moonscape[y][x] = block_type
+                    #spawn_event = ArcadeBlockSpawnedEvent(
+                        #from_position, (x, y), block_type, BLOCK_NAMES[block_type])
+                    #self._evman.Post(spawn_event)
                     break
                 elif base:
                     # this is some other kind of block. try another column.
@@ -938,6 +968,34 @@ class MoonModel(object):
 
         self._arcade_print_moonscape()
 
+    def _arcade_build_moonbase(self, from_position, destination, block_type):
+        """
+        Use this to build the moon base objects.
+        It sets the corresponding moonscape cell value,
+        constructs matching game objects, and fires matching events.
+
+        """
+
+        # update the moonscape matrix for easier collision tests
+        x, y = destination
+        self._moonscape[y][x] = block_type
+
+        # construct a game object for specific types
+        if block_type == BLOCK_TURRET:
+            turret = Turret()
+            turret.position = destination
+            self._turrets[turret.id] = turret
+            event = TurretSpawnedEvent(
+                turret=turret,
+                flyin_position=from_position
+                )
+            self._evman.Post(event)
+        else:
+            # generic spawn event to be replace by specific events above
+            spawn_event = ArcadeBlockSpawnedEvent(
+                from_position, destination, block_type, BLOCK_NAMES[block_type])
+            self._evman.Post(spawn_event)
+
     def _arcade_step(self):
         """
         Step the arcade game.
@@ -945,7 +1003,7 @@ class MoonModel(object):
         """
 
         # spawn some asteroids
-        if len(self._asteroids) == 0:
+        while len(self._asteroids) < 3:
             self._arcade_spawn_asteroid()
 
         remove_list = []
@@ -960,7 +1018,7 @@ class MoonModel(object):
             else:
                 # get the moonbase block at this translated position
                 x, y = self._asteroid_to_moonscape(asteroid)
-                trace.write('translated asteroid pos to moonscape %s' % ((x, y),))
+                #trace.write('translated asteroid pos to moonscape %s' % ((x, y),))
                 block_type = self._moonscape_block_at(x, y)
 
                 if not block_type:
@@ -1005,7 +1063,7 @@ class MoonModel(object):
         """
 
         asteroid = Asteroid()
-        asteroid.position = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT / 2)
+        asteroid.position = (random.randint(0, ARCADE_WIDTH), 0)
         asteroid.destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
         asteroid.trajectory = list(reversed(helper.get_line_segments(asteroid.position, asteroid.destination)))
         self._asteroids.append(asteroid)
