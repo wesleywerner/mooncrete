@@ -416,8 +416,7 @@ class MoonView(object):
             if not sprite.is_moving:
                 # set new sprite position relative to the moonscape panel.
                 # we reuse the stored indice positions for this.
-                sprite.rect.topleft = self.convert_moonscape_to_panel(
-                    sprite.moonscape_index_position)
+                sprite.rect.topleft = sprite.final_destination
                 self.moonbase_sprites[key] = sprite
                 remove_list.append(key)
         # remove unmoving sprites
@@ -505,8 +504,7 @@ class MoonView(object):
             (index_position, start_position, end_position))
         rect = pygame.Rect(start_position, MOONSCAPE_BLOCK_SIZE)
         sprite = Sprite(name, rect)
-        # store the moonscape index position for reuse
-        sprite.moonscape_index_position = index_position
+        sprite.final_destination = self.convert_moonscape_to_panel(index_position)
 
         # use a placehold image
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
@@ -536,8 +534,7 @@ class MoonView(object):
         dest = pygame.Rect(dest, MOONSCAPE_BLOCK_SIZE)
         sprite = Sprite('turret %s' % (turret.id,), rect)
 
-        # TODO remove the below in favor of storing the turret directly
-        sprite.moonscape_index_position = turret.position
+        sprite.final_destination = self.convert_moonscape_to_panel(turret.position)
         sprite.set_position(dest.topleft)
 
         # use a placehold image
