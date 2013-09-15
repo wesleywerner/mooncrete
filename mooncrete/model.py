@@ -83,6 +83,7 @@
 import copy
 import random
 import trace
+import helper
 from statemachine import *
 from eventmanager import *
 
@@ -206,6 +207,21 @@ class Player(object):
         self.level = 1
 
 
+class Asteroid(object):
+    """
+    A dangerous object that will destroy your moon base.
+
+    """
+
+    def __init__(self):
+        self.position = None
+        self.destination = None
+
+    def move(self):
+        segments = helper.get_line_segments(self.position, self.destination)
+        if segments:
+            self.position = segments[0]
+
 class MoonModel(object):
     """
     Handles game logic. Everything data lives in here.
@@ -252,6 +268,9 @@ class MoonModel(object):
         # track the last phase the game was in for continuing games from the menu
         self._last_phase = STATE_MENU
 
+        # list of asteroids in the arcade game mode
+        self._asteroids = []
+
     @property
     def state(self):
         """
@@ -276,6 +295,8 @@ class MoonModel(object):
                 state = self._state.peek()
                 if state in (STATE_PHASE1, STATE_PHASE2):
                     self._puzzle_step()
+                elif state == STATE_PHASE3:
+                    self._arcade_step()
 
         elif isinstance(event, QuitEvent):
             trace.write('Engine shutting down...')
@@ -796,6 +817,27 @@ class MoonModel(object):
         self._evman.Post(MoonscapeGeneratedEvent())
         self._arcade_print_moonscape()
 
+    def moonscape_data(self):
+        """
+        Provide an iteratble list of the moonscape data in the form:
+
+            (x, y, block_type)
+        """
+
+
+        for y, row in enumerate(self._moonscape):
+            for x, cell in enumerate(row):
+                yield (x, y, cell)
+
+    def _arcade_in_bounds(self, position):
+        """
+        Checks if a point is in arcade boundaries.
+
+        """
+
+        x, y = position
+        return (x >= 0 and x < ARCADE_WIDTH and y >= 0 and y < ARCADE_HEIGHT)
+
     def _moonscape_block_at(self, x, y):
         """
         Get the block value at x, y.
@@ -861,7 +903,23 @@ class MoonModel(object):
 
         self._arcade_print_moonscape()
 
-    def moonscape_data(self):
-        for y, row in enumerate(self._moonscape):
-            for x, cell in enumerate(row):
-                yield (x, y, cell)
+    def _arcade_step(self):
+        """
+        Step the arcade game.
+
+        """
+
+        # spawn some asteroids
+
+        # move asteroids
+        remove_list = []
+        for asteroid in self._asteroids:
+            asteroid.move()
+            if not self._arcade_in_bounds(asteroid.position):
+                remove_list.append(asteroid)
+
+        # check for asteroid + moonbase hits
+
+        # remove asteroids
+        for to_remove in remove_list:
+            self._asteroids.remove(to_remove)
