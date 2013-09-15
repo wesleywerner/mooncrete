@@ -94,21 +94,21 @@ class ArcadeBlockSpawnedEvent(Event):
 
     def __init__(
                 self,
-                puzzle_block_position,
-                arcade_block_position,
+                start_indice,
+                end_indice,
                 block_type,
                 block_name,
                 ):
         self.name = 'Arcade block spawned event'
-        self.puzzle_block_position = puzzle_block_position
-        self.arcade_block_position = arcade_block_position
+        self.start_indice = start_indice
+        self.end_indice = end_indice
         self.block_type = block_type
         self.block_name = block_name
 
     def __str__(self):
         return ('%s spawned from puzzle loc %s -> arcade loc %s' % (self.block_name,
-                                    self.puzzle_block_position,
-                                    self.arcade_block_position)
+                                    self.start_indice,
+                                    self.end_indice)
                                     )
 
 
