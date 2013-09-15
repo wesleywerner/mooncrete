@@ -944,8 +944,9 @@ class MoonModel(object):
             if found_home:
                 break
             for y in xrange(0, MOONSCAPE_HEIGHT):
+                current = self._moonscape_block_at(x, y)
                 base = self._moonscape_block_at(x, y + 1)
-                if base == required_base:
+                if not current and base == required_base:
                     found_home = True
                     self._arcade_build_moonbase(
                         from_position=from_position,
