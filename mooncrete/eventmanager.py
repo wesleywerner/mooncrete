@@ -110,3 +110,9 @@ class ArcadeBlockSpawnedEvent(Event):
                                     self.puzzle_block_position,
                                     self.arcade_block_position)
                                     )
+
+
+class MoonscapeGeneratedEvent(Event):
+
+    def __init__(self):
+        self.name = 'Moonscape generated event'
