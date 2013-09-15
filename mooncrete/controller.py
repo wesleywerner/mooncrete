@@ -48,8 +48,6 @@ class MoonController(object):
         else:
             return
 
-        # TODO separate this logic to support different update speeds
-        # for puzzle and arcade modes
         ticks = pygame.time.get_ticks()
         if ticks - self.last_model_update > frequency:
             self.last_model_update = ticks
