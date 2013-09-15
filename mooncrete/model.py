@@ -225,6 +225,9 @@ class Asteroid(object):
             self.position = segments[1]
             trace.write('moved asteroid to %s' % (self.position,))
 
+    def id(self):
+        return id(self)
+
 class MoonModel(object):
     """
     Handles game logic. Everything data lives in here.
@@ -845,7 +848,7 @@ class MoonModel(object):
 
         """
 
-        if x < MOONSCAPE_WIDTH and y < MOONSCAPE_HEIGHT:
+        if self._arcade_in_bounds((x, y)):
             return self._moonscape[y][x]
 
     def _arcade_print_moonscape(self):
@@ -909,8 +912,6 @@ class MoonModel(object):
 
         """
 
-
-
         # spawn some asteroids
         if len(self._asteroids) == 0:
             self._arcade_spawn_asteroid()
@@ -953,5 +954,6 @@ class MoonModel(object):
 
         asteroid = Asteroid()
         asteroid.position = (0, 0)
-        asteroid.destination = (3, ARCADE_HEIGHT)
+        asteroid.destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
         self._asteroids.append(asteroid)
+        self._evman.Post(AsteroidSpawnedEvent(asteroid))

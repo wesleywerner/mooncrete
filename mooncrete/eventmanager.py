@@ -116,3 +116,11 @@ class MoonscapeGeneratedEvent(Event):
 
     def __init__(self):
         self.name = 'Moonscape generated event'
+
+
+class AsteroidSpawnedEvent(Event):
+
+    def __init__(self, asteroid):
+        self.name = 'Asteroid spawned event'
+        self.asteroid = asteroid
+
