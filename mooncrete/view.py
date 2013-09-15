@@ -303,10 +303,13 @@ class MoonView(object):
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
-            #self.draw_moving_moonbases()
 
         elif state == STATE_PHASE3:
             self.draw_moonscape()
+
+        # animate moonbase sprites.
+        # before drawing the panels, as these live on one of the panels.
+        self.animate_moonbases()
 
         # update panels
         self.transitioning = False
@@ -336,6 +339,10 @@ class MoonView(object):
     def translate_to_screen(self, position, container_position):
         return (position[0] + container_position[0],
                 position[1] + container_position[1])
+
+    def translate_from_screen(self, position, container_position):
+        return (position[0] - container_position[0],
+                position[1] - container_position[1])
 
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
@@ -376,11 +383,29 @@ class MoonView(object):
             sprite.update(t)
             self.image.blit(sprite.image, sprite.rect)
             if not sprite.is_moving:
+                # set new sprite position relative to the moonscape panel.
+                # we reuse the stored indice positions for this.
+                sprite.rect.topleft = (
+                    sprite.moonscape_index_position[0] * MOONSCAPE_BLOCK_SIZE[0],
+                    sprite.moonscape_index_position[1] * MOONSCAPE_BLOCK_SIZE[1],
+                    )
                 self.moonbase_sprites[key] = sprite
                 remove_list.append(key)
         # remove unmoving sprites
         for remove_key in remove_list:
             del self.moving_moonbase_sprites[remove_key]
+
+    def animate_moonbases(self):
+        """
+        Draw animating moonbase sprites.
+
+        """
+
+        t = pygame.time.get_ticks()
+        pan = self.panels['moonscape']
+        for key, sprite in self.moonbase_sprites.items():
+            sprite.update(t)
+            pan.image.blit(sprite.image, sprite.rect)
 
     def prerender_moonscape(self):
         """
@@ -439,6 +464,8 @@ class MoonView(object):
             (index_position, start_position, end_position))
         rect = pygame.Rect(start_position, MOONSCAPE_BLOCK_SIZE)
         sprite = Sprite(name, rect)
+        # store the moonscape index position for reuse
+        sprite.moonscape_index_position = index_position
 
         # use a placehold image
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
