@@ -59,6 +59,8 @@ PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
 # The size to draw each moonscape block.
 MOONSCAPE_BLOCK_SIZE = (MOONSCAPE_BIG.width // model.MOONSCAPE_WIDTH,
                         MOONSCAPE_BIG.height // model.MOONSCAPE_HEIGHT)
+MOONSCAPE_MINI_SIZE = (MOONSCAPE_MINI.width // model.MOONSCAPE_WIDTH,
+                        MOONSCAPE_MINI.height // model.MOONSCAPE_HEIGHT)
 
 # The gameplay layout has two types: Puzzle and Arcade.
 # The whole of it is defined as DRAW_AREA.
@@ -301,6 +303,7 @@ class MoonView(object):
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
+            #self.draw_moving_moonbases()
 
         elif state == STATE_PHASE3:
             self.draw_moonscape()
@@ -310,6 +313,9 @@ class MoonView(object):
         for key, panel in self.panels.items():
             if panel.draw(self.image):
                 self.transitioning = True
+
+        # moving moonbases are draw on top of all other panels
+        self.draw_moving_moonbases()
 
         pix = self.smallfont.render(
             'Mooncrete -- press space to play',
@@ -324,8 +330,8 @@ class MoonView(object):
                 position[1] * PUZZLE_BLOCK_SIZE[1])
 
     def translate_from_moonscape_coords(self, position):
-        return (position[0] * MOONSCAPE_BLOCK_SIZE[0],
-                position[1] * MOONSCAPE_BLOCK_SIZE[1])
+        return (position[0] * MOONSCAPE_MINI_SIZE[0],
+                position[1] * MOONSCAPE_MINI_SIZE[1])
 
     def translate_to_screen(self, position, container_position):
         return (position[0] + container_position[0],
@@ -354,6 +360,20 @@ class MoonView(object):
                 if v == model.BLOCK_TURRET_BASE:
                     block_color = (0, 0, 64)
                 pygame.draw.rect(pan.image, block_color, rect)
+
+    def draw_moving_moonbases(self):
+        """
+        Draws any moving moonbase sprites.
+        When they reach their destination, they will be moved to the
+        moonbase_sprites list where they are then drawn onto the moonscape
+        panel itself.
+
+        """
+
+        t = pygame.time.get_ticks()
+        for key, sprite in self.moving_moonbase_sprites.items():
+            sprite.update(t)
+            self.image.blit(sprite.image, sprite.rect)
 
     def prerender_moonscape(self):
         """
@@ -408,6 +428,8 @@ class MoonView(object):
 
         """
 
+        trace.write('creating moonbase sprite %s at position %s -> %s' %
+            (index_position, start_position, end_position))
         rect = pygame.Rect(start_position, MOONSCAPE_BLOCK_SIZE)
         sprite = Sprite(name, rect)
 
@@ -416,7 +438,7 @@ class MoonView(object):
         pix.fill(color.gold)
 
         sprite.addimage(pix, 1, -1)
-        sprite.set_position(end_position)
+        sprite.set_position(end_position, shift_speed=4)
 
         # store this sprite using its (x, y) as a unique id
         self.moving_moonbase_sprites[index_position] = sprite
