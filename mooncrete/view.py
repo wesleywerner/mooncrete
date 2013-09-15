@@ -23,6 +23,7 @@ import model
 from statemachine import *
 from eventmanager import *
 from panel import Panel
+from sprites import Sprite
 
 
 # Limit drawing to this many frames per second.
@@ -108,7 +109,11 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
-        self.puzzle_sprites = {}
+        # stores moonbase sprites that get drawn onto the moonscape panel
+        self.moonbase_sprites = {}
+        # stores moving moonbase sprites that get drawn to the screen while
+        # they are moving towards their destination
+        self.moving_moonbase_sprites = {}
         self.panels = {}
         self.windowsize = None
         # True while we are busy moving panels around
@@ -155,6 +160,28 @@ class MoonView(object):
         elif isinstance(event, MoonscapeGeneratedEvent):
             self.prerender_moonscape()
             self.draw_moonscape()
+
+        elif isinstance(event, ArcadeBlockSpawnedEvent):
+            # the event positions are measured in board indices.
+            # translate them into screen coordinates.
+            start_pos = self.translate_from_puzzle_coords(event.start_indice)
+            end_pos = self.translate_from_moonscape_coords(event.end_indice)
+            # these are still relative to their respective panels.
+            # add the panel offsets.
+            start_pos = self.translate_to_screen(
+                start_pos, self.panels['puzzle'].rect.topleft
+                )
+            end_pos = self.translate_to_screen(
+                end_pos, self.panels['moonscape'].rect.topleft
+                )
+            # create this sprite object
+            self.create_moonbase_sprite(
+                event.end_indice,
+                start_pos,
+                end_pos,
+                event.block_type,
+                event.name
+                )
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -300,13 +327,17 @@ class MoonView(object):
         return (position[0] * MOONSCAPE_BLOCK_SIZE[0],
                 position[1] * MOONSCAPE_BLOCK_SIZE[1])
 
+    def translate_to_screen(self, position, container_position):
+        return (position[0] + container_position[0],
+                position[1] + container_position[1])
+
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
-        pan.image.fill(color.gray)
+        pan.image.fill(color.darker_gray)
         for x, y, v in self.model.puzzle_board_data():
             if v:
                 rect = pygame.Rect(
-                    (x * PUZZLE_BLOCK_SIZE[0], y * PUZZLE_BLOCK_SIZE[1]),
+                    self.translate_from_puzzle_coords((x, y)),
                     PUZZLE_BLOCK_SIZE
                     )
                 block_color = (128, 128, 128)
@@ -360,3 +391,32 @@ class MoonView(object):
 
         if self.moon_surface:
             pan.image.blit(self.moon_surface, (0, 0))
+
+    def create_moonbase_sprite(
+                        self,
+                        index_position,
+                        start_position,
+                        end_position,
+                        block_type,
+                        name,
+                        ):
+        """
+        Create a moonbase object sprite.
+
+        index_position is the (x, y) indices in the model space.
+        start and end position are the screen pixels.
+
+        """
+
+        rect = pygame.Rect(start_position, MOONSCAPE_BLOCK_SIZE)
+        sprite = Sprite(name, rect)
+
+        # use a placehold image
+        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
+        pix.fill(color.gold)
+
+        sprite.addimage(pix, 1, -1)
+        sprite.set_position(end_position)
+
+        # store this sprite using its (x, y) as a unique id
+        self.moving_moonbase_sprites[index_position] = sprite
