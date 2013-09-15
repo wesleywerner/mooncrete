@@ -92,18 +92,35 @@ from eventmanager import *
 PUZZLE_WIDTH = 10
 PUZZLE_HEIGHT = 10
 
+# The arcade size is in a much more refined scale.
+# views should scale accordingly to their screen size.
+ARCADE_WIDTH = 100
+ARCADE_HEIGHT = 100
+
 # The moonscape is the rocky moon surface where your base is built.
-# It is uses index positioning.
+# It is uses index positioning, and the value of each cell is the block type.
+# Air space lives above the moonscape, and is primarily used to calculate
+# the asteroids collisions with your base - without air space asteroids would
+# collide when they enter that playfield. This gives you some time to shoot
+# them down.
+#   +---------------------+
+#   |                     |
+#   |                     |
+#   |     air space       |
+#   O---------------------+
+#   | moonscape           |
+#   |                     |
+#   +---------------------+
 MOONSCAPE_WIDTH = 20
 MOONSCAPE_HEIGHT = 5
+# This can be seen as squaring up with the moonscape width
+MOONSCAPE_AIRSPACE = 15
 
-# The arcade width should be the same as the moonscape we are building on.
-ARCADE_WIDTH = MOONSCAPE_WIDTH
-# The height can be variable, but can't be smaller than the moonscape height.
-ARCADE_HEIGHT = 20
-# The height difference between the arcade and moonscape data structures.
-# Used to offset asteroid positions (arcade) for moonscape collitions.
-ARCADE_MOONSCAPE_YDIFF = ARCADE_HEIGHT - MOONSCAPE_HEIGHT
+# The moonspace ratio where it lives within the air space
+MOONSPACE_RATIO = (
+    ARCADE_WIDTH / MOONSCAPE_WIDTH,
+    ARCADE_HEIGHT / (MOONSCAPE_AIRSPACE + MOONSCAPE_HEIGHT)
+    )
 
 # different kind of puzzle blocks
 BLOCK_CALCIUM_BARREL = 10
@@ -222,7 +239,8 @@ class Asteroid(object):
 
     def move(self):
         if self.trajectory:
-            self.position = self.trajectory.pop()
+            self.trajectory = self.trajectory[:-2]
+            self.position = self.trajectory[-1]
 
     def id(self):
         return id(self)
@@ -941,8 +959,8 @@ class MoonModel(object):
                 remove_list.append(asteroid)
             else:
                 # get the moonbase block at this translated position
-                x, y = asteroid.position
-                y = y - ARCADE_MOONSCAPE_YDIFF
+                x, y = self._asteroid_to_moonscape(asteroid)
+                trace.write('translated asteroid pos to moonscape %s' % ((x, y),))
                 block_type = self._moonscape_block_at(x, y)
 
                 if not block_type:
@@ -967,6 +985,19 @@ class MoonModel(object):
         for to_remove in remove_list:
             self._asteroids.remove(to_remove)
 
+    def _asteroid_to_moonscape(self, asteroid):
+        """
+        Converts the asteroid position to find the moonscape block equivalent.
+
+        """
+
+        x, y = asteroid.position
+        x = x // MOONSPACE_RATIO[0]
+        y = y // MOONSPACE_RATIO[1]
+        # exclude the air space above the moonscape
+        y -= MOONSCAPE_AIRSPACE
+        return (x, y)
+
     def _arcade_spawn_asteroid(self):
         """
         Creator a new asteroid and put it in play.
@@ -974,7 +1005,7 @@ class MoonModel(object):
         """
 
         asteroid = Asteroid()
-        asteroid.position = (random.randint(0, ARCADE_WIDTH), 10)
+        asteroid.position = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT / 2)
         asteroid.destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
         asteroid.trajectory = list(reversed(helper.get_line_segments(asteroid.position, asteroid.destination)))
         self._asteroids.append(asteroid)
