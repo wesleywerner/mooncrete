@@ -445,6 +445,12 @@ class MoonModel(object):
         self._reset_puzzle()
         self._reset_arcade()
 
+        # TODO remove this (for testing)
+        for i in xrange(10):
+            self._arcade_spawn_block(BLOCK_MOONCRETE_SLAB, (10, 10))
+        for i in xrange(5):
+            self._arcade_spawn_block(BLOCK_RADAR, (10, 10))
+
     def _unshared_copy(self, inList):
         """
         Recursive copy list-of-lists.
@@ -850,6 +856,15 @@ class MoonModel(object):
         if self._arcade_in_bounds((x, y)):
             return self._moonscape[y][x]
 
+    def _moonscape_set_block(self, position, block_type):
+        """
+        Set a moonscape block to a new type.
+
+        """
+
+        x, y = position
+        self._moonscape[y][x] = block_type
+
     def _arcade_print_moonscape(self):
         if trace.TRACE:
             grid = []
@@ -937,12 +952,16 @@ class MoonModel(object):
                     continue
 
                 # check for asteroid + moonbase collisions
-                if block_type in BLOCK_BASES.keys():
+                if block_type == BLOCK_MOONROCKS:
+                    # we hit the ground and disintegrate in a puff of dust
+                    remove_list.append(asteroid)
+                    self._evman.Post(AsteroidDestroyEvent(asteroid))
+                elif block_type in BLOCK_BASES.keys():
                     # ah-yup. let's destroy these.
                     remove_list.append(asteroid)
-                    # TODO AsteroidDestroyEvent and MoonbaseDestroyEvent
-
-
+                    self._moonscape_set_block((x, y), 0)
+                    self._evman.Post(AsteroidDestroyEvent(asteroid))
+                    self._evman.Post(MoonbaseDestroyEvent((x, y)))
 
         # remove asteroids
         for to_remove in remove_list:
