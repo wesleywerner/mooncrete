@@ -218,11 +218,11 @@ class Asteroid(object):
     def __init__(self):
         self.position = None
         self.destination = None
+        self.trajectory = None
 
     def move(self):
-        segments = helper.get_line_segments(self.position, self.destination)
-        if segments:
-            self.position = segments[1]
+        if self.trajectory:
+            self.position = self.trajectory.pop()
 
     def id(self):
         return id(self)
@@ -955,5 +955,6 @@ class MoonModel(object):
         asteroid = Asteroid()
         asteroid.position = (random.randint(0, ARCADE_WIDTH), 0)
         asteroid.destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
+        asteroid.trajectory = list(reversed(helper.get_line_segments(asteroid.position, asteroid.destination)))
         self._asteroids.append(asteroid)
         self._evman.Post(AsteroidSpawnedEvent(asteroid))
