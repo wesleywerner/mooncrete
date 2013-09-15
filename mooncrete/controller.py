@@ -39,6 +39,8 @@ class MoonController(object):
 
         """
 
+        # TODO separate this logic to support different update speeds
+        # for puzzle and arcade modes
         ticks = pygame.time.get_ticks()
         if ticks - self.last_model_update > self.model_update_delay:
             self.last_model_update = ticks
