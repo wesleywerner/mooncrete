@@ -112,6 +112,14 @@ class ArcadeBlockSpawnedEvent(Event):
                                     )
 
 
+class TurretSpawnedEvent(Event):
+
+    def __init__(self, turret, flyin_position):
+        self.name = 'Turret spawned event'
+        self.turret = turret
+        self.flyin_position = flyin_position
+
+
 class MoonscapeGeneratedEvent(Event):
 
     def __init__(self):
