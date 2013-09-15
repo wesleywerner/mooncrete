@@ -92,16 +92,18 @@ from eventmanager import *
 PUZZLE_WIDTH = 10
 PUZZLE_HEIGHT = 10
 
-# The arcade mode uses pixel positioning.
-# Views rendering this need to scale the results to match the
-# actual window size that they are drawing to.
-ARCADE_WIDTH = 1000
-ARCADE_HEIGHT = 1000
-
 # The moonscape is the rocky moon surface where your base is built.
 # It is uses index positioning.
 MOONSCAPE_WIDTH = 20
-MOONSCAPE_HEIGHT = 6
+MOONSCAPE_HEIGHT = 5
+
+# The arcade width should be the same as the moonscape we are building on.
+ARCADE_WIDTH = MOONSCAPE_WIDTH
+# The height can be variable, but can't be smaller than the moonscape height.
+ARCADE_HEIGHT = 20
+# The height difference between the arcade and moonscape data structures.
+# Used to offset asteroid positions (arcade) for moonscape collitions.
+ARCADE_MOONSCAPE_YDIFF = ARCADE_HEIGHT - MOONSCAPE_HEIGHT
 
 # different kind of puzzle blocks
 BLOCK_CALCIUM_BARREL = 10
@@ -220,7 +222,8 @@ class Asteroid(object):
     def move(self):
         segments = helper.get_line_segments(self.position, self.destination)
         if segments:
-            self.position = segments[0]
+            self.position = segments[1]
+            trace.write('moved asteroid to %s' % (self.position,))
 
 class MoonModel(object):
     """
@@ -261,9 +264,6 @@ class MoonModel(object):
 
         # location on the board of the puzzle shape.
         self._puzzle_location = None
-
-        # stores the arcade field
-        self.arcade_field = None
 
         # track the last phase the game was in for continuing games from the menu
         self._last_phase = STATE_MENU
@@ -697,7 +697,7 @@ class MoonModel(object):
 
         """
 
-        if x < PUZZLE_WIDTH and y < PUZZLE_HEIGHT:
+        if self._puzzle_in_bounds(x, y):
             return self._puzzle_board[y][x]
 
     def _puzzle_clear_cell(self, x, y):
@@ -909,17 +909,49 @@ class MoonModel(object):
 
         """
 
-        # spawn some asteroids
 
-        # move asteroids
+
+        # spawn some asteroids
+        if len(self._asteroids) == 0:
+            self._arcade_spawn_asteroid()
+
         remove_list = []
         for asteroid in self._asteroids:
+
+            # move asteroids
             asteroid.move()
+
             if not self._arcade_in_bounds(asteroid.position):
                 remove_list.append(asteroid)
+            else:
+                # get the moonbase block at this translated position
+                x, y = asteroid.position
+                y = y - ARCADE_MOONSCAPE_YDIFF
+                block_type = self._puzzle_block_at(x, y)
+                if not block_type:
+                    # asteroid is not within the moonscape boundaries yet (None).
+                    # or this block has no value (0).
+                    # step the next asteroid.
+                    continue
 
-        # check for asteroid + moonbase hits
+                # check for asteroid + moonbase collisions
+                if block_type in BLOCK_BASES.keys():
+                    # ah-yup. let's destroy these.
+                    remove_list.append(asteroid)
+
+
 
         # remove asteroids
         for to_remove in remove_list:
             self._asteroids.remove(to_remove)
+
+    def _arcade_spawn_asteroid(self):
+        """
+        Creator a new asteroid and put it in play.
+
+        """
+
+        asteroid = Asteroid()
+        asteroid.position = (0, 0)
+        asteroid.destination = (3, ARCADE_HEIGHT)
+        self._asteroids.append(asteroid)
