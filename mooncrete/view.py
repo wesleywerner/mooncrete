@@ -477,8 +477,6 @@ class MoonView(object):
 
         sprite.addimage(pix, 1, -1)
         sprite.set_position(end_position, shift_speed=4)
-        # TODO set the sprite draw size to scale with the mini moonbase size.
-        # or not? see how it looks.
 
         # store this sprite using its (x, y) as a unique id
         self.moving_moonbase_sprites[index_position] = sprite
