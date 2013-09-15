@@ -928,7 +928,8 @@ class MoonModel(object):
                 # get the moonbase block at this translated position
                 x, y = asteroid.position
                 y = y - ARCADE_MOONSCAPE_YDIFF
-                block_type = self._puzzle_block_at(x, y)
+                block_type = self._moonscape_block_at(x, y)
+
                 if not block_type:
                     # asteroid is not within the moonscape boundaries yet (None).
                     # or this block has no value (0).
@@ -939,6 +940,7 @@ class MoonModel(object):
                 if block_type in BLOCK_BASES.keys():
                     # ah-yup. let's destroy these.
                     remove_list.append(asteroid)
+                    # TODO AsteroidDestroyEvent and MoonbaseDestroyEvent
 
 
 
@@ -953,7 +955,7 @@ class MoonModel(object):
         """
 
         asteroid = Asteroid()
-        asteroid.position = (random.randint(0, ARCADE_WIDTH), 0)
+        asteroid.position = (random.randint(0, ARCADE_WIDTH), 10)
         asteroid.destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
         asteroid.trajectory = list(reversed(helper.get_line_segments(asteroid.position, asteroid.destination)))
         self._asteroids.append(asteroid)
