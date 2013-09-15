@@ -470,6 +470,10 @@ class MoonView(object):
         # use a placehold image
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
         pix.fill(color.gold)
+        if block_type == model.BLOCK_MOONCRETE_SLAB:
+            pix.fill(color.darker_gray)
+        if block_type == model.BLOCK_RADAR:
+            pix.fill(color.copper)
 
         sprite.addimage(pix, 1, -1)
         sprite.set_position(end_position, shift_speed=4)
