@@ -2,6 +2,30 @@ import pygame
 from pygame.locals import *
 import color
 
+# alter the Sprite class to:
+#   have multiple base images
+#   have multiple turret images
+#   have an angle which to rotate the turret
+#   limit the angle with a min and max
+#   a way to cycle the angle between a range
+#   a way to override the angle
+#   a way to animate base images with optional loop
+#   a way to animate turret images with optional loop
+#   a way to set the current base image
+#
+#   RADARS will constantly cycle their angle and images.
+#   animating base: possibly
+#   animating turret: yes
+#   auto angle: yes
+#
+#   GUN TURRETS will center their angle unless they are
+#   the closest to the cursor, then their angle is overridden.
+#   Their images will only animate once when told to, when a shot is fired.
+#   animating base: yes, explicitly
+#   animating turret: yes, explicitly
+#   auto angle: yes, with override
+#
+
 class Sprite(pygame.sprite.Sprite):
     """
     Represents an animated sprite.
