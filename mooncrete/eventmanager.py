@@ -130,3 +130,17 @@ class AsteroidMovedEvent(Event):
     def __init__(self, asteroid):
         self.name = 'Asteroid move event'
         self.asteroid = asteroid
+
+
+class AsteroidDestroyEvent(Event):
+
+    def __init__(self, asteroid):
+        self.name = 'Asteroid destroy event'
+        self.asteroid = asteroid
+
+
+class MoonbaseDestroyEvent(Event):
+
+    def __init__(self, position):
+        self.name = 'Moonbase destroy event'
+        self.position = position
