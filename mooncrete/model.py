@@ -87,10 +87,20 @@ from statemachine import *
 from eventmanager import *
 
 
+# The puzzle mode uses index positioning.
 PUZZLE_WIDTH = 10
 PUZZLE_HEIGHT = 10
-ARCADE_WIDTH = 20
-ARCADE_HEIGHT = 6
+
+# The arcade mode uses pixel positioning.
+# Views rendering this need to scale the results to match the
+# actual window size that they are drawing to.
+ARCADE_WIDTH = 1000
+ARCADE_HEIGHT = 1000
+
+# The moonscape is the rocky moon surface where your base is built.
+# It is uses index positioning.
+MOONSCAPE_WIDTH = 20
+MOONSCAPE_HEIGHT = 6
 
 # different kind of puzzle blocks
 BLOCK_CALCIUM_BARREL = 10
@@ -769,36 +779,36 @@ class MoonModel(object):
 
         # create a new arcade moonscape.
         # the bottom row will be filled with Moonrock blocks.
-        self._arcade_field = [
-            [BLOCK_MOONROCKS if y == ARCADE_HEIGHT - 1 else 0
-            for x in xrange(ARCADE_WIDTH)]
-            for y in xrange(ARCADE_HEIGHT)]
+        self._moonscape = [
+            [BLOCK_MOONROCKS if y == MOONSCAPE_HEIGHT - 1 else 0
+            for x in xrange(MOONSCAPE_WIDTH)]
+            for y in xrange(MOONSCAPE_HEIGHT)]
 
         # place some random features on the surface
-        for y in xrange(ARCADE_HEIGHT - 2, ARCADE_HEIGHT - 4, -1):
-            for x in xrange(ARCADE_WIDTH):
+        for y in xrange(MOONSCAPE_HEIGHT - 2, MOONSCAPE_HEIGHT - 4, -1):
+            for x in xrange(MOONSCAPE_WIDTH):
                 if random.random() < MOONSCAPE_RUGGEDNESS:
-                    is_empty = self._arcade_field[y][x]
-                    has_base = self._arcade_field[y + 1][x]
+                    is_empty = self._moonscape[y][x]
+                    has_base = self._moonscape[y + 1][x]
                     if not is_empty and has_base:
-                        self._arcade_field[y][x] = BLOCK_MOONROCKS
+                        self._moonscape[y][x] = BLOCK_MOONROCKS
 
         self._arcade_print_moonscape()
 
-    def _arcade_block_at(self, x, y):
+    def _moonscape_block_at(self, x, y):
         """
         Get the block value at x, y.
         Returns None if x, y is out of range.
 
         """
 
-        if x < ARCADE_WIDTH and y < ARCADE_HEIGHT:
-            return self._arcade_field[y][x]
+        if x < MOONSCAPE_WIDTH and y < MOONSCAPE_HEIGHT:
+            return self._moonscape[y][x]
 
     def _arcade_print_moonscape(self):
         if trace.TRACE:
             grid = []
-            for y, row in enumerate(self._arcade_field):
+            for y, row in enumerate(self._moonscape):
                 grid.append('\n')
                 for x, val in enumerate(row):
                     if val:
@@ -826,16 +836,16 @@ class MoonModel(object):
                         (BLOCK_NAMES[block_type],))
 
         found_home = False
-        x_range = list(xrange(0, ARCADE_WIDTH))
+        x_range = list(xrange(0, MOONSCAPE_WIDTH))
         random.shuffle(x_range)
         for x in x_range:
             if found_home:
                 break
-            for y in xrange(0, ARCADE_HEIGHT):
-                base = self._arcade_block_at(x, y + 1)
+            for y in xrange(0, MOONSCAPE_HEIGHT):
+                base = self._moonscape_block_at(x, y + 1)
                 if base == required_base:
                     found_home = True
-                    self._arcade_field[y][x] = block_type
+                    self._moonscape[y][x] = block_type
                     spawn_event = ArcadeBlockSpawnedEvent(
                         source_loc, (x, y), block_type, BLOCK_NAMES[block_type])
                     self._evman.Post(spawn_event)
@@ -851,6 +861,6 @@ class MoonModel(object):
         self._arcade_print_moonscape()
 
     def moonscape_data(self):
-        for y, row in enumerate(self._arcade_field):
+        for y, row in enumerate(self._moonscape):
             for x, cell in enumerate(row):
                 yield (x, y, cell)
