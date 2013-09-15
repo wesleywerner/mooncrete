@@ -113,7 +113,7 @@ class Sprite(pygame.sprite.Sprite):
             position = pygame.Rect(position, self.rect.size)
         if shift_speed == 0:
             self.shift_speed = 0
-            self.rect.topleft = position
+            self.rect.topleft = position.topleft
         else:
             self.shift_speed = shift_speed
             self.destination = position
