@@ -29,20 +29,29 @@ class MoonController(object):
         self.evman.RegisterListener(self)
         self.model = model
         self.view = view
-        self.model_update_delay = 1000
+        self.puzzle_update_freq = 1000
+        self.arcade_update_freq = 100
         self.last_model_update = 0
 
-    def can_step_model(self):
+    def can_step_model(self, model_state):
         """
         Limits the model update frequency.
         (Updating each Tick would be too fast a game, of course!)
 
         """
 
+        # the puzzle and arcade modes have different speeds
+        if model_state in (STATE_PHASE1, STATE_PHASE2):
+            frequency = self.puzzle_update_freq
+        elif model_state == STATE_PHASE3:
+            frequency = self.arcade_update_freq
+        else:
+            return
+
         # TODO separate this logic to support different update speeds
         # for puzzle and arcade modes
         ticks = pygame.time.get_ticks()
-        if ticks - self.last_model_update > self.model_update_delay:
+        if ticks - self.last_model_update > frequency:
             self.last_model_update = ticks
             return True
 
@@ -54,11 +63,13 @@ class MoonController(object):
 
         if isinstance(event, TickEvent):
 
+            state = self.model.state
+
             # update the model pause state
             self.model.paused = self.view.transitioning
 
             # step the model if it is time
-            if self.can_step_model():
+            if self.can_step_model(state):
                 self.evman.Post(StepGameEvent())
 
             for event in pygame.event.get():
@@ -71,7 +82,6 @@ class MoonController(object):
                 if event.type == KEYDOWN:
                     if event.key == K_F11:
                         self.view.toggle_fullscreen()
-                    state = self.model.state
                     if state == STATE_MENU:
                         self.menu_keys(event)
                     elif state in (STATE_PHASE1, STATE_PHASE2):
