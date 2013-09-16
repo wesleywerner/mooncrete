@@ -187,11 +187,11 @@ class MoonView(object):
         elif isinstance(event, MooncreteDestroyEvent):
             self.destroy_mooncrete_sprite(event.mooncrete)
 
-        #elif isinstance(event, TurretSpawnedEvent):
-            #self.create_turret_sprite(event.turret, event.flyin_position)
+        elif isinstance(event, TurretSpawnedEvent):
+            self.create_turret_sprite(event.turret, event.flyin_position)
 
-        #elif isinstance(event, TurretDestroyEvent):
-            #self.destroy_turret_sprite(event.turret)
+        elif isinstance(event, TurretDestroyEvent):
+            self.destroy_turret_sprite(event.turret)
 
         #elif isinstance(event, RadarSpawnedEvent):
             #self.create_radar_sprite(event.radar, event.flyin_position)
@@ -578,26 +578,14 @@ class MoonView(object):
 
         """
 
-        # convert the sprite flyin position from the puzzle
-        rect = self.convert_puzzle_to_screen(flyin_position)
-        rect = pygame.Rect(rect, MOONSCAPE_BLOCK_SIZE)
-        # convert the sprite destination position from the moonscape
-        dest = self.convert_mini_moonscape_to_screen(turret.position)
-
         # TODO use dedicated turret sprite
-        sprite = Sprite('turret %s' % (turret.id,), rect)
-
-        # store the turret on the sprite
-        sprite.turret = turret
-        sprite.final_destination = self.convert_moonscape_to_panel(turret.position)
-        sprite.set_position(dest)
-
-        # use a placehold image
-        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
-        pix.fill(color.gold)
-        sprite.addimage(pix, 1, -1)
-
-        self._courier_sprites[turret.id] = sprite
+        rect = self.convert_moonscape_to_panel(turret.position)
+        cargo = Sprite('turret', rect)
+        cargo.turret = turret
+        cargo.image = self.placeholder_pix(
+            MOONSCAPE_BLOCK_SIZE, color.gold)
+        self.courier_puzzle_to_moonscape(
+            turret.id, cargo, flyin_position, turret.position)
 
     def destroy_turret_sprite(self, turret):
         """
@@ -607,7 +595,6 @@ class MoonView(object):
 
         if self.moonbase_sprites.has_key(turret.id):
             del self.moonbase_sprites[turret.id]
-
 
     def create_radar_sprite(self, radar, flyin_position):
         """
