@@ -347,7 +347,7 @@ class MoonView(object):
             self.draw_asteroids()
 
         # moving moonbases are draw on top of all other panels
-        self.deliver_courier_sprites()
+        self.courier_deliver_sprite()
 
         pix = self.smallfont.render(
             'Mooncrete -- press space to play',
@@ -416,7 +416,35 @@ class MoonView(object):
                     block_color = (0, 0, 64)
                 pygame.draw.rect(pan.image, block_color, rect)
 
-    def deliver_courier_sprites(self):
+    def placeholder_pix(self, size, acolor):
+        pix = pygame.Surface(size)
+        pix.fill(acolor)
+        return pix
+
+    def courier_send_sprite(self, cargo_id, cargo, fly_from, fly_to):
+        """
+        courier a sprite from the puzzle area to the moonscape via
+        a flying sprite. It carries the cargo and upon reaching its
+        destination, drops the cargo in the moonbase sprite list.
+
+        cargo_id is the key used storing dictionary entries.
+        fly_from is puzzle grid coordinates.
+        fly_to is moonscape grid coordinates.
+
+        """
+
+        from_coords = pygame.Rect(
+            self.convert_puzzle_to_screen(fly_from), MOONSCAPE_BLOCK_SIZE)
+        to_coords = self.convert_mini_moonscape_to_screen(fly_to)
+        fly = CourierSprite(
+            rect=from_coords,
+            image=cargo.image,
+            destination=to_coords,
+            cargo=cargo
+            )
+        self._courier_sprites[cargo_id] = fly
+
+    def courier_deliver_sprite(self):
         """
         Update courier sprites that deliver a cargo sprite to the moonscape.
 
@@ -522,34 +550,6 @@ class MoonView(object):
         # store this sprite using its (x, y) as a unique id
         self._courier_sprites[index_position] = sprite
 
-    def placeholder_pix(self, size, acolor):
-        pix = pygame.Surface(size)
-        pix.fill(acolor)
-        return pix
-
-    def courier_puzzle_to_moonscape(self, cargo_id, cargo, fly_from, fly_to):
-        """
-        courier a sprite from the puzzle area to the moonscape via
-        a flying sprite. It carries the cargo and upon reaching its
-        destination, drops the cargo in the moonbase sprite list.
-
-        cargo_id is the key used storing dictionary entries.
-        fly_from is puzzle grid coordinates.
-        fly_to is moonscape grid coordinates.
-
-        """
-
-        from_coords = pygame.Rect(
-            self.convert_puzzle_to_screen(fly_from), MOONSCAPE_BLOCK_SIZE)
-        to_coords = self.convert_mini_moonscape_to_screen(fly_to)
-        fly = CourierSprite(
-            rect=from_coords,
-            image=cargo.image,
-            destination=to_coords,
-            cargo=cargo
-            )
-        self._courier_sprites[cargo_id] = fly
-
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
         Create a mooncrete sprite.
@@ -560,7 +560,7 @@ class MoonView(object):
         cargo = MooncreteSprite(rect)
         cargo.image = self.placeholder_pix(
             MOONSCAPE_BLOCK_SIZE, color.darker_gray)
-        self.courier_puzzle_to_moonscape(
+        self.courier_send_sprite(
             mooncrete.id, cargo, flyin_position, mooncrete.position)
 
     def destroy_mooncrete_sprite(self, mooncrete):
@@ -584,7 +584,7 @@ class MoonView(object):
         cargo.turret = turret
         cargo.image = self.placeholder_pix(
             MOONSCAPE_BLOCK_SIZE, color.gold)
-        self.courier_puzzle_to_moonscape(
+        self.courier_send_sprite(
             turret.id, cargo, flyin_position, turret.position)
 
     def destroy_turret_sprite(self, turret):
@@ -608,7 +608,7 @@ class MoonView(object):
         cargo.radar = radar
         cargo.image = self.placeholder_pix(
             MOONSCAPE_BLOCK_SIZE, color.copper)
-        self.courier_puzzle_to_moonscape(
+        self.courier_send_sprite(
             radar.id, cargo, flyin_position, radar.position)
 
     def destroy_radar_sprite(radar):
