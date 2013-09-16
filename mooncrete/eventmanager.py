@@ -156,3 +156,24 @@ class MoonbaseDestroyEvent(Event):
     def __init__(self, position):
         self.name = 'Moonbase destroy event'
         self.position = position
+
+
+class MissileSpawnedEvent(Event):
+
+    def __init__(self, missile):
+        self.name = 'Missle spawned event'
+        self.missile = missile
+
+
+class MissileMovedEvent(Event):
+
+    def __init__(self, missile):
+        self.name = 'Missle moved event'
+        self.missile = missile
+
+class MissileDestroyEvent(Event):
+
+    def __init__(self, missile):
+        self.name = 'Missle destroy event'
+        self.missile = missile
+
