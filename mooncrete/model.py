@@ -239,8 +239,7 @@ class Asteroid(object):
 
     def move(self):
         if self.trajectory:
-            self.trajectory = self.trajectory[:-2]
-            self.position = self.trajectory[-1]
+            self.position = self.trajectory.pop()
 
     def id(self):
         return id(self)
