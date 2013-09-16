@@ -545,24 +545,16 @@ class MoonView(object):
 
         self.moving_moonbase_sprites[turret.id] = sprite
 
-
-
     def create_asteroid_sprite(self, asteroid):
         """
         Create an asteroid sprite from the given model asteroid object.
 
         """
 
-        # the model asteroid works in indexes
-        x, y = asteroid.position
-        dx, dy = asteroid.destination
-        # convert indexes to screen coordinates
-        x = x * ARCADE_VIEW_MODEL_RATIO[0]
-        y = y * ARCADE_VIEW_MODEL_RATIO[1]
-        dx = dx * ARCADE_VIEW_MODEL_RATIO[0]
-        dy = dy * ARCADE_VIEW_MODEL_RATIO[1]
-        rect = pygame.Rect(x, y, dx, dy)
-        # construct the sprite
+        # TODO use a dedicated AsteroidSprite here.
+        # No fancy sliding movement required please.
+        position = self.convert_moonscape_to_panel(asteroid.position)
+        rect = pygame.Rect(position, MOONSCAPE_BLOCK_SIZE)
         sprite = Sprite('asteroid %s' % (asteroid.id,), rect)
 
         # use a placehold image

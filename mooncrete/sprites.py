@@ -26,6 +26,7 @@ import color
 #   auto angle: yes, with override
 #
 
+# KEEP THIS AS THE MOVEMENT IS NICE FOR THE MOVING MOONBASE SPRITES
 class Sprite(pygame.sprite.Sprite):
     """
     Represents an animated sprite.
