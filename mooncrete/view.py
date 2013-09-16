@@ -194,6 +194,12 @@ class MoonView(object):
         elif isinstance(event, TurretDestroyEvent):
             self.destroy_turret_sprite(event.turret)
 
+        elif isinstance(event, RadarSpawnedEvent):
+            self.create_radar_sprite(event.radar, event.flyin_position)
+
+        elif isinstance(event, RadarDestroyEvent):
+            self.destroy_radar_sprite(event.radar)
+
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
 
@@ -565,6 +571,8 @@ class MoonView(object):
         rect = pygame.Rect(rect, MOONSCAPE_BLOCK_SIZE)
         # convert the sprite destination position from the moonscape
         dest = self.convert_mini_moonscape_to_screen(turret.position)
+
+        # TODO use dedicated turret sprite
         sprite = Sprite('turret %s' % (turret.id,), rect)
 
         # store the turret on the sprite
@@ -587,6 +595,41 @@ class MoonView(object):
 
         if self.moonbase_sprites.has_key(turret.id):
             del self.moonbase_sprites[turret.id]
+
+
+    def create_radar_sprite(self, radar, flyin_position):
+        """
+        Create a radar sprite.
+
+        """
+
+        # convert the sprite flyin position from the puzzle
+        rect = self.convert_puzzle_to_screen(flyin_position)
+        rect = pygame.Rect(rect, MOONSCAPE_BLOCK_SIZE)
+        # convert the sprite destination position from the moonscape
+        dest = self.convert_mini_moonscape_to_screen(radar.position)
+        sprite = Sprite('radar', rect)
+
+        # store the turret on the sprite
+        sprite.radar = radar
+        sprite.final_destination = self.convert_moonscape_to_panel(radar.position)
+        sprite.set_position(dest)
+
+        # use a placehold image
+        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
+        pix.fill(color.copper)
+        sprite.addimage(pix, 1, -1)
+
+        self.moving_moonbase_sprites[radar.id] = sprite
+
+    def destroy_radar_sprite(radar):
+        """
+        Destroy a radar sprite.
+
+        """
+
+        if self.moonbase_sprites.has_key(radar.id):
+            del self.moonbase_sprites[radar.id]
 
     def create_asteroid_sprite(self, asteroid):
         """
