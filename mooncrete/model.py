@@ -278,7 +278,6 @@ class Turret(object):
 
     @property
     def id(self):
-        # TODO may as well be consistent and use id(self)
         return self.position
 
 
@@ -532,7 +531,7 @@ class MoonModel(object):
         # TODO remove this (for testing)
         for i in xrange(10):
             self._arcade_spawn_block(BLOCK_MOONCRETE_SLAB, (10, 10))
-        for i in xrange(5):
+        for i in xrange(10):
             self._arcade_spawn_block(BLOCK_RADAR, (10, 10))
 
     def _unshared_copy(self, inList):
@@ -1094,6 +1093,13 @@ class MoonModel(object):
                     remove_list.append(asteroid)
                     self._moonscape_set_block((x, y), 0)
                     self._evman.Post(MooncreteDestroyEvent(Mooncrete((x, y))))
+                elif block_type == BLOCK_TURRET:
+                    remove_list.append(asteroid)
+                    self._moonscape_set_block((x, y), 0)
+                    turret = self._turrets.get((x, y), None)
+                    if turret:
+                        del self._turrets[(x, y)]
+                        self._evman.Post(TurretDestroyEvent(turret))
                 elif block_type in BLOCK_BASES.keys():
                     # ah-yup. let's destroy these.
                     remove_list.append(asteroid)
