@@ -1120,6 +1120,14 @@ class MoonModel(object):
                         del self._turrets[xy]
                         self._evman.Post(TurretDestroyEvent(turret))
 
+                elif block_type == BLOCK_RADAR:
+                    remove_list.append(asteroid)
+                    self._moonscape_set_block(xy, 0)
+                    radar = self._radars.get(xy, None)
+                    if radar:
+                        del self._radars[xy]
+                        self._evman.Post(RadarDestroyEvent(radar))
+
                 elif block_type in BLOCK_BASES.keys():
                     # ah-yup. let's destroy these.
                     remove_list.append(asteroid)
