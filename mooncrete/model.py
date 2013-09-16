@@ -232,10 +232,11 @@ class Asteroid(object):
 
     """
 
-    def __init__(self):
-        self.position = None
-        self.destination = None
-        self.trajectory = None
+    def __init__(self, position, destination):
+        self.position = position
+        self.destination = destination
+        self.trajectory = list(
+            reversed(helper.get_line_segments(position, destination)))
 
     def move(self):
         if self.trajectory:
@@ -261,7 +262,29 @@ class Turret(object):
             self.charge += 1
 
     def id(self):
+        # TODO may as well be consistent and use id(self)
         return self.position
+
+
+class Missile(object):
+    """
+    Munition in transit with a designated impact point.
+
+    """
+
+    def __init__(self, position, destination):
+        self.position = position
+        self.destination = destination
+        self.trajectory = list(
+            reversed(helper.get_line_segments(position, destination)))
+
+    def move(self):
+        if self.trajectory:
+            self.position = self.trajectory.pop()
+
+    def id(self):
+        return id(self)
+
 
 
 class MoonModel(object):
@@ -309,6 +332,9 @@ class MoonModel(object):
 
         # list of asteroids in the arcade game mode
         self._asteroids = []
+
+        # missiles the player has fired
+        self._missiles = []
 
         # our gun turrets to defend our base.
         # a dictionary is used and the key is the moonscape (x, y) position.
@@ -1002,6 +1028,15 @@ class MoonModel(object):
 
         """
 
+        self._arcade_move_asteroids()
+        self._arcade_move_missiles()
+
+    def _arcade_move_asteroids(self):
+        """
+        Move lunar asteroids coming your way.
+
+        """
+
         # spawn some asteroids
         while len(self._asteroids) < 3:
             self._arcade_spawn_asteroid()
@@ -1031,17 +1066,37 @@ class MoonModel(object):
                 if block_type == BLOCK_MOONROCKS:
                     # we hit the ground and disintegrate in a puff of dust
                     remove_list.append(asteroid)
-                    self._evman.Post(AsteroidDestroyEvent(asteroid))
                 elif block_type in BLOCK_BASES.keys():
                     # ah-yup. let's destroy these.
                     remove_list.append(asteroid)
                     self._moonscape_set_block((x, y), 0)
-                    self._evman.Post(AsteroidDestroyEvent(asteroid))
                     self._evman.Post(MoonbaseDestroyEvent((x, y)))
 
         # remove asteroids
         for to_remove in remove_list:
             self._asteroids.remove(to_remove)
+            self._evman.Post(AsteroidDestroyEvent(asteroid))
+
+    def _arcade_move_missiles(self):
+        """
+        Move fired missiles through the lunar air.
+
+        """
+
+        remove_list = []
+        for missile in self._missiles:
+            missile.move()
+            self._evman.Post(MissileMovedEvent(missile))
+
+            if not self._arcade_in_bounds(missile.position):
+                remove_list.append(missile)
+            else:
+                # is reached target: detonate!
+                pass
+
+        for missile in remove_list:
+            self._missiles.remove(missile)
+            self._evman.Post(MissileDestroyEvent(missile))
 
     def _asteroid_to_moonscape(self, asteroid):
         """
@@ -1058,13 +1113,24 @@ class MoonModel(object):
 
     def _arcade_spawn_asteroid(self):
         """
-        Creator a new asteroid and put it in play.
+        Create a new asteroid and put it in play.
 
         """
 
-        asteroid = Asteroid()
-        asteroid.position = (random.randint(0, ARCADE_WIDTH), 0)
-        asteroid.destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
-        asteroid.trajectory = list(reversed(helper.get_line_segments(asteroid.position, asteroid.destination)))
+        position = (random.randint(0, ARCADE_WIDTH), 0)
+        destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
+        asteroid = Asteroid(position, destination)
         self._asteroids.append(asteroid)
         self._evman.Post(AsteroidSpawnedEvent(asteroid))
+
+    def _arcade_spawn_missile(self, turret, destination):
+        """
+        Fire a missile from the given turret.
+
+        """
+
+        position = (random.randint(0, ARCADE_WIDTH), 0)
+        destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
+        missile = Missile(position, destination)
+        self._missiles.append(missile)
+        self._evman.Post(MissileSpawnedEvent(missile))
