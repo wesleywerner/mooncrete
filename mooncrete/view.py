@@ -170,17 +170,6 @@ class MoonView(object):
             self.prerender_moonscape()
             self.draw_moonscape()
 
-        elif isinstance(event, ArcadeBlockSpawnedEvent):
-            start_pos = self.convert_puzzle_to_screen(event.start_indice)
-            end_pos = self.convert_mini_moonscape_to_screen(event.end_indice)
-            self.create_moonbase_sprite(
-                event.end_indice,
-                start_pos,
-                end_pos,
-                event.block_type,
-                event.name
-                )
-
         elif isinstance(event, MooncreteSpawnEvent):
             self.create_mooncrete_sprite(event.mooncrete, event.flyin_position)
 
@@ -207,9 +196,6 @@ class MoonView(object):
 
         elif isinstance(event, AsteroidDestroyEvent):
             self.destroy_asteroid(event.asteroid)
-
-        elif isinstance(event, MoonbaseDestroyEvent):
-            self.destroy_moonbase(event.position)
 
         elif isinstance(event, MissileSpawnedEvent):
             self.create_missile(event.missile)
@@ -512,44 +498,6 @@ class MoonView(object):
             asteroid.update(t)
             self.image.blit(asteroid.image, asteroid.rect)
 
-
-    # OBSOLETE - TO BE REPLACED BY EXPLICIT SPRITE CREATIONS
-    def create_moonbase_sprite(
-                        self,
-                        index_position,
-                        start_position,
-                        end_position,
-                        block_type,
-                        name,
-                        ):
-        """
-        Create a moonbase object sprite.
-
-        index_position is the (x, y) indices in the model space.
-        start and end position are the screen pixels.
-
-        """
-
-        trace.write('creating moonbase sprite %s at position %s -> %s' %
-            (index_position, start_position, end_position))
-        rect = pygame.Rect(start_position, MOONSCAPE_BLOCK_SIZE)
-        sprite = Sprite(name, rect)
-        sprite.final_destination = self.convert_moonscape_to_panel(index_position)
-
-        # use a placehold image
-        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
-        pix.fill(color.gold)
-        if block_type == model.BLOCK_MOONCRETE_SLAB:
-            pix.fill(color.darker_gray)
-        if block_type == model.BLOCK_RADAR:
-            pix.fill(color.copper)
-
-        sprite.addimage(pix, 1, -1)
-        sprite.set_position(end_position)
-
-        # store this sprite using its (x, y) as a unique id
-        self._courier_sprites[index_position] = sprite
-
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
         Create a mooncrete sprite.
@@ -653,17 +601,6 @@ class MoonView(object):
             x = x * ARCADE_VIEW_MODEL_RATIO[0]
             y = y * ARCADE_VIEW_MODEL_RATIO[1]
             sprite.set_position((x, y))
-
-    def destroy_moonbase(self, position):
-        """
-        Destroy the moonbase at the given position.
-
-        """
-
-        base = self.moonbase_sprites.get(position, None)
-        if base:
-            del self.moonbase_sprites[position]
-            # TODO spawn moonbase destroy animation
 
     def destroy_asteroid(self, asteroid):
         """
