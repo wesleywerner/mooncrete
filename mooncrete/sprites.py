@@ -26,6 +26,52 @@ import color
 #   auto angle: yes, with override
 #
 
+class MooncreteSprite(pygame.sprite.Sprite):
+    """
+    A mooncrete slab that flies in from it's creation point onto the moonscape.
+
+    """
+
+    def __init__(self, rect):
+
+        super(MooncreteSprite, self).__init__()
+        self.name = 'mooncrete'
+        self.rect = rect
+        self.image = None
+        self.destination = None
+
+    @property
+    def is_moving(self):
+        """
+        Test if this sprite is busy moving to a destination position.
+        """
+
+        if self.destination:
+            return self.rect.topleft != self.destination.topleft
+
+    def update(self, t):
+        """
+        Update the sprite position.
+
+        """
+
+        if self.destination:
+            x_diff = self.destination.left - self.rect.left
+            y_diff = self.destination.top - self.rect.top
+            self.rect = self.rect.move(x_diff // 5, y_diff // 5)
+            if (abs(x_diff) < 5) and (abs(y_diff) < 5):
+                self.rect = self.destination
+
+    def set_position(self, position):
+        """
+        Set the sprite destination to move towards
+        """
+
+        if position and type(position) is tuple:
+            position = pygame.Rect(position, self.rect.size)
+        self.destination = position
+
+
 # KEEP THIS AS THE MOVEMENT IS NICE FOR THE MOVING MOONBASE SPRITES
 class Sprite(pygame.sprite.Sprite):
     """
