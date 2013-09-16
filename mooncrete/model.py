@@ -1028,11 +1028,10 @@ class MoonModel(object):
             turret = Turret()
             turret.position = destination
             self._turrets[turret.id] = turret
-            event = TurretSpawnedEvent(
+            self._evman.Post(TurretSpawnedEvent(
                 turret=turret,
-                flyin_position=from_position
+                flyin_position=from_position)
                 )
-            self._evman.Post(event)
         elif block_type == BLOCK_MOONCRETE_SLAB:
             slab = Mooncrete(destination)
             self._evman.Post(MooncreteSpawnEvent(
