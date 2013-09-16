@@ -94,28 +94,6 @@ class StepGameEvent(Event):
         self.name = 'Step game event'
 
 
-class ArcadeBlockSpawnedEvent(Event):
-
-    def __init__(
-                self,
-                start_indice,
-                end_indice,
-                block_type,
-                block_name,
-                ):
-        self.name = 'Arcade block spawned event'
-        self.start_indice = start_indice
-        self.end_indice = end_indice
-        self.block_type = block_type
-        self.block_name = block_name
-
-    def __str__(self):
-        return ('%s spawned from puzzle loc %s -> arcade loc %s' % (self.block_name,
-                                    self.start_indice,
-                                    self.end_indice)
-                                    )
-
-
 class MooncreteSpawnEvent(Event):
 
     def __init__(self, mooncrete, flyin_position):
@@ -185,13 +163,6 @@ class AsteroidDestroyEvent(Event):
     def __init__(self, asteroid):
         self.name = 'Asteroid destroy event'
         self.asteroid = asteroid
-
-
-class MoonbaseDestroyEvent(Event):
-
-    def __init__(self, position):
-        self.name = 'Moonbase destroy event'
-        self.position = position
 
 
 class MissileSpawnedEvent(Event):
