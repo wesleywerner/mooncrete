@@ -193,11 +193,11 @@ class MoonView(object):
         elif isinstance(event, TurretDestroyEvent):
             self.destroy_turret_sprite(event.turret)
 
-        #elif isinstance(event, RadarSpawnedEvent):
-            #self.create_radar_sprite(event.radar, event.flyin_position)
+        elif isinstance(event, RadarSpawnedEvent):
+            self.create_radar_sprite(event.radar, event.flyin_position)
 
-        #elif isinstance(event, RadarDestroyEvent):
-            #self.destroy_radar_sprite(event.radar)
+        elif isinstance(event, RadarDestroyEvent):
+            self.destroy_radar_sprite(event.radar)
 
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
@@ -602,24 +602,14 @@ class MoonView(object):
 
         """
 
-        # convert the sprite flyin position from the puzzle
-        rect = self.convert_puzzle_to_screen(flyin_position)
-        rect = pygame.Rect(rect, MOONSCAPE_BLOCK_SIZE)
-        # convert the sprite destination position from the moonscape
-        dest = self.convert_mini_moonscape_to_screen(radar.position)
-        sprite = Sprite('radar', rect)
-
-        # store the turret on the sprite
-        sprite.radar = radar
-        sprite.final_destination = self.convert_moonscape_to_panel(radar.position)
-        sprite.set_position(dest)
-
-        # use a placehold image
-        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
-        pix.fill(color.copper)
-        sprite.addimage(pix, 1, -1)
-
-        self._courier_sprites[radar.id] = sprite
+        # TODO use dedicated radar sprite
+        rect = self.convert_moonscape_to_panel(radar.position)
+        cargo = Sprite('radar', rect)
+        cargo.radar = radar
+        cargo.image = self.placeholder_pix(
+            MOONSCAPE_BLOCK_SIZE, color.copper)
+        self.courier_puzzle_to_moonscape(
+            radar.id, cargo, flyin_position, radar.position)
 
     def destroy_radar_sprite(radar):
         """
