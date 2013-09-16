@@ -119,9 +119,8 @@ class MoonView(object):
         self.image = None
         # moonbase sprites that get drawn onto the moonscape panel
         self.moonbase_sprites = {}
-        # moving moonbase sprites that get drawn to the screen while
-        # they are moving towards their destination
-        self.moving_moonbase_sprites = {}
+        # courier sprites between panels with a flying sprite
+        self._courier_sprites = {}
         # all arcade sprites (asteroids, missiles...)
         self.arcade_sprites = {}
         self.panels = {}
@@ -188,17 +187,17 @@ class MoonView(object):
         elif isinstance(event, MooncreteDestroyEvent):
             self.destroy_mooncrete_sprite(event.mooncrete)
 
-        elif isinstance(event, TurretSpawnedEvent):
-            self.create_turret_sprite(event.turret, event.flyin_position)
+        #elif isinstance(event, TurretSpawnedEvent):
+            #self.create_turret_sprite(event.turret, event.flyin_position)
 
-        elif isinstance(event, TurretDestroyEvent):
-            self.destroy_turret_sprite(event.turret)
+        #elif isinstance(event, TurretDestroyEvent):
+            #self.destroy_turret_sprite(event.turret)
 
-        elif isinstance(event, RadarSpawnedEvent):
-            self.create_radar_sprite(event.radar, event.flyin_position)
+        #elif isinstance(event, RadarSpawnedEvent):
+            #self.create_radar_sprite(event.radar, event.flyin_position)
 
-        elif isinstance(event, RadarDestroyEvent):
-            self.destroy_radar_sprite(event.radar)
+        #elif isinstance(event, RadarDestroyEvent):
+            #self.destroy_radar_sprite(event.radar)
 
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
@@ -348,7 +347,7 @@ class MoonView(object):
             self.draw_asteroids()
 
         # moving moonbases are draw on top of all other panels
-        self.draw_moving_moonbases()
+        self.deliver_courier_sprites()
 
         pix = self.smallfont.render(
             'Mooncrete -- press space to play',
@@ -417,29 +416,22 @@ class MoonView(object):
                     block_color = (0, 0, 64)
                 pygame.draw.rect(pan.image, block_color, rect)
 
-    def draw_moving_moonbases(self):
+    def deliver_courier_sprites(self):
         """
-        Draws any moving moonbase sprites.
-        When they reach their destination, they will be moved to the
-        moonbase_sprites list where they are then drawn onto the moonscape
-        panel itself.
+        Update courier sprites that deliver a cargo sprite to the moonscape.
 
         """
 
         t = pygame.time.get_ticks()
-        remove_list = []
-        for key, sprite in self.moving_moonbase_sprites.items():
-            sprite.update(t)
-            self.image.blit(sprite.image, sprite.rect)
-            if not sprite.is_moving:
-                # set new sprite position relative to the moonscape panel.
-                # we reuse the stored indice positions for this.
-                sprite.rect.topleft = sprite.final_destination
-                self.moonbase_sprites[key] = sprite
-                remove_list.append(key)
-        # remove unmoving sprites
-        for remove_key in remove_list:
-            del self.moving_moonbase_sprites[remove_key]
+        retirement_list = []
+        for key, courier in self._courier_sprites.items():
+            courier.update(t)
+            self.image.blit(courier.image, courier.rect)
+            if courier.at_destination:
+                self.moonbase_sprites[key] = courier.cargo
+                retirement_list.append(key)
+        for delivery in retirement_list:
+            del self._courier_sprites[delivery]
 
     def prerender_moonscape(self):
         """
@@ -493,6 +485,7 @@ class MoonView(object):
             self.image.blit(asteroid.image, asteroid.rect)
 
 
+    # OBSOLETE - TO BE REPLACED BY EXPLICIT SPRITE CREATIONS
     def create_moonbase_sprite(
                         self,
                         index_position,
@@ -527,7 +520,35 @@ class MoonView(object):
         sprite.set_position(end_position)
 
         # store this sprite using its (x, y) as a unique id
-        self.moving_moonbase_sprites[index_position] = sprite
+        self._courier_sprites[index_position] = sprite
+
+    def placeholder_pix(self, size, acolor):
+        pix = pygame.Surface(size)
+        pix.fill(acolor)
+        return pix
+
+    def courier_puzzle_to_moonscape(self, cargo_id, cargo, fly_from, fly_to):
+        """
+        courier a sprite from the puzzle area to the moonscape via
+        a flying sprite. It carries the cargo and upon reaching its
+        destination, drops the cargo in the moonbase sprite list.
+
+        cargo_id is the key used storing dictionary entries.
+        fly_from is puzzle grid coordinates.
+        fly_to is moonscape grid coordinates.
+
+        """
+
+        from_coords = pygame.Rect(
+            self.convert_puzzle_to_screen(fly_from), MOONSCAPE_BLOCK_SIZE)
+        to_coords = self.convert_mini_moonscape_to_screen(fly_to)
+        fly = CourierSprite(
+            rect=from_coords,
+            image=cargo.image,
+            destination=to_coords,
+            cargo=cargo
+            )
+        self._courier_sprites[cargo_id] = fly
 
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
@@ -535,21 +556,12 @@ class MoonView(object):
 
         """
 
-        # convert the sprite flyin position from the puzzle
-        rect = self.convert_puzzle_to_screen(flyin_position)
-        rect = pygame.Rect(rect, MOONSCAPE_BLOCK_SIZE)
-        # convert the sprite destination position from the moonscape
-        dest = self.convert_mini_moonscape_to_screen(mooncrete.position)
-        sprite = MooncreteSprite(rect)
-
-        # use a placehold image
-        sprite.image = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
-        sprite.image.fill(color.darker_gray)
-
-        # no need to store the slab on the sprite. it has a fixed position.
-        sprite.final_destination = self.convert_moonscape_to_panel(mooncrete.position)
-        sprite.set_position(dest)
-        self.moving_moonbase_sprites[mooncrete.id] = sprite
+        rect = self.convert_moonscape_to_panel(mooncrete.position)
+        cargo = MooncreteSprite(rect)
+        cargo.image = self.placeholder_pix(
+            MOONSCAPE_BLOCK_SIZE, color.darker_gray)
+        self.courier_puzzle_to_moonscape(
+            mooncrete.id, cargo, flyin_position, mooncrete.position)
 
     def destroy_mooncrete_sprite(self, mooncrete):
         """
@@ -585,7 +597,7 @@ class MoonView(object):
         pix.fill(color.gold)
         sprite.addimage(pix, 1, -1)
 
-        self.moving_moonbase_sprites[turret.id] = sprite
+        self._courier_sprites[turret.id] = sprite
 
     def destroy_turret_sprite(self, turret):
         """
@@ -620,7 +632,7 @@ class MoonView(object):
         pix.fill(color.copper)
         sprite.addimage(pix, 1, -1)
 
-        self.moving_moonbase_sprites[radar.id] = sprite
+        self._courier_sprites[radar.id] = sprite
 
     def destroy_radar_sprite(radar):
         """
