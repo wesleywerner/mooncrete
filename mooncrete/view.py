@@ -191,6 +191,9 @@ class MoonView(object):
         elif isinstance(event, TurretSpawnedEvent):
             self.create_turret_sprite(event.turret, event.flyin_position)
 
+        elif isinstance(event, TurretDestroyEvent):
+            self.destroy_turret_sprite(event.turret)
+
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
 
@@ -575,6 +578,15 @@ class MoonView(object):
         sprite.addimage(pix, 1, -1)
 
         self.moving_moonbase_sprites[turret.id] = sprite
+
+    def destroy_turret_sprite(self, turret):
+        """
+        Destroy a turret sprite.
+
+        """
+
+        if self.moonbase_sprites.has_key(turret.id):
+            del self.moonbase_sprites[turret.id]
 
     def create_asteroid_sprite(self, asteroid):
         """
