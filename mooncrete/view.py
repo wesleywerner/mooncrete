@@ -559,7 +559,7 @@ class MoonView(object):
         self.courier_send_sprite(
             radar.id, cargo, flyin_position, radar.position)
 
-    def destroy_radar_sprite(radar):
+    def destroy_radar_sprite(self, radar):
         """
         Destroy a radar sprite.
 
