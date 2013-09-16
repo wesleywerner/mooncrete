@@ -226,6 +226,20 @@ class Player(object):
         self.level = 1
 
 
+class Mooncrete(object):
+    """
+    A slab of mooncrete.
+
+    """
+
+    def __init__(self, position):
+        self.position = position
+
+    @property
+    def id(self):
+        return self.position
+
+
 class Asteroid(object):
     """
     A dangerous object that will destroy your moon base.
@@ -242,6 +256,7 @@ class Asteroid(object):
         if self.trajectory:
             self.position = self.trajectory.pop()
 
+    @property
     def id(self):
         return id(self)
 
@@ -261,6 +276,7 @@ class Turret(object):
         if self.charge < self.max_charge:
             self.charge += 1
 
+    @property
     def id(self):
         # TODO may as well be consistent and use id(self)
         return self.position
@@ -282,6 +298,7 @@ class Missile(object):
         if self.trajectory:
             self.position = self.trajectory.pop()
 
+    @property
     def id(self):
         return id(self)
 
@@ -944,6 +961,7 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
+    # TODO can we merge this code into the block below, "_arcade_build_moonbase"
     def _arcade_spawn_block(self, block_type, from_position):
         """
         Spawn the given block type into the arcade playfield.
@@ -1016,6 +1034,12 @@ class MoonModel(object):
                 flyin_position=from_position
                 )
             self._evman.Post(event)
+        elif block_type == BLOCK_MOONCRETE_SLAB:
+            slab = Mooncrete(destination)
+            self._evman.Post(MooncreteSpawnEvent(
+                mooncrete=slab,
+                flyin_position=from_position)
+                )
         else:
             # generic spawn event to be replace by specific events above
             spawn_event = ArcadeBlockSpawnedEvent(
@@ -1066,6 +1090,10 @@ class MoonModel(object):
                 if block_type == BLOCK_MOONROCKS:
                     # we hit the ground and disintegrate in a puff of dust
                     remove_list.append(asteroid)
+                elif block_type == BLOCK_MOONCRETE_SLAB:
+                    remove_list.append(asteroid)
+                    self._moonscape_set_block((x, y), 0)
+                    self._evman.Post(MooncreteDestroyEvent(Mooncrete((x, y))))
                 elif block_type in BLOCK_BASES.keys():
                     # ah-yup. let's destroy these.
                     remove_list.append(asteroid)
@@ -1073,8 +1101,8 @@ class MoonModel(object):
                     self._evman.Post(MoonbaseDestroyEvent((x, y)))
 
         # remove asteroids
-        for to_remove in remove_list:
-            self._asteroids.remove(to_remove)
+        for asteroid in remove_list:
+            self._asteroids.remove(asteroid)
             self._evman.Post(AsteroidDestroyEvent(asteroid))
 
     def _arcade_move_missiles(self):
@@ -1117,7 +1145,7 @@ class MoonModel(object):
 
         """
 
-        position = (random.randint(0, ARCADE_WIDTH), 0)
+        position = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT / 2)
         destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
         asteroid = Asteroid(position, destination)
         self._asteroids.append(asteroid)
