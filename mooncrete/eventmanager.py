@@ -116,6 +116,21 @@ class ArcadeBlockSpawnedEvent(Event):
                                     )
 
 
+class MooncreteSpawnEvent(Event):
+
+    def __init__(self, mooncrete, flyin_position):
+        self.name = 'Mooncrete spawned event'
+        self.mooncrete = mooncrete
+        self.flyin_position = flyin_position
+
+
+class MooncreteDestroyEvent(Event):
+
+    def __init__(self, mooncrete):
+        self.name = 'Mooncrete destroy event'
+        self.mooncrete = mooncrete
+
+
 class TurretSpawnedEvent(Event):
 
     def __init__(self, turret, flyin_position):
