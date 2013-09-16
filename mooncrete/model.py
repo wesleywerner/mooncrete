@@ -281,6 +281,20 @@ class Turret(object):
         return self.position
 
 
+class Radar(object):
+    """
+    Asteroid detector 3000.
+
+    """
+
+    def __init__(self):
+        self.position = None
+
+    @property
+    def id(self):
+        return self.position
+
+
 class Missile(object):
     """
     Munition in transit with a designated impact point.
@@ -352,9 +366,10 @@ class MoonModel(object):
         # missiles the player has fired
         self._missiles = []
 
-        # our gun turrets to defend our base.
+        # our gun turrets and radars to defend our base.
         # a dictionary is used and the key is the moonscape (x, y) position.
         self._turrets = {}
+        self._radars = {}
 
     @property
     def state(self):
@@ -529,9 +544,9 @@ class MoonModel(object):
         self._reset_arcade()
 
         # TODO remove this (for testing)
-        for i in xrange(10):
+        for i in xrange(5):
             self._arcade_spawn_block(BLOCK_MOONCRETE_SLAB, (10, 10))
-        for i in xrange(10):
+        for i in xrange(5):
             self._arcade_spawn_block(BLOCK_RADAR, (10, 10))
 
     def _unshared_copy(self, inList):
@@ -1030,6 +1045,14 @@ class MoonModel(object):
             self._turrets[turret.id] = turret
             self._evman.Post(TurretSpawnedEvent(
                 turret=turret,
+                flyin_position=from_position)
+                )
+        elif block_type == BLOCK_RADAR:
+            radar = Radar()
+            radar.position = destination
+            self._radars[radar.id] = radar
+            self._evman.Post(RadarSpawnedEvent(
+                radar=radar,
                 flyin_position=from_position)
                 )
         elif block_type == BLOCK_MOONCRETE_SLAB:
