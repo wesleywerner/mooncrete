@@ -139,6 +139,13 @@ class TurretSpawnedEvent(Event):
         self.flyin_position = flyin_position
 
 
+class TurretDestroyEvent(Event):
+
+    def __init__(self, turret):
+        self.name = 'Turret destroy event'
+        self.turret = turret
+
+
 class MoonscapeGeneratedEvent(Event):
 
     def __init__(self):
