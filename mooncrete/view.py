@@ -23,7 +23,7 @@ import model
 from statemachine import *
 from eventmanager import *
 from panel import Panel
-from sprites import Sprite
+from sprites import *
 
 
 # Limit drawing to this many frames per second.
@@ -122,8 +122,8 @@ class MoonView(object):
         # moving moonbase sprites that get drawn to the screen while
         # they are moving towards their destination
         self.moving_moonbase_sprites = {}
-        # asteroids sprites that fly through space towards your base
-        self.asteroid_sprites = {}
+        # all arcade sprites (asteroids, missiles...)
+        self.arcade_sprites = {}
         self.panels = {}
         self.windowsize = None
         # True while we are busy moving panels around
@@ -182,6 +182,12 @@ class MoonView(object):
                 event.name
                 )
 
+        elif isinstance(event, MooncreteSpawnEvent):
+            self.create_mooncrete_sprite(event.mooncrete, event.flyin_position)
+
+        elif isinstance(event, MooncreteDestroyEvent):
+            self.destroy_mooncrete_sprite(event.mooncrete)
+
         elif isinstance(event, TurretSpawnedEvent):
             self.create_turret_sprite(event.turret, event.flyin_position)
 
@@ -196,6 +202,9 @@ class MoonView(object):
 
         elif isinstance(event, MoonbaseDestroyEvent):
             self.destroy_moonbase(event.position)
+
+        elif isinstance(event, MissileSpawnedEvent):
+            self.create_missile(event.missile)
 
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
@@ -314,7 +323,7 @@ class MoonView(object):
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
-            self.animate_moonbases()
+            self.draw_moonscape()
 
         elif state == STATE_PHASE3:
             self.draw_moonscape()
@@ -423,18 +432,6 @@ class MoonView(object):
         for remove_key in remove_list:
             del self.moving_moonbase_sprites[remove_key]
 
-    def animate_moonbases(self):
-        """
-        Draw animating moonbase sprites.
-
-        """
-
-        t = pygame.time.get_ticks()
-        pan = self.panels['moonscape']
-        for key, sprite in self.moonbase_sprites.items():
-            sprite.update(t)
-            pan.image.blit(sprite.image, sprite.rect)
-
     def prerender_moonscape(self):
         """
         Draw the moonscape from the model.
@@ -462,15 +459,18 @@ class MoonView(object):
         """
 
         # clear
-        pan = self.panels['moonscape']
-        pan.image.fill(color.magenta)
+        moonscape = self.panels['moonscape']
+        moonscape.image.fill(color.magenta)
 
-        # draw moon base sprites
-        self.animate_moonbases()
+        # animate moon base sprites
+        t = pygame.time.get_ticks()
+        for key, sprite in self.moonbase_sprites.items():
+            sprite.update(t)
+            moonscape.image.blit(sprite.image, sprite.rect)
 
         # draw the pre-rendered moon surface
         if self.moon_surface:
-            pan.image.blit(self.moon_surface, (0, 0))
+            moonscape.image.blit(self.moon_surface, (0, 0))
 
     def draw_asteroids(self):
         """
@@ -479,7 +479,7 @@ class MoonView(object):
         """
 
         t = pygame.time.get_ticks()
-        for key, asteroid in self.asteroid_sprites.items():
+        for key, asteroid in self.arcade_sprites.items():
             asteroid.update(t)
             self.image.blit(asteroid.image, asteroid.rect)
 
@@ -519,6 +519,37 @@ class MoonView(object):
 
         # store this sprite using its (x, y) as a unique id
         self.moving_moonbase_sprites[index_position] = sprite
+
+    def create_mooncrete_sprite(self, mooncrete, flyin_position):
+        """
+        Create a mooncrete sprite.
+
+        """
+
+        # convert the sprite flyin position from the puzzle
+        rect = self.convert_puzzle_to_screen(flyin_position)
+        rect = pygame.Rect(rect, MOONSCAPE_BLOCK_SIZE)
+        # convert the sprite destination position from the moonscape
+        dest = self.convert_mini_moonscape_to_screen(mooncrete.position)
+        sprite = MooncreteSprite(rect)
+
+        # use a placehold image
+        sprite.image = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
+        sprite.image.fill(color.darker_gray)
+
+        # no need to store the slab on the sprite. it has a fixed position.
+        sprite.final_destination = self.convert_moonscape_to_panel(mooncrete.position)
+        sprite.set_position(dest)
+        self.moving_moonbase_sprites[mooncrete.id] = sprite
+
+    def destroy_mooncrete_sprite(self, mooncrete):
+        """
+        Destroy a mooncrete sprite.
+
+        """
+
+        if self.moonbase_sprites.has_key(mooncrete.id):
+            del self.moonbase_sprites[mooncrete.id]
 
     def create_turret_sprite(self, turret, flyin_position):
         """
@@ -562,7 +593,7 @@ class MoonView(object):
         pix.fill(color.red)
         sprite.addimage(pix, 1, -1)
 
-        self.asteroid_sprites[asteroid.id] = sprite
+        self.arcade_sprites[asteroid.id] = sprite
         trace.write('asteroid created at %s' % (rect))
 
     def move_asteroid(self, asteroid):
@@ -571,7 +602,7 @@ class MoonView(object):
 
         """
 
-        sprite = self.asteroid_sprites.get(asteroid.id, None)
+        sprite = self.arcade_sprites.get(asteroid.id, None)
         if sprite:
         # convert indexes to screen coordinates
             x, y = asteroid.position
@@ -596,5 +627,13 @@ class MoonView(object):
 
         """
 
-        del self.asteroid_sprites[asteroid.id]
+        del self.arcade_sprites[asteroid.id]
         # TODO spawn an asteroid destroy animation
+
+    def create_missile(missile):
+        """
+        Create a sprite for a missile.
+
+        """
+
+        pass
