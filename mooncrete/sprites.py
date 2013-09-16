@@ -26,7 +26,7 @@ import color
 #   auto angle: yes, with override
 #
 
-class CourrierSprite(pygame.sprite.Sprite):
+class CourierSprite(pygame.sprite.Sprite):
     """
     A sprite that flies in from the puzzle area towards the mini moonscape.
     It carries the sprite object which to create in the moonscape when
@@ -36,8 +36,8 @@ class CourrierSprite(pygame.sprite.Sprite):
 
     def __init__(self, rect, image, destination, cargo):
 
-        super(CourrierSprite, self).__init__()
-        self.name = 'courrier'
+        super(CourierSprite, self).__init__()
+        self.name = 'courier'
         self.rect = rect
         self.image = image
         self.cargo = cargo
