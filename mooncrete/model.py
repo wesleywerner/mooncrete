@@ -1010,11 +1010,6 @@ class MoonModel(object):
                         destination=(x, y),
                         block_type=block_type
                         )
-
-                    #self._moonscape[y][x] = block_type
-                    #spawn_event = ArcadeBlockSpawnedEvent(
-                        #from_position, (x, y), block_type, BLOCK_NAMES[block_type])
-                    #self._evman.Post(spawn_event)
                     break
                 elif base:
                     # this is some other kind of block. try another column.
@@ -1061,11 +1056,11 @@ class MoonModel(object):
                 mooncrete=slab,
                 flyin_position=from_position)
                 )
-        else:
-            # generic spawn event to be replace by specific events above
-            spawn_event = ArcadeBlockSpawnedEvent(
-                from_position, destination, block_type, BLOCK_NAMES[block_type])
-            self._evman.Post(spawn_event)
+        #else:
+            ## generic spawn event to be replace by specific events above
+            #spawn_event = ArcadeBlockSpawnedEvent(
+                #from_position, destination, block_type, BLOCK_NAMES[block_type])
+            #self._evman.Post(spawn_event)
 
     def _arcade_step(self):
         """
@@ -1097,9 +1092,9 @@ class MoonModel(object):
                 remove_list.append(asteroid)
             else:
                 # get the moonbase block at this translated position
-                x, y = self._asteroid_to_moonscape(asteroid)
+                xy = self._asteroid_to_moonscape(asteroid)
                 #trace.write('translated asteroid pos to moonscape %s' % ((x, y),))
-                block_type = self._moonscape_block_at(x, y)
+                block_type = self._moonscape_block_at(xy[0], xy[1])
 
                 if not block_type:
                     # asteroid is not within the moonscape boundaries yet (None).
@@ -1111,22 +1106,24 @@ class MoonModel(object):
                 if block_type == BLOCK_MOONROCKS:
                     # we hit the ground and disintegrate in a puff of dust
                     remove_list.append(asteroid)
+
                 elif block_type == BLOCK_MOONCRETE_SLAB:
                     remove_list.append(asteroid)
-                    self._moonscape_set_block((x, y), 0)
-                    self._evman.Post(MooncreteDestroyEvent(Mooncrete((x, y))))
+                    self._moonscape_set_block(xy, 0)
+                    self._evman.Post(MooncreteDestroyEvent(Mooncrete(xy)))
+
                 elif block_type == BLOCK_TURRET:
                     remove_list.append(asteroid)
-                    self._moonscape_set_block((x, y), 0)
-                    turret = self._turrets.get((x, y), None)
+                    self._moonscape_set_block(xy, 0)
+                    turret = self._turrets.get(xy, None)
                     if turret:
-                        del self._turrets[(x, y)]
+                        del self._turrets[xy]
                         self._evman.Post(TurretDestroyEvent(turret))
+
                 elif block_type in BLOCK_BASES.keys():
                     # ah-yup. let's destroy these.
                     remove_list.append(asteroid)
-                    self._moonscape_set_block((x, y), 0)
-                    self._evman.Post(MoonbaseDestroyEvent((x, y)))
+                    self._moonscape_set_block(xy, 0)
 
         # remove asteroids
         for asteroid in remove_list:
