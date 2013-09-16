@@ -146,6 +146,20 @@ class TurretDestroyEvent(Event):
         self.turret = turret
 
 
+class RadarSpawnedEvent(Event):
+
+    def __init__(self, radar, flyin_position):
+        self.name = 'Radar spawned event'
+        self.radar = radar
+        self.flyin_position = flyin_position
+
+
+class RadarDestroyEvent(Event):
+
+    def __init__(self, radar):
+        self.name = 'Radar destroy event'
+        self.radar = radar
+
 class MoonscapeGeneratedEvent(Event):
 
     def __init__(self):
