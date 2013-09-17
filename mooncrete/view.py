@@ -672,9 +672,8 @@ class MoonView(object):
         """
 
         # the missile position and destination is the arcade coordinate target.
-        #position = self.convert_arcade_to_screen(missile.position)
-        rect = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
-        #rect.center = position
+        position = self.convert_arcade_to_screen(missile.position)
+        rect = pygame.Rect(position, MOONSCAPE_BLOCK_SIZE)
         # destination used by the sprite to calc it's angle of rotation
         dest_coords = self.convert_arcade_to_screen(missile.destination)
         destination = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
@@ -695,10 +694,7 @@ class MoonView(object):
         sprite = self.arcade_sprites.get(missile.id, None)
         if sprite:
             position = self.convert_arcade_to_screen(missile.position)
-            rect = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
-            rect.center = position
-            sprite.rect = rect
-            #sprite.rect.center = position
+            sprite.rect.topleft = position
 
     def destroy_missile(self, missile):
         """
