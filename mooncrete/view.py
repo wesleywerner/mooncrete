@@ -336,7 +336,7 @@ class MoonView(object):
 
         # draw asteroids after panel updates: these live on the screen surface.
         if state == STATE_PHASE3:
-            self.draw_asteroids()
+            self.draw_arcade_sprites()
 
         # moving moonbases are draw on top of all other panels
         self.courier_deliver_sprite()
@@ -512,7 +512,7 @@ class MoonView(object):
         if self.moon_surface:
             moonscape.image.blit(self.moon_surface, (0, 0))
 
-    def draw_asteroids(self):
+    def draw_arcade_sprites(self):
         """
         Animate and draw flying asteroids.
 
