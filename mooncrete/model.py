@@ -1194,6 +1194,7 @@ class MoonModel(object):
         """
 
         remove_list = []
+        new_explosions = []
         for explosion in self._explosions:
             if explosion.update():
                 self._evman.Post(ExplosionGrowEvent(explosion))
@@ -1202,6 +1203,7 @@ class MoonModel(object):
                     dist = helper.distance(* asteroid.position + explosion.position)
                     if dist < explosion.radius:
                         remove_list.append(asteroid)
+                        new_explosions.append(asteroid)
             else:
                 remove_list.append(explosion)
 
@@ -1212,6 +1214,8 @@ class MoonModel(object):
             elif isinstance(obj, Asteroid):
                 self._asteroids.remove(obj)
                 self._evman.Post(AsteroidDestroyEvent(obj))
+        for asteroid in new_explosions:
+            self._arcade_spawn_explosion(asteroid.position)
 
 
     def _convert_arcade_to_moonscape(self, position):
