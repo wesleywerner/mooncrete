@@ -12,6 +12,9 @@
 #  along with this program. If not, see http://www.gnu.org/licenses/.
 
 
+import math
+
+
 def get_line_segments(start, end):
     """
     Returns a list of line segments that make up a line between two points.
