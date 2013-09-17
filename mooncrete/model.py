@@ -308,8 +308,7 @@ class Missile(object):
     def __init__(self, position, destination):
         self.position = position
         self.destination = destination
-        self.trajectory = list(
-            reversed(helper.get_line_segments(position, destination)))
+        self.trajectory = helper.get_line_segments(destination, position)
 
     def move(self):
         if self.trajectory:
@@ -1190,18 +1189,6 @@ class MoonModel(object):
         self._asteroids.append(asteroid)
         self._evman.Post(AsteroidSpawnedEvent(asteroid))
 
-    def _arcade_spawn_missile(self, turret, destination):
-        """
-        Fire a missile from the given turret.
-
-        """
-
-        position = (random.randint(0, ARCADE_WIDTH), 0)
-        destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
-        missile = Missile(position, destination)
-        self._missiles.append(missile)
-        self._evman.Post(MissileSpawnedEvent(missile))
-
     def closest_ready_turret(self, arcade_position):
         """
         Returns the closest, charged turret to a position.
@@ -1231,6 +1218,12 @@ class MoonModel(object):
         turret = self.closest_ready_turret(arcade_position)
         if turret:
             trace.write('firing solution number %s' % (turret.id,))
-            pass
+            # translate the turret position into arcade coordinates
+            position = (
+                turret.position[0] * MOONSPACE_RATIO[0],
+                (turret.position[1] + MOONSCAPE_AIRSPACE) * MOONSPACE_RATIO[1])
+            missile = Missile(position, arcade_position)
+            self._missiles.append(missile)
+            self._evman.Post(MissileSpawnedEvent(missile))
         else:
             trace.write('no ready turrets found')
