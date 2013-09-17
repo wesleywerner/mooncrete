@@ -652,7 +652,8 @@ class MoonView(object):
             x, y = asteroid.position
             x = x * ARCADE_VIEW_MODEL_RATIO[0]
             y = y * ARCADE_VIEW_MODEL_RATIO[1]
-            sprite.set_position((x, y))
+            sprite.rect.topleft = (x, y)
+            #sprite.set_position((x, y))
 
     def destroy_asteroid(self, asteroid):
         """
