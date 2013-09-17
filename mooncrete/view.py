@@ -538,10 +538,8 @@ class MoonView(object):
         for key, sprite in self.arcade_sprites.items():
             sprite.update(t)
 
-            #if isinstance(sprite, ExplosionSprite):
-                #pan.image.blit(sprite.image, sprite.rect.center)
-            #else:
-            pan.image.blit(sprite.image, sprite.rect)
+            if sprite.image:
+                pan.image.blit(sprite.image, sprite.rect)
 
             ## draw the missile firing solution
             #if isinstance(sprite, MissileSprite):
