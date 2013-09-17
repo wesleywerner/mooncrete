@@ -313,6 +313,7 @@ class Missile(object):
     def move(self):
         if self.trajectory:
             self.position = self.trajectory.pop()
+            return True
 
     @property
     def id(self):
@@ -1151,14 +1152,10 @@ class MoonModel(object):
 
         remove_list = []
         for missile in self._missiles:
-            missile.move()
-            self._evman.Post(MissileMovedEvent(missile))
-
-            if not self._arcade_in_bounds(missile.position):
-                remove_list.append(missile)
+            if missile.move():
+                self._evman.Post(MissileMovedEvent(missile))
             else:
-                # is reached target: detonate!
-                pass
+                remove_list.append(missile)
 
         for missile in remove_list:
             self._missiles.remove(missile)
