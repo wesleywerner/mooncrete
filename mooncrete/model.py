@@ -269,12 +269,16 @@ class Turret(object):
 
     def __init__(self):
         self.position = None
-        self.charge = 0
+        self.charge = 4
         self.max_charge = 4
 
     def recharge(self):
         if self.charge < self.max_charge:
             self.charge += 1
+
+    @property
+    def ready(self):
+        return self.charge == self.max_charge
 
     @property
     def id(self):
@@ -544,10 +548,12 @@ class MoonModel(object):
         self._reset_arcade()
 
         # TODO remove this (for testing)
-        for i in xrange(5):
+        for i in xrange(10):
             self._arcade_spawn_block(BLOCK_MOONCRETE_SLAB, (10, 10))
         for i in xrange(5):
             self._arcade_spawn_block(BLOCK_RADAR, (10, 10))
+        for i in xrange(5):
+            self._arcade_spawn_block(BLOCK_TURRET, (10, 10))
 
     def _unshared_copy(self, inList):
         """
@@ -1092,7 +1098,7 @@ class MoonModel(object):
                 remove_list.append(asteroid)
             else:
                 # get the moonbase block at this translated position
-                xy = self._asteroid_to_moonscape(asteroid)
+                xy = self._convert_arcade_to_moonscape(asteroid.position)
                 #trace.write('translated asteroid pos to moonscape %s' % ((x, y),))
                 block_type = self._moonscape_block_at(xy[0], xy[1])
 
@@ -1159,13 +1165,13 @@ class MoonModel(object):
             self._missiles.remove(missile)
             self._evman.Post(MissileDestroyEvent(missile))
 
-    def _asteroid_to_moonscape(self, asteroid):
+    def _convert_arcade_to_moonscape(self, position):
         """
         Converts the asteroid position to find the moonscape block equivalent.
 
         """
 
-        x, y = asteroid.position
+        x, y = position
         x = x // MOONSPACE_RATIO[0]
         y = y // MOONSPACE_RATIO[1]
         # exclude the air space above the moonscape
@@ -1195,3 +1201,36 @@ class MoonModel(object):
         missile = Missile(position, destination)
         self._missiles.append(missile)
         self._evman.Post(MissileSpawnedEvent(missile))
+
+    def closest_ready_turret(self, arcade_position):
+        """
+        Returns the closest, charged turret to a position.
+        Position is measured in ARCADE_WIDTH and HEIGHT.
+        It will be translated into a moonscape index position.
+
+        """
+
+        coords = self._convert_arcade_to_moonscape(arcade_position)
+        chosen_one = None
+        chosen_dist = ARCADE_HEIGHT
+        for key, turret in self._turrets.items():
+            if turret.ready:
+                distance = helper.distance(* coords + turret.position)
+                if distance < chosen_dist:
+                    chosen_dist = distance
+                    chosen_one = turret
+        return chosen_one
+
+    def fire_missile(self, arcade_position):
+        """
+        Launch a missile towards to given arcade position, the closest
+        ready turret will provide the firing solution.
+
+        """
+
+        turret = self.closest_ready_turret(arcade_position)
+        if turret:
+            trace.write('firing solution number %s' % (turret.id,))
+            pass
+        else:
+            trace.write('no ready turrets found')
