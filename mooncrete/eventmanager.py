@@ -179,9 +179,30 @@ class MissileMovedEvent(Event):
         self.name = 'Missle moved event'
         self.missile = missile
 
+
 class MissileDestroyEvent(Event):
 
     def __init__(self, missile):
         self.name = 'Missle destroy event'
         self.missile = missile
 
+
+class ExplosionSpawnEvent(Event):
+
+    def __init__(self, explosion):
+        self.name = 'Explosion spawn event'
+        self.explosion = explosion
+
+
+class ExplosionGrowEvent(Event):
+
+    def __init__(self, explosion):
+        self.name = 'Explosion grow event'
+        self.explosion = explosion
+
+
+class ExplosionDestroyEvent(Event):
+
+    def __init__(self, explosion):
+        self.name = 'Explosion destroy event'
+        self.explosion = explosion
