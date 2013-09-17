@@ -1,3 +1,4 @@
+import math
 import pygame
 from pygame.locals import *
 import color
@@ -110,6 +111,31 @@ class MooncreteSprite(pygame.sprite.Sprite):
             position = pygame.Rect(position, self.rect.size)
         self.destination = position
 
+
+class MissileSprite(pygame.sprite.Sprite):
+    """
+    Flying ordenance that points towards the angle it is travelling.
+
+    """
+
+    def __init__(self, rect, image, destination):
+
+        super(MissileSprite, self).__init__()
+        self.name = 'missile'
+        self.rect = rect
+        self.image = image
+        self.destination = destination
+
+        ## calculate the angle to face our image
+        #dx = destination.left - rect.left
+        #dy = destination.top - rect.top
+        #rads = math.atan2(-dy, dx)
+        #rads %= 2 * math.pi
+        #self.angle = math.degrees(rads)
+        #self.image = pygame.transform.rotate(self.image, self.angle)
+
+    def update(self, t):
+        pass
 
 class TurretSprite(pygame.sprite.Sprite):
     """
