@@ -209,6 +209,15 @@ class MoonView(object):
         elif isinstance(event, MissileDestroyEvent):
             self.destroy_missile(event.missile)
 
+        elif isinstance(event, ExplosionSpawnEvent):
+            self.create_explosion(event.explosion)
+
+        elif isinstance(event, ExplosionGrowEvent):
+            self.move_explosion(event.explosion)
+
+        elif isinstance(event, ExplosionDestroyEvent):
+            self.destroy_explosion(event.explosion)
+
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
 
@@ -528,16 +537,20 @@ class MoonView(object):
         t = pygame.time.get_ticks()
         for key, sprite in self.arcade_sprites.items():
             sprite.update(t)
+
+            #if isinstance(sprite, ExplosionSprite):
+                #pan.image.blit(sprite.image, sprite.rect.center)
+            #else:
             pan.image.blit(sprite.image, sprite.rect)
 
-            # draw the missile firing solution
-            if isinstance(sprite, MissileSprite):
-                if sprite.missile.trajectory:
-                    pygame.draw.line(
-                        pan.image, color.white,
-                        sprite.rect.center,
-                        sprite.destination.center
-                        )
+            ## draw the missile firing solution
+            #if isinstance(sprite, MissileSprite):
+                #if sprite.missile.trajectory:
+                    #pygame.draw.line(
+                        #pan.image, color.white,
+                        #sprite.rect.center,
+                        #sprite.destination.center
+                        #)
 
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
@@ -659,10 +672,13 @@ class MoonView(object):
         """
 
         # the missile position and destination is the arcade coordinate target.
-        position = self.convert_arcade_to_screen(missile.position)
-        rect = pygame.Rect(position, MOONSCAPE_BLOCK_SIZE)
-        destination = self.convert_arcade_to_screen(missile.destination)
-        destination = pygame.Rect(destination, MOONSCAPE_BLOCK_SIZE)
+        #position = self.convert_arcade_to_screen(missile.position)
+        rect = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
+        #rect.center = position
+        # destination used by the sprite to calc it's angle of rotation
+        dest_coords = self.convert_arcade_to_screen(missile.destination)
+        destination = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
+        destination.center = dest_coords
         # use a placehold image
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
         pix.fill(color.purple)
@@ -679,7 +695,10 @@ class MoonView(object):
         sprite = self.arcade_sprites.get(missile.id, None)
         if sprite:
             position = self.convert_arcade_to_screen(missile.position)
-            sprite.rect.topleft = position
+            rect = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
+            rect.center = position
+            sprite.rect = rect
+            #sprite.rect.center = position
 
     def destroy_missile(self, missile):
         """
@@ -689,3 +708,32 @@ class MoonView(object):
 
         if self.arcade_sprites.has_key(missile.id):
             del self.arcade_sprites[missile.id]
+
+    def create_explosion(self, explosion):
+        """
+        Create an explosion sprite.
+
+        """
+
+        position = self.convert_arcade_to_screen(explosion.position)
+        sprite = ExplosionSprite(position)
+        self.arcade_sprites[explosion.id] = sprite
+
+    def move_explosion(self, explosion):
+        """
+        Grow an explosion sprite.
+
+        """
+
+        sprite = self.arcade_sprites.get(explosion.id, None)
+        if sprite:
+            sprite.grow(explosion.radius * 10)
+
+    def destroy_explosion(self, explosion):
+        """
+        Destroy an explosion sprite.
+
+        """
+
+        if self.arcade_sprites.has_key(explosion.id):
+            del self.arcade_sprites[explosion.id]
