@@ -94,6 +94,11 @@ class MoonController(object):
                         # allow escaping from unhandled states
                         self.model.escape_state()
 
+                elif event.type == MOUSEBUTTONDOWN:
+                    if state == STATE_PHASE3:
+                        pos = self.view.convert_screen_to_arcade(event.pos)
+                        self.model.fire_missile(pos)
+
     def menu_keys(self, event):
 
         if event.key == K_ESCAPE:
