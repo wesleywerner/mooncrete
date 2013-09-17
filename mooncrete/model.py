@@ -313,6 +313,7 @@ class Missile(object):
     def move(self):
         if self.trajectory:
             self.position = self.trajectory.pop()
+            self.trajectory = self.trajectory[:-2]
             return True
 
     @property
@@ -1164,10 +1165,20 @@ class MoonModel(object):
                     remove_list.append(asteroid)
                     self._moonscape_set_block(xy, 0)
 
-        # remove asteroids
-        for asteroid in remove_list:
-            self._asteroids.remove(asteroid)
-            self._evman.Post(AsteroidDestroyEvent(asteroid))
+        self._arcade_remove_asteroids(remove_list)
+
+    def _arcade_remove_asteroids(self, asteroid_list):
+        """
+        Helper to remove a list of asteroids with sanity checks.
+
+        """
+
+        for asteroid in asteroid_list:
+            try:
+                self._asteroids.remove(asteroid)
+                self._evman.Post(AsteroidDestroyEvent(asteroid))
+            except ValueError:
+                pass
 
     def _arcade_move_missiles(self):
         """
@@ -1193,7 +1204,8 @@ class MoonModel(object):
 
         """
 
-        remove_list = []
+        explosion_remove_list = []
+        asteroid_remove_list = []
         new_explosions = []
         for explosion in self._explosions:
             if explosion.update():
@@ -1201,19 +1213,17 @@ class MoonModel(object):
                 # check for collisions with asteroids
                 for asteroid in self._asteroids:
                     dist = helper.distance(* asteroid.position + explosion.position)
-                    if dist < explosion.radius:
-                        remove_list.append(asteroid)
+                    if (dist < explosion.radius * 2):
+                        asteroid_remove_list.append(asteroid)
                         new_explosions.append(asteroid)
             else:
-                remove_list.append(explosion)
+                explosion_remove_list.append(explosion)
 
-        for obj in remove_list:
-            if isinstance(obj, Explosion):
-                self._explosions.remove(obj)
-                self._evman.Post(ExplosionDestroyEvent(obj))
-            elif isinstance(obj, Asteroid):
-                self._asteroids.remove(obj)
-                self._evman.Post(AsteroidDestroyEvent(obj))
+        self._arcade_remove_asteroids(asteroid_remove_list)
+
+        for explosion in explosion_remove_list:
+            self._explosions.remove(explosion)
+            self._evman.Post(ExplosionDestroyEvent(explosion))
         for asteroid in new_explosions:
             self._arcade_spawn_explosion(asteroid.position)
 
@@ -1237,7 +1247,7 @@ class MoonModel(object):
 
         """
 
-        position = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT / 2)
+        position = (random.randint(0, ARCADE_WIDTH), 0)
         destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
         asteroid = Asteroid(position, destination)
         self._asteroids.append(asteroid)
