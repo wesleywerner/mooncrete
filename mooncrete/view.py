@@ -145,6 +145,7 @@ class MoonView(object):
 
         elif isinstance(event, StateEvent):
             if event.state in (STATE_PHASE1, STATE_PHASE2):
+                self.panels['arcade'].hide()
                 self.panels['score'].show()
                 self.panels['puzzle'].show()
                 moonscape = self.panels['moonscape']
@@ -152,6 +153,7 @@ class MoonView(object):
                 moonscape.show_position = MOONSCAPE_MINI.topleft
                 moonscape.scale(MOONSCAPE_MINI.size)
             elif event.state == STATE_PHASE3:
+                self.panels['arcade'].show()
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
                 moonscape = self.panels['moonscape']
@@ -162,6 +164,7 @@ class MoonView(object):
                 # TODO show the help panel
                 pass
             elif event.state == STATE_MENU:
+                self.panels['arcade'].hide()
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
                 self.panels['moonscape'].hide()
@@ -281,10 +284,15 @@ class MoonView(object):
         # start of as a mini moonscape view
         moonscape_panel.show_position = MOONSCAPE_MINI.topleft
         # hide it by moving it down outside the draw area
-        moonscape_panel.hide_position = (MOONSCAPE_MINI.left, DRAW_AREA.height + 1)
+        moonscape_panel.hide_position = (MOONSCAPE_MINI.left, DRAW_AREA.height)
         moonscape_panel.hide(instant=True)
         self.panels['moonscape'] = moonscape_panel
-        #puzzle_panel.scale((150, 150), instant=False)
+
+        arcade_panel = Panel(DRAW_AREA.size, DRAW_AREA)
+        arcade_panel.show_position = DRAW_AREA.topleft
+        arcade_panel.hide_position = (DRAW_AREA.left, - DRAW_AREA.height)
+        arcade_panel.hide(instant=True)
+        self.panels['arcade'] = arcade_panel
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
@@ -326,6 +334,7 @@ class MoonView(object):
             self.draw_moonscape()
 
         elif state == STATE_PHASE3:
+            self.draw_arcade_sprites()
             self.draw_moonscape()
 
         # update panels
@@ -333,10 +342,6 @@ class MoonView(object):
         for key, panel in self.panels.items():
             if panel.draw(self.image):
                 self.transitioning = True
-
-        # draw asteroids after panel updates: these live on the screen surface.
-        if state == STATE_PHASE3:
-            self.draw_arcade_sprites()
 
         # moving moonbases are draw on top of all other panels
         self.courier_deliver_sprite()
@@ -518,10 +523,12 @@ class MoonView(object):
 
         """
 
+        pan = self.panels['arcade']
+        pan.image.fill(color.magenta)
         t = pygame.time.get_ticks()
         for key, sprite in self.arcade_sprites.items():
             sprite.update(t)
-            self.image.blit(sprite.image, sprite.rect)
+            pan.image.blit(sprite.image, sprite.rect)
 
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
