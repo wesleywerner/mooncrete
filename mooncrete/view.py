@@ -530,6 +530,15 @@ class MoonView(object):
             sprite.update(t)
             pan.image.blit(sprite.image, sprite.rect)
 
+            # draw the missile firing solution
+            if isinstance(sprite, MissileSprite):
+                if sprite.missile.trajectory:
+                    pygame.draw.line(
+                        pan.image, color.white,
+                        sprite.rect.center,
+                        sprite.destination.center
+                        )
+
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
         Create a mooncrete sprite.
@@ -651,13 +660,14 @@ class MoonView(object):
 
         # the missile position and destination is the arcade coordinate target.
         position = self.convert_arcade_to_screen(missile.position)
-        destination = self.convert_arcade_to_screen(missile.destination)
         rect = pygame.Rect(position, MOONSCAPE_BLOCK_SIZE)
+        destination = self.convert_arcade_to_screen(missile.destination)
         destination = pygame.Rect(destination, MOONSCAPE_BLOCK_SIZE)
         # use a placehold image
         pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
         pix.fill(color.purple)
         sprite = MissileSprite(rect, pix, destination)
+        sprite.missile = missile
         self.arcade_sprites[missile.id] = sprite
 
     def move_missile(self, missile):
