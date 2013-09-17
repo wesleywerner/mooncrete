@@ -200,6 +200,9 @@ class MoonView(object):
         elif isinstance(event, MissileSpawnedEvent):
             self.create_missile(event.missile)
 
+        elif isinstance(event, MissileMovedEvent):
+            self.move_missile(event.missile)
+
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
 
@@ -365,6 +368,12 @@ class MoonView(object):
             pos, self.panels['puzzle'].rect.topleft)
         return pos
 
+    def convert_moonscape_to_screen(self, position):
+        pos = self.convert_moonscape_to_panel(position)
+        pos = self.translate_to_screen(
+            pos, self.panels['moonscape'].rect.topleft)
+        return pos
+
     def convert_mini_moonscape_to_screen(self, position):
         pos = self.convert_mini_moonscape_to_panel(position)
         pos = self.translate_to_screen(
@@ -381,12 +390,15 @@ class MoonView(object):
         y = (model.ARCADE_HEIGHT / float(DRAW_AREA.height)) * position[1]
         return (int(x), int(y))
 
-    # UNUSED
-    #def convert_moonscape_to_screen(self, position):
-        #pos = self.convert_moonscape_to_panel(position)
-        #pos = self.translate_to_screen(
-            #pos, self.panels['moonscape'].rect.topleft)
-        #return pos
+    def convert_arcade_to_screen(self, position):
+        """
+        Take a arcade position and translate to a screen equivalent.
+
+        """
+
+        x = (DRAW_AREA.width / float(model.ARCADE_WIDTH)) * position[0]
+        y = (DRAW_AREA.height / float(model.ARCADE_HEIGHT)) * position[1]
+        return (int(x), int(y))
 
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
@@ -621,10 +633,25 @@ class MoonView(object):
         del self.arcade_sprites[asteroid.id]
         # TODO spawn an asteroid destroy animation
 
-    def create_missile(missile):
+    def create_missile(self, missile):
         """
         Create a sprite for a missile.
 
         """
 
-        pass
+        # the missile position and destination is the arcade coordinate target.
+        position = self.convert_arcade_to_screen(missile.position)
+        destination = self.convert_arcade_to_screen(missile.destination)
+        rect = pygame.Rect(position, MOONSCAPE_BLOCK_SIZE)
+        destination = pygame.Rect(destination, MOONSCAPE_BLOCK_SIZE)
+        # use a placehold image
+        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
+        pix.fill(color.purple)
+        sprite = MissileSprite(rect, pix, destination)
+        self.arcade_sprites[missile.id] = sprite
+
+    def move_missile(self, missile):
+        sprite = self.arcade_sprites.get(missile.id, None)
+        if sprite:
+            position = self.convert_arcade_to_screen(missile.position)
+            sprite.rect.topleft = position
