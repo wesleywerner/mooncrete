@@ -203,6 +203,9 @@ class MoonView(object):
         elif isinstance(event, MissileMovedEvent):
             self.move_missile(event.missile)
 
+        elif isinstance(event, MissileDestroyEvent):
+            self.destroy_missile(event.missile)
+
         elif isinstance(event, QuitEvent):
             self.isinitialized = False
 
@@ -651,7 +654,21 @@ class MoonView(object):
         self.arcade_sprites[missile.id] = sprite
 
     def move_missile(self, missile):
+        """
+        Move a missile.
+
+        """
+
         sprite = self.arcade_sprites.get(missile.id, None)
         if sprite:
             position = self.convert_arcade_to_screen(missile.position)
             sprite.rect.topleft = position
+
+    def destroy_missile(self, missile):
+        """
+        Destroy a missile.
+
+        """
+
+        if self.arcade_sprites.has_key(missile.id):
+            del self.arcade_sprites[missile.id]
