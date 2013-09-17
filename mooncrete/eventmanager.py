@@ -32,7 +32,8 @@ class EventManager(object):
         if type(event) not in (TickEvent,
                                 InputEvent,
                                 StepGameEvent,
-                                AsteroidMovedEvent
+                                AsteroidMovedEvent,
+                                MissileMovedEvent,
                                 ):
             trace.write(str(event))
         for listener in self.listeners:
