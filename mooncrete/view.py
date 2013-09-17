@@ -519,9 +519,9 @@ class MoonView(object):
         """
 
         t = pygame.time.get_ticks()
-        for key, asteroid in self.arcade_sprites.items():
-            asteroid.update(t)
-            self.image.blit(asteroid.image, asteroid.rect)
+        for key, sprite in self.arcade_sprites.items():
+            sprite.update(t)
+            self.image.blit(sprite.image, sprite.rect)
 
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
