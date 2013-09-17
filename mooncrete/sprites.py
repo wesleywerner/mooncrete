@@ -124,7 +124,7 @@ class MissileSprite(pygame.sprite.Sprite):
         self.name = 'missile'
         self.rect = rect
         self.image = image
-        self.destination = destination
+        #self.destination = destination
 
         ## calculate the angle to face our image
         #dx = destination.left - rect.left
@@ -136,6 +136,43 @@ class MissileSprite(pygame.sprite.Sprite):
 
     def update(self, t):
         pass
+
+
+class ExplosionSprite(pygame.sprite.Sprite):
+    """
+    A growing explosion from some kind of detonation.
+
+    """
+
+    def __init__(self, position):
+
+        super(ExplosionSprite, self).__init__()
+        self.name = 'explosion'
+        self.position = position
+        self.rect = pygame.Rect(position, (0, 0))
+        self.radius = 0.0
+        self.image = None
+
+    def grow(self, radius):
+        """
+        Grow the explosion sprite radius size.
+
+        """
+
+        if radius != self.radius:
+            self.radius = radius
+            half = (int(radius),) * 2
+            self.rect = pygame.Rect(self.position, (radius * 2, radius * 2))
+            self.rect = self.rect.move(-radius, -radius)
+            self.image = pygame.Surface(self.rect.size)
+            self.image.set_colorkey(color.magenta)
+            self.image.fill(color.magenta)
+            pygame.draw.circle(
+                self.image, color.red, half, int(self.radius))
+
+    def update(self, t):
+        pass
+
 
 class TurretSprite(pygame.sprite.Sprite):
     """
