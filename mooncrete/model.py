@@ -320,6 +320,27 @@ class Missile(object):
         return id(self)
 
 
+class Explosion(object):
+    """
+    An explosion from a missile detonation.
+    It grows in diameter until it expires.
+
+    """
+
+    def __init__(self, position):
+        self.position = position
+        self.radius = 0.0
+
+    def update(self):
+        if self.radius < 5:
+            self.radius += 0.5
+            return True
+
+
+    @property
+    def id(self):
+        return id(self)
+
 
 class MoonModel(object):
     """
@@ -369,6 +390,9 @@ class MoonModel(object):
 
         # missiles the player has fired
         self._missiles = []
+
+        # explosions that grow in size
+        self._explosions = []
 
         # our gun turrets and radars to defend our base.
         # a dictionary is used and the key is the moonscape (x, y) position.
@@ -1076,6 +1100,7 @@ class MoonModel(object):
 
         self._arcade_move_asteroids()
         self._arcade_move_missiles()
+        self._arcade_grow_explosions()
 
     def _arcade_move_asteroids(self):
         """
@@ -1155,11 +1180,39 @@ class MoonModel(object):
             if missile.move():
                 self._evman.Post(MissileMovedEvent(missile))
             else:
+                self._arcade_spawn_explosion(missile.position)
                 remove_list.append(missile)
 
         for missile in remove_list:
             self._missiles.remove(missile)
             self._evman.Post(MissileDestroyEvent(missile))
+
+    def _arcade_grow_explosions(self):
+        """
+        Grow explosions.
+
+        """
+
+        remove_list = []
+        for explosion in self._explosions:
+            if explosion.update():
+                self._evman.Post(ExplosionGrowEvent(explosion))
+                # check for collisions with asteroids
+                for asteroid in self._asteroids:
+                    dist = helper.distance(* asteroid.position + explosion.position)
+                    if dist < explosion.radius:
+                        remove_list.append(asteroid)
+            else:
+                remove_list.append(explosion)
+
+        for obj in remove_list:
+            if isinstance(obj, Explosion):
+                self._explosions.remove(obj)
+                self._evman.Post(ExplosionDestroyEvent(obj))
+            elif isinstance(obj, Asteroid):
+                self._asteroids.remove(obj)
+                self._evman.Post(AsteroidDestroyEvent(obj))
+
 
     def _convert_arcade_to_moonscape(self, position):
         """
@@ -1224,3 +1277,13 @@ class MoonModel(object):
             self._evman.Post(MissileSpawnedEvent(missile))
         else:
             trace.write('no ready turrets found')
+
+    def _arcade_spawn_explosion(self, position):
+        """
+        Spawn a new impact point that grows its explosion.
+
+        """
+
+        explosion = Explosion(position)
+        self._explosions.append(explosion)
+        self._evman.Post(ExplosionSpawnEvent(explosion))
