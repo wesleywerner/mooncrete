@@ -371,6 +371,16 @@ class MoonView(object):
             pos, self.panels['moonscape'].rect.topleft)
         return pos
 
+    def convert_screen_to_arcade(self, position):
+        """
+        Take a screen position and translate to an arcade equivalent.
+
+        """
+
+        x = (model.ARCADE_WIDTH / float(DRAW_AREA.width)) * position[0]
+        y = (model.ARCADE_HEIGHT / float(DRAW_AREA.height)) * position[1]
+        return (int(x), int(y))
+
     # UNUSED
     #def convert_moonscape_to_screen(self, position):
         #pos = self.convert_moonscape_to_panel(position)
