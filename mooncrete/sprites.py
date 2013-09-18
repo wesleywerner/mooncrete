@@ -235,10 +235,21 @@ class TurretSprite(pygame.sprite.Sprite):
         # a way to override the angle
         self.turrent_angle_override = -1
 
-
         self.fps = 10
         self._delay = 1000 / self.fps
         self._last_update = 0
+
+        # for testing build a placeholder turret image
+        timage = pygame.Surface(rect.size)
+        timage.set_colorkey(color.magenta)
+        timage.fill(color.magenta)
+        pygame.draw.line(
+            timage,
+            color.white,
+            (0, self.rect.height / 2),
+            (self.rect.width, self.rect.height / 2),
+            2)
+        self.turret_images.append(timage)
 
     def subsurface_base_images(self, surface, rect_list):
         """
@@ -282,6 +293,13 @@ class TurretSprite(pygame.sprite.Sprite):
 
             if self.turret.ready:
                 self.image.fill(color.gold)
+                # angle the turret
+                if self.turrent_angle_override > -1:
+                    angled_pix = pygame.transform.rotate(
+                        self.turret_images[self.turret_images_current],
+                        self.turrent_angle_override)
+                    self.image.blit(angled_pix, (0, 0))
+                    #self.image.blit(self.turret_images[self.turret_images_current], (0, 0))
             else:
                 self.image.fill(color.gray)
                 # draw a recharge bar
