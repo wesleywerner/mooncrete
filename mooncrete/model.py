@@ -269,8 +269,8 @@ class Turret(object):
 
     def __init__(self):
         self.position = None
-        self.charge = 4
-        self.max_charge = 4
+        self.charge = 0
+        self.max_charge = 20
 
     def recharge(self):
         if self.charge < self.max_charge:
@@ -1101,6 +1101,7 @@ class MoonModel(object):
         self._arcade_move_asteroids()
         self._arcade_move_missiles()
         self._arcade_grow_explosions()
+        self._arcade_recharge_turrets()
 
     def _arcade_move_asteroids(self):
         """
@@ -1226,6 +1227,14 @@ class MoonModel(object):
         for asteroid in new_explosions:
             self._arcade_spawn_explosion(asteroid.position)
 
+    def _arcade_recharge_turrets(self):
+        """
+        Recharge turrets for firing missiles.
+
+        """
+
+        for key, turret in self._turrets.items():
+            turret.recharge()
 
     def _convert_arcade_to_moonscape(self, position):
         """
@@ -1281,6 +1290,7 @@ class MoonModel(object):
         turret = self.closest_ready_turret(arcade_position)
         if turret:
             trace.write('firing solution number %s' % (turret.id,))
+            turret.charge = 0
             # translate the turret position into arcade coordinates
             position = (
                 turret.position[0] * MOONSPACE_RATIO[0],
