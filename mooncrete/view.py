@@ -462,6 +462,7 @@ class MoonView(object):
 
     def placeholder_pix(self, size, acolor):
         pix = pygame.Surface(size)
+        pix.set_colorkey(color.magenta)
         pix.fill(acolor)
         return pix
 
@@ -697,8 +698,7 @@ class MoonView(object):
         destination = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
         destination.center = dest_coords
         # use a placehold image
-        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
-        pix.fill(color.purple)
+        pix = self.placeholder_pix(MOONSCAPE_BLOCK_SIZE, color.magenta)
         sprite = MissileSprite(rect, pix, destination)
         sprite.missile = missile
         self.arcade_sprites[missile.id] = sprite
