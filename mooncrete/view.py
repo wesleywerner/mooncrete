@@ -129,6 +129,8 @@ class MoonView(object):
         self.transitioning = False
         # a pre-rendered image of the game moonscape surface
         self.moon_surface = None
+        # list of colors to flash the background each tick
+        self.flash_color = []
 
     def notify(self, event):
         """
@@ -184,12 +186,14 @@ class MoonView(object):
 
         elif isinstance(event, TurretDestroyEvent):
             self.destroy_turret_sprite(event.turret)
+            self.flash_screen(color.red, 4)
 
         elif isinstance(event, RadarSpawnedEvent):
             self.create_radar_sprite(event.radar, event.flyin_position)
 
         elif isinstance(event, RadarDestroyEvent):
             self.destroy_radar_sprite(event.radar)
+            self.flash_screen([color.red, color.white], 2)
 
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
@@ -199,6 +203,7 @@ class MoonView(object):
 
         elif isinstance(event, AsteroidDestroyEvent):
             self.destroy_asteroid(event.asteroid)
+            self.flash_screen(color.dark_gray, 1)
 
         elif isinstance(event, MissileSpawnedEvent):
             self.create_missile(event.missile)
@@ -211,6 +216,7 @@ class MoonView(object):
 
         elif isinstance(event, ExplosionSpawnEvent):
             self.create_explosion(event.explosion)
+            self.flash_screen(color.darker_gray, 1)
 
         elif isinstance(event, ExplosionGrowEvent):
             self.move_explosion(event.explosion)
@@ -266,6 +272,16 @@ class MoonView(object):
 
         self.create_panels()
 
+    def flash_screen(self, color_list, duration):
+        """
+        Queue colors to flash the background with.
+
+        """
+
+        if type(color_list) is tuple:
+            color_list = [color_list,]
+        self.flash_color.extend(color_list * duration)
+
     def create_panels(self):
         """
         Build game panels that move around and show at various model states.
@@ -319,7 +335,10 @@ class MoonView(object):
             return
 
         state = self.model.state
-        self.image.fill((0, 0, 0))
+        if self.flash_color:
+            self.image.fill(self.flash_color.pop())
+        else:
+            self.image.fill((0, 0, 0))
 
         if state == STATE_MENU:
             pass
