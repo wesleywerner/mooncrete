@@ -598,8 +598,8 @@ class MoonView(object):
         """
 
         # TODO use dedicated turret sprite
-        rect = self.convert_moonscape_to_panel(turret.position)
-        cargo = Sprite('turret', rect)
+        position = self.convert_moonscape_to_panel(turret.position)
+        cargo = TurretSprite(pygame.Rect(position, MOONSCAPE_BLOCK_SIZE))
         cargo.turret = turret
         cargo.image = self.placeholder_pix(
             MOONSCAPE_BLOCK_SIZE, color.gold)
