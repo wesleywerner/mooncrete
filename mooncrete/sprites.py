@@ -126,13 +126,20 @@ class MissileSprite(pygame.sprite.Sprite):
         self.image = image
         #self.destination = destination
 
-        ## calculate the angle to face our image
-        #dx = destination.left - rect.left
-        #dy = destination.top - rect.top
-        #rads = math.atan2(-dy, dx)
-        #rads %= 2 * math.pi
-        #self.angle = math.degrees(rads)
-        #self.image = pygame.transform.rotate(self.image, self.angle)
+        pygame.draw.line(
+            self.image,
+            color.white,
+            (0, self.rect.height / 2),
+            (self.rect.width, self.rect.height / 2),
+            2)
+
+        # calculate the angle to face our image
+        dx = destination.left - rect.left
+        dy = destination.top - rect.top
+        rads = math.atan2(-dy, dx)
+        rads %= 2 * math.pi
+        self.angle = math.degrees(rads)
+        self.image = pygame.transform.rotate(self.image, self.angle)
 
     def update(self, t):
         pass
