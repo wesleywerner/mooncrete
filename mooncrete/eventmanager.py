@@ -34,6 +34,7 @@ class EventManager(object):
                                 StepGameEvent,
                                 AsteroidMovedEvent,
                                 MissileMovedEvent,
+                                ExplosionGrowEvent,
                                 ):
             trace.write(str(event))
         for listener in self.listeners:
