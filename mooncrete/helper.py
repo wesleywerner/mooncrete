@@ -91,3 +91,15 @@ def clamp(n, minn, maxn):
     """
 
     return max(min(maxn, n), minn)
+
+def angle(pointA, pointB):
+    """
+    Return the angle between two points.
+
+    """
+
+    dx = pointB[0] - pointA[0]
+    dy = pointB[1] - pointA[1]
+    rads = math.atan2(-dy, dx)
+    rads %= 2 * math.pi
+    return math.degrees(rads)
