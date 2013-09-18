@@ -269,7 +269,7 @@ class Turret(object):
 
     def __init__(self):
         self.position = None
-        self.charge = 0
+        self.charge = 20
         self.max_charge = 20
 
     def recharge(self):
