@@ -337,8 +337,6 @@ class Explosion(object):
             self.radius += 0.5
             return True
 
-
-
     @property
     def id(self):
         return id(self)
