@@ -265,30 +265,27 @@ class TurretSprite(pygame.sprite.Sprite):
         """
 
         if t - self._last_update > self._delay:
+            self._last_update = t
             return True
 
     def update(self, t):
         """
         Update the sprite animation if enough time has passed.
-        t would be pygame.time.get_ticks() passed from the caller.
-        Call this each game tick, either manually if this sprite is stored in a list,
-        or if you keep sprites in a PyGame.Group object it will be called for you when you
-        issue the Group.draw() method.
+        t would be pygame.time.get_ticks().
+
         """
 
         if self.canupdate(t):
-            self._last_update = t
-            if self._hasframes:
-                self._frame += 1
-                if self._frame >= len(self._images):
-                    self._frame = 0
-                    if self.loop > 0:
-                        self.loop -= 1
-                    if self.loop == 0:
-                        self._hasframes = False
-                        self._frame = -1
-                self.image = self._images[self._frame]
 
+            if self.turret.ready:
+                self.image.fill(color.gold)
+            else:
+                self.image.fill(color.gray)
+                # draw a recharge bar
+                charge_ratio = self.turret.charge / float(self.turret.max_charge)
+                charged = int(self.rect.height * charge_ratio)
+                bar = pygame.Rect(0, self.rect.height - charged, 4, charged)
+                pygame.draw.rect(self.image, color.white, bar)
 
 
 # KEEP THIS AS THE MOVEMENT IS NICE FOR THE MOVING MOONBASE SPRITES
