@@ -186,14 +186,14 @@ class MoonView(object):
 
         elif isinstance(event, TurretDestroyEvent):
             self.destroy_turret_sprite(event.turret)
-            self.flash_screen(color.red, 4)
+            self.flash_screen([color.gold, color.black], 2)
 
         elif isinstance(event, RadarSpawnedEvent):
             self.create_radar_sprite(event.radar, event.flyin_position)
 
         elif isinstance(event, RadarDestroyEvent):
             self.destroy_radar_sprite(event.radar)
-            self.flash_screen([color.red, color.white], 2)
+            self.flash_screen([color.copper, color.black], 2)
 
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
