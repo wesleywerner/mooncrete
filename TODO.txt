@@ -1,4 +1,2 @@
-get the closest charged turret to a position.
-fire a missile towards a destination.
-detonate missile at impact point and create blast radius.
-increase blast radius until lifetime expires.
+build a TurretSprite class. On update it must change it's color to indicate the turret is ready.
+also draw an indicator of its angle
