@@ -362,6 +362,7 @@ class MoonView(object):
             self.draw_moonscape()
 
         elif state == STATE_PHASE3:
+            self.angle_turrets()
             self.draw_arcade_sprites()
             self.draw_moonscape()
 
@@ -570,6 +571,20 @@ class MoonView(object):
                         #sprite.destination.center
                         #)
 
+    def angle_turrets(self):
+        """
+        Angle turrets towards the cursor.
+
+        """
+
+        for key, sprite in self.moonbase_sprites.items():
+            if isinstance(sprite, TurretSprite):
+                angle = helper.angle(
+                    sprite.rect.topleft,
+                    pygame.mouse.get_pos()
+                    )
+                sprite.turrent_angle_override = angle
+
     def create_mooncrete_sprite(self, mooncrete, flyin_position):
         """
         Create a mooncrete sprite.
@@ -598,7 +613,6 @@ class MoonView(object):
 
         """
 
-        # TODO use dedicated turret sprite
         position = self.convert_moonscape_to_panel(turret.position)
         cargo = TurretSprite(pygame.Rect(position, MOONSCAPE_BLOCK_SIZE))
         cargo.turret = turret
