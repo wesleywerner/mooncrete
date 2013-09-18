@@ -1,7 +1,7 @@
-import math
 import pygame
 from pygame.locals import *
 import color
+import helper
 
 # alter the Sprite class to:
 #   have multiple base images
@@ -134,11 +134,7 @@ class MissileSprite(pygame.sprite.Sprite):
             2)
 
         # calculate the angle to face our image
-        dx = destination.left - rect.left
-        dy = destination.top - rect.top
-        rads = math.atan2(-dy, dx)
-        rads %= 2 * math.pi
-        self.angle = math.degrees(rads)
+        self.angle = helper.angle(rect.topleft, destination)
         self.image = pygame.transform.rotate(self.image, self.angle)
 
     def update(self, t):
