@@ -406,9 +406,11 @@ class MoonView(object):
         return pos
 
     def convert_moonscape_to_screen(self, position):
-        pos = self.convert_moonscape_to_panel(position)
+        # position is already in view sizes (pixels) no need to convert
+        # from panel indices to pixels.
+        #pos = self.convert_moonscape_to_panel(position)
         pos = self.translate_to_screen(
-            pos, self.panels['moonscape'].rect.topleft)
+            position, self.panels['moonscape'].rect.topleft)
         return pos
 
     def convert_mini_moonscape_to_screen(self, position):
@@ -579,9 +581,11 @@ class MoonView(object):
 
         for key, sprite in self.moonbase_sprites.items():
             if isinstance(sprite, TurretSprite):
+                tpos = self.convert_moonscape_to_screen(sprite.rect.center)
+                mpos = pygame.mouse.get_pos()
                 angle = helper.angle(
-                    sprite.rect.topleft,
-                    pygame.mouse.get_pos()
+                    tpos,
+                    mpos
                     )
                 sprite.turrent_angle_override = angle
 
