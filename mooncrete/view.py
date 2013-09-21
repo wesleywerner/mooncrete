@@ -365,6 +365,7 @@ class MoonView(object):
             self.angle_turrets()
             self.draw_arcade_sprites()
             self.draw_moonscape()
+            self.draw_firing_solution()
 
         # update panels
         self.transitioning = False
@@ -572,6 +573,19 @@ class MoonView(object):
                         #sprite.rect.center,
                         #sprite.destination.center
                         #)
+
+    def draw_firing_solution(self):
+        """
+        Draws a firing solution from the closest ready turret to the cursor.
+
+        """
+
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_pos = self.convert_screen_to_arcade(mouse_pos)
+        turret = self.model.closest_ready_turret(mouse_pos)
+        if turret:
+            turret_pos = self.convert_arcade_to_screen(turret.position)
+            pygame.draw.line(self.image, color.white, mouse_pos, turret_pos)
 
     def angle_turrets(self):
         """
