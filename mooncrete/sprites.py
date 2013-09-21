@@ -134,7 +134,7 @@ class MissileSprite(pygame.sprite.Sprite):
             2)
 
         # calculate the angle to face our image
-        self.angle = helper.angle(rect.center, destination)
+        self.angle = helper.angle(rect.topleft, destination)
         self.image = pygame.transform.rotate(self.image, self.angle)
 
     def update(self, t):
