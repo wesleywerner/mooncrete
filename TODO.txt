@@ -1,2 +1,6 @@
-build a TurretSprite class. On update it must change it's color to indicate the turret is ready.
-also draw an indicator of its angle
+draw firing solution from the active turret.
+
+do not allow targeting positions below the moonscape boundary.
+
+create an asteroid sprite that tumbles as it falls.
+
