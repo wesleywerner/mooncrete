@@ -12,13 +12,13 @@
 #  along with this program. If not, see http://www.gnu.org/licenses/.
 
 
-STATE_MENU = 42
+STATE_MENU = -1
 STATE_PHASE1 = 1
 STATE_PHASE2 = 2
 STATE_PHASE3 = 3
-STATE_LEVELDONE = 4
-STATE_LOSE = 5
-STATE_HELP = 6
+STATE_LEVELDONE = 100
+STATE_LOSE = -100
+STATE_HELP = 42
 
 
 class StateMachine(object):
