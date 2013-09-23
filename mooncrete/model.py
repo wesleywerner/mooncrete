@@ -253,6 +253,9 @@ class MoonModel(object):
         # key is the (x, y) position.
         self._moonbase = {}
 
+        # lose sequence explosion fascilitator
+        self.lose_sequence_explosion_counter = 0
+
     @property
     def state(self):
         """
@@ -371,6 +374,7 @@ class MoonModel(object):
         """
 
         self._playing = False
+        self.lose_sequence_explosion_counter = 20
         self._change_state(STATE_LOSE, swap_state=True)
 
     def _chain_event(self, next_event):
@@ -974,8 +978,17 @@ class MoonModel(object):
         self._arcade_grow_explosions()
 
         # test for lose conditions
-        if (self._playing and turrets_alive == 0):
-            self.end_game()
+        if (self._playing):
+            if (turrets_alive == 0):
+                self.end_game()
+        else:
+            if (self.lose_sequence_explosion_counter > 0):
+                self.lose_sequence_explosion_counter -= 1
+                position = (
+                    random.randint(0, ARCADE_WIDTH),
+                    random.randint(0, ARCADE_HEIGHT))
+                self._arcade_spawn_explosion(position)
+
 
     def _arcade_move_asteroids(self):
         """
@@ -984,7 +997,7 @@ class MoonModel(object):
         """
 
         # spawn some asteroids
-        while len(self._asteroids) < 3:
+        while (self._playing and len(self._asteroids) < 3):
             self._arcade_spawn_asteroid()
 
         # we cannot modify the asteroid list while iterating it.
