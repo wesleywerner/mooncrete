@@ -19,6 +19,7 @@ add lose conditions: all moon bases are destroyed in phase 3.
 # CONTROLLER
 
 handle win and lose controller states.
+use a countdown timer to trigger the next phase. call the view to update the time left.
 
 # GFX
 
