@@ -221,10 +221,12 @@ class MoonModel(object):
         self.paused = False
 
         # stores current player score and level
-        self.player = None
+        self._level = 0
+        self._score = 0
+        self._last_phase = 0
 
-        # stores the last game scores for historics
-        self.previous_player = None
+        # flag if there is a game in progress
+        self._playing = False
 
         # stores the puzzle board
         self._puzzle_board = None
@@ -316,9 +318,13 @@ class MoonModel(object):
         """
 
         if new_state:
+
             # remember the last game phase
             if new_state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3):
                 self._last_phase = new_state
+                ## TODO auto chain help screens for main game phases for new games
+                #if (self._level == 1):
+                    #self._chain_event(StateEvent(STATE_HELP))
             # swap the current state for another
             if swap_state:
                 self._state.swap(new_state)
@@ -335,11 +341,6 @@ class MoonModel(object):
                 # there is nothing left to pump
                 self._evman.Post(QuitEvent())
 
-        ## TODO auto chain help screens for main game phases if this is a new game
-        #if new_state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3) and
-                        #self.player_level == 1:
-            #self._chain_event(StateEvent(STATE_HELP))
-
     def escape_state(self):
         """
         Escape from the current state.
@@ -354,10 +355,10 @@ class MoonModel(object):
 
         """
 
-        if not self.player:
-            # start a new game
-            self._change_state(STATE_PHASE1)
+        if not self._playing:
+            trace.write('starting a new game...')
             self._reset_game()
+            self._change_state(STATE_PHASE1, swap_state=True)
         else:
             # continue the game with the last known player phase
             if self.state != self._last_phase:
@@ -369,9 +370,7 @@ class MoonModel(object):
 
         """
 
-        # keep a copy of the last game player
-        self.previous_player = copy.copy(self.player)
-        self.player = None
+        self._playing = False
         self._change_state(STATE_LOSE, swap_state=True)
 
     def _chain_event(self, next_event):
@@ -409,7 +408,7 @@ class MoonModel(object):
         elif self.state == STATE_PHASE3:
             self._change_state(STATE_LEVELDONE, swap_state=True)
         elif self.state == STATE_LEVELDONE:
-            self.player.level += 1
+            self._level += 1
             self._change_state(STATE_PHASE1, swap_state=True)
 
     def _reset_game(self):
@@ -418,9 +417,11 @@ class MoonModel(object):
 
         """
 
-        self.player = Player()
+        self._level = 1
+        self._score = 0
         self._reset_puzzle()
         self._reset_arcade()
+        self._playing = True
 
     def _unshared_copy(self, inList):
         """
@@ -437,7 +438,7 @@ class MoonModel(object):
 #-- Puzzle Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
     def _puzzle_print_grid(self):
-        if trace.TRACE and self.player:
+        if trace.TRACE and self._playing:
             grid = []
             # copy the board and place th player piece inside it
             matrix = self._puzzle_merge_board(
@@ -468,7 +469,7 @@ class MoonModel(object):
 
         """
 
-        if include_player_shape:
+        if include_player_shape and self._puzzle_shape:
             grid = self._puzzle_merge_board(
                         self._puzzle_board, self._puzzle_shape, self._puzzle_location)
         else:
@@ -488,9 +489,6 @@ class MoonModel(object):
                                 for y in xrange(PUZZLE_HEIGHT)]
 
         # TODO add some random elements for higher levels
-
-        # choose a shape
-        self._puzzle_next_shape()
 
     def _puzzle_merge_board(self, board, shape, shape_location):
         """
@@ -570,11 +568,18 @@ class MoonModel(object):
         self._puzzle_pair_blocks()
         self._puzzle_drop_board()
 
+        # choose a new puzzle piece
+        if not self._puzzle_shape:
+            self._puzzle_next_shape()
+
     def _puzzle_drop_piece(self):
         """
         Drop the player puzzle piece.
 
         """
+
+        if not self._puzzle_shape:
+            return
 
         new_loc = self._puzzle_location[:]
         new_loc[1] += 1
@@ -735,10 +740,9 @@ class MoonModel(object):
 
         """
 
-        if self.paused or not self.player:
-            return
-        if self.state in (STATE_PHASE1, STATE_PHASE2):
-            self._puzzle_move_piece(-1)
+        if self._playing and not self.paused:
+            if self.state in (STATE_PHASE1, STATE_PHASE2):
+                self._puzzle_move_piece(-1)
 
     def move_right(self):
         """
@@ -746,10 +750,9 @@ class MoonModel(object):
 
         """
 
-        if self.paused:
-            return
-        if self.state in (STATE_PHASE1, STATE_PHASE2):
-            self._puzzle_move_piece(1)
+        if self._playing and not self.paused:
+            if self.state in (STATE_PHASE1, STATE_PHASE2):
+                self._puzzle_move_piece(1)
 
     def move_down(self):
         """
@@ -757,10 +760,9 @@ class MoonModel(object):
 
         """
 
-        if self.paused:
-            return
-        if self.state in (STATE_PHASE1, STATE_PHASE2):
-            self._puzzle_drop_piece()
+        if self._playing and not self.paused:
+            if self.state in (STATE_PHASE1, STATE_PHASE2):
+                self._puzzle_drop_piece()
 
 
 #-- Arcade Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
