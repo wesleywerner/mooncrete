@@ -98,13 +98,11 @@ PUZZLE_HEIGHT = 10
 ARCADE_WIDTH = 100
 ARCADE_HEIGHT = 100
 
-# padding tells us how many arcade positions moonbase blocks should be apart.
-# this limits moonbase size, so instead of having a 100-block wide moon base
-# to build we only have a (100 / 5 = 20) block moon base.
-# this minimizes the scope of search for collision detection and makes the
-# game more practical.
-# Of course setting this to 0 would allow you to build a massive base.
-# View that will draw the base will need to size their sprites to a ratio of
+# Block padding defines the minimum open blocks between moon base objects.
+# This limits moonbase size so instead of having a 100-block moon base
+# we limit it to a (100 / 5 = 20) block moon base.
+# Setting this to 1 allow you to build a massive base.
+# Views that draw the base will need to size their sprites to a ratio of
 # the arcade size to block padding accordingly.
 BLOCK_PADDING = 5
 
