@@ -701,6 +701,9 @@ class MoonModel(object):
 
         """
 
+        if not self._puzzle_shape:
+            return
+
         x, y = self._puzzle_location[:]
         x += delta_x
         if x < 0:
@@ -718,6 +721,9 @@ class MoonModel(object):
             self._puzzle_print_grid()
 
     def rotate_puzzle(self, clockwise=True):
+
+        if not self._puzzle_shape:
+            return
 
         new_shape = self._unshared_copy(self._puzzle_shape)
 
