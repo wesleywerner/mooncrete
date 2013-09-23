@@ -417,6 +417,7 @@ class MoonModel(object):
 
         """
 
+        self._evman.Post(ResetGameEvent())
         self._level = 1
         self._score = 0
         self._reset_puzzle()
@@ -818,11 +819,11 @@ class MoonModel(object):
         self._generate_lunar_landscape()
 
         # add some bases for testing
-        for n in xrange(10):
+        for n in xrange(5):
             self._arcade_build_moonbase(BLOCK_MOONCRETE_SLAB)
-        for n in xrange(5):
+        for n in xrange(3):
             self._arcade_build_moonbase(BLOCK_RADAR)
-        for n in xrange(5):
+        for n in xrange(2):
             self._arcade_build_moonbase(BLOCK_TURRET)
 
     def _generate_lunar_landscape(self):
@@ -955,24 +956,26 @@ class MoonModel(object):
         else:
             return
 
-
-
     def _arcade_step(self):
         """
         Step the arcade game.
 
         """
 
+        turrets_alive = 0
         for position, base_object in self._moonbase.items():
-
             # recharge our gun turrets
             if isinstance(base_object, Turret):
+                turrets_alive += 1
                 base_object.recharge()
 
         self._arcade_move_asteroids()
         self._arcade_move_missiles()
         self._arcade_grow_explosions()
 
+        # test for lose conditions
+        if (turrets_alive == 0):
+            self.end_game()
 
     def _arcade_move_asteroids(self):
         """
