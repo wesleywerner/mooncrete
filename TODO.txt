@@ -1,1 +1,29 @@
+# VIEW
 
+create a title screen.
+draw a starry background for all the views.
+draw borders on the puzzle panel.
+draw borders on the arcade panel.
+draw borders on the score box.
+add a title panel.
+add win and lose screens.
+
+
+# MODEL
+
+add score tracking.
+add timers or counters to limit phase duration.
+add win conditions: phase 3 ends with moon base intact.
+add lose conditions: all moon bases are destroyed in phase 3.
+
+# CONTROLLER
+
+handle win and lose controller states.
+
+# GFX
+
+create puzzle piece images.
+create asteroid images.
+create asteroid disintegrate images.
+create radar dish images.
+create gun turret images.
