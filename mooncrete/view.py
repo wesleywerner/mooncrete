@@ -133,7 +133,7 @@ class MoonView(object):
                 arcade_panel.scale((300, 225))
                 arcade_panel.show_position = (0, 375)
                 arcade_panel.show()
-            elif event.state == STATE_PHASE3:
+            elif event.state in (STATE_PHASE3, STATE_LOSE):
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
                 arcade_panel = self.panels['arcade']
@@ -321,13 +321,6 @@ class MoonView(object):
             self.panels['score'].image.blit(pix, (0, 0))
             pass
 
-        elif state == STATE_LOSE:
-            pix = self.smallfont.render(
-                'You Lose!',
-                False, color.white, color.magenta)
-            pix.set_colorkey(color.magenta)
-            self.panels['score'].image.blit(pix, (0, 50))
-
         elif state == STATE_LEVELDONE:
             pass
 
@@ -336,12 +329,19 @@ class MoonView(object):
             self.clear_arcade()
             self.draw_moonbase(ticks)
 
-        elif state == STATE_PHASE3:
+        elif state in (STATE_PHASE3, STATE_LOSE):
             self.angle_turrets()
             self.clear_arcade()
             self.draw_moonbase(ticks)
             self.draw_missiles_and_asteroids(ticks)
             self.draw_firing_solution()
+
+            if (state == STATE_LOSE):
+                pix = self.smallfont.render(
+                    'You Lose!',
+                    False, color.white, color.magenta)
+                pix.set_colorkey(color.magenta)
+                self.panels['arcade'].image.blit(pix, (300, 250))
 
         # update panels
         self.transitioning = False

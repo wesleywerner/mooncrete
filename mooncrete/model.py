@@ -277,7 +277,7 @@ class MoonModel(object):
                 state = self._state.peek()
                 if state in (STATE_PHASE1, STATE_PHASE2):
                     self._puzzle_step()
-                elif state == STATE_PHASE3:
+                elif state in (STATE_PHASE3, STATE_LOSE):
                     self._arcade_step()
 
         elif isinstance(event, QuitEvent):
@@ -823,8 +823,8 @@ class MoonModel(object):
             self._arcade_build_moonbase(BLOCK_MOONCRETE_SLAB)
         for n in xrange(3):
             self._arcade_build_moonbase(BLOCK_RADAR)
-        for n in xrange(2):
-            self._arcade_build_moonbase(BLOCK_TURRET)
+        #for n in xrange(2):
+            #self._arcade_build_moonbase(BLOCK_TURRET)
 
     def _generate_lunar_landscape(self):
         """
@@ -974,7 +974,7 @@ class MoonModel(object):
         self._arcade_grow_explosions()
 
         # test for lose conditions
-        if (turrets_alive == 0):
+        if (self._playing and turrets_alive == 0):
             self.end_game()
 
     def _arcade_move_asteroids(self):

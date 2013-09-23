@@ -43,7 +43,7 @@ class MoonController(object):
         # the puzzle and arcade modes have different speeds
         if model_state in (STATE_PHASE1, STATE_PHASE2):
             frequency = self.puzzle_update_freq
-        elif model_state == STATE_PHASE3:
+        elif model_state in (STATE_PHASE3, STATE_LOSE):
             frequency = self.arcade_update_freq
         else:
             return
