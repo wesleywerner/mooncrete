@@ -542,20 +542,20 @@ class MoonView(object):
         if self.moonbase_sprites.has_key(mooncrete.id):
             del self.moonbase_sprites[mooncrete.id]
 
-    def create_turret_sprite(self, turret, flyin_position):
+    def create_turret_sprite(self, turret):
         """
         Create a turret sprite.
 
         """
 
-        pass
-        #position = self.convert_arcade_to_panel(turret.position)
-        #cargo = TurretSprite(pygame.Rect(position, ARCADE_SPRITE_SIZE))
-        #cargo.turret = turret
-        #cargo.image = self.placeholder_pix(
-            #ARCADE_SPRITE_SIZE, color.gold)
-        #self.courier_moonbase_sprite(
-            #turret.id, cargo, flyin_position, turret.position)
+        destination = pygame.Rect(
+            self.convert_arcade_to_panel(turret.position),
+            ARCADE_SPRITE_SIZE)
+        sprite = TurretSprite(self.moonbase_sprite_origin())
+        sprite.turret = turret
+        sprite.destination = destination
+        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.gold)
+        self.moonbase_sprites[turret.id] = sprite
 
     def destroy_turret_sprite(self, turret):
         """
@@ -566,21 +566,19 @@ class MoonView(object):
         if self.moonbase_sprites.has_key(turret.id):
             del self.moonbase_sprites[turret.id]
 
-    def create_radar_sprite(self, radar, flyin_position):
+    def create_radar_sprite(self, radar):
         """
         Create a radar sprite.
 
         """
 
-        pass
-        ## TODO use dedicated radar sprite
-        #rect = self.convert_arcade_to_panel(radar.position)
-        #cargo = Sprite('radar', rect)
-        #cargo.radar = radar
-        #cargo.image = self.placeholder_pix(
-            #ARCADE_SPRITE_SIZE, color.copper)
-        #self.courier_moonbase_sprite(
-            #radar.id, cargo, flyin_position, radar.position)
+        destination = pygame.Rect(
+            self.convert_arcade_to_panel(radar.position),
+            ARCADE_SPRITE_SIZE)
+        sprite = Sprite('radar', self.moonbase_sprite_origin())
+        sprite.destination = destination
+        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.copper)
+        self.moonbase_sprites[radar.id] = sprite
 
     def destroy_radar_sprite(self, radar):
         """
