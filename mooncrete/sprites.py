@@ -1,3 +1,4 @@
+import random
 import pygame
 from pygame.locals import *
 import color
@@ -85,6 +86,29 @@ class MoonbaseSprite(pygame.sprite.Sprite):
 
         #if self.can_update(ticks):
             # do frame rotation or animation now
+
+
+class AsteroidSprite(MoonbaseSprite):
+    """
+    An asteroid sprite that tumbles as it falls.
+
+    """
+
+    def __init__(self):
+        super(AsteroidSprite, self).__init__()
+        self.name = 'asteroid'
+        self.rect = None
+        self.original_image = None
+        self.image = None
+        self.angle = 0.0
+        self.rotate_speed = random.randint(6, 25)
+
+    def update(self, ticks):
+        if self.can_update(ticks):
+            self.angle = (self.angle + self.rotate_speed) % 360
+            if not self.original_image:
+                self.original_image = self.image.copy()
+            self.image = pygame.transform.rotate(self.original_image, self.angle)
 
 
 class MooncreteSprite(MoonbaseSprite):
