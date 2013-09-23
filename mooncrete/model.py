@@ -779,19 +779,19 @@ class MoonModel(object):
     def closest_ready_turret(self, arcade_position):
         """
         Returns the closest, charged turret to a position.
-        Position is measured in ARCADE_WIDTH and HEIGHT.
-        It will be translated into a moonscape index position.
+        Position is in ARCADE measurements (ARCADE _WIDTH / _HEIGHT).
 
         """
 
         chosen_one = None
         chosen_dist = ARCADE_HEIGHT
-        for key, turret in self._turrets.items():
-            if turret.ready:
-                distance = helper.distance(* arcade_position + turret.position)
-                if distance < chosen_dist:
-                    chosen_dist = distance
-                    chosen_one = turret
+        for key, base in self._moonbase.items():
+            if isinstance(base, Turret):
+                if base.ready:
+                    distance = helper.distance(* arcade_position + base.position)
+                    if distance < chosen_dist:
+                        chosen_dist = distance
+                        chosen_one = base
         return chosen_one
 
     def fire_missile(self, arcade_position):
@@ -805,11 +805,7 @@ class MoonModel(object):
         if turret:
             trace.write('firing solution number %s' % (turret.id,))
             turret.charge = 0
-            # translate the turret position into arcade coordinates
-            position = (
-                turret.position[0] * MOONSPACE_RATIO[0],
-                (turret.position[1] + MOONSCAPE_AIRSPACE) * MOONSPACE_RATIO[1])
-            missile = Missile(position, arcade_position)
+            missile = Missile(turret.position, arcade_position)
             self._missiles.append(missile)
             self._evman.Post(MissileSpawnedEvent(missile))
         else:
