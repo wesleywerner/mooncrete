@@ -112,7 +112,7 @@ class MooncreteSprite(MoonbaseSprite):
 
 class MissileSprite(MoonbaseSprite):
     """
-    Flying ordanance that points towards the angle it is travelling.
+    Flying ordinance that points towards the angle it is travelling.
 
     """
 
