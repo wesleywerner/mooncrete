@@ -511,20 +511,24 @@ class MoonView(object):
                     )
                 sprite.turrent_angle_override = angle
 
+    def moonbase_sprite_origin(self):
+        """
+        Gives a rect for moon base sprite origin when building your base.
+
+        """
+
+        return pygame.Rect((ARCADE_POS.width / 2, 0), ARCADE_SPRITE_SIZE)
+
     def create_mooncrete_sprite(self, mooncrete):
         """
         Create a mooncrete sprite.
 
         """
 
-        origin = pygame.Rect(
-            (ARCADE_POS.width, 0),
-            ARCADE_SPRITE_SIZE
-            )
         destination = pygame.Rect(
             self.convert_arcade_to_panel(mooncrete.position),
             ARCADE_SPRITE_SIZE)
-        sprite = MooncreteSprite(origin)
+        sprite = MooncreteSprite(self.moonbase_sprite_origin())
         sprite.destination = destination
         sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.darker_gray)
         self.moonbase_sprites[mooncrete.id] = sprite
