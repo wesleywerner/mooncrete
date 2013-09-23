@@ -602,9 +602,14 @@ class MoonView(object):
         # No fancy sliding movement required please.
         position = self.convert_arcade_to_panel(asteroid.position)
         rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
-        sprite = MoonbaseSprite()
+        sprite = AsteroidSprite()
         sprite.rect = rect
-        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.red)
+        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.magenta)
+        pygame.draw.circle(
+            sprite.image,
+            color.white,
+            (ARCADE_SPRITE_SIZE[0] / 2, ARCADE_SPRITE_SIZE[1] / 2),
+            ARCADE_SPRITE_SIZE[0] / 3)
         self.arcade_sprites[asteroid.id] = sprite
 
     def move_asteroid(self, asteroid):
