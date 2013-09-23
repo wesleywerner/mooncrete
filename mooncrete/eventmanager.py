@@ -111,10 +111,9 @@ class LunarLandSpawnEvent(Event):
 
 class MooncreteSpawnEvent(Event):
 
-    def __init__(self, mooncrete, parents):
+    def __init__(self, mooncrete):
         self.name = 'Mooncrete spawned event'
         self.mooncrete = mooncrete
-        self.parents = parents
 
 
 class MooncreteDestroyEvent(Event):
@@ -126,10 +125,9 @@ class MooncreteDestroyEvent(Event):
 
 class TurretSpawnedEvent(Event):
 
-    def __init__(self, turret, parents):
+    def __init__(self, turret):
         self.name = 'Turret spawned event'
         self.turret = turret
-        self.parents = parents
 
 
 class TurretDestroyEvent(Event):
@@ -141,10 +139,9 @@ class TurretDestroyEvent(Event):
 
 class RadarSpawnedEvent(Event):
 
-    def __init__(self, radar, parents):
+    def __init__(self, radar):
         self.name = 'Radar spawned event'
         self.radar = radar
-        self.parents = parents
 
 
 class RadarDestroyEvent(Event):

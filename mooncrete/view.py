@@ -151,20 +151,20 @@ class MoonView(object):
             self.prerender_lunar_landscape(event.land)
 
         elif isinstance(event, MooncreteSpawnEvent):
-            self.create_mooncrete_sprite(event.mooncrete, event.parents)
+            self.create_mooncrete_sprite(event.mooncrete)
 
         elif isinstance(event, MooncreteDestroyEvent):
             self.destroy_mooncrete_sprite(event.mooncrete)
 
         elif isinstance(event, TurretSpawnedEvent):
-            self.create_turret_sprite(event.turret, event.parents)
+            self.create_turret_sprite(event.turret)
 
         elif isinstance(event, TurretDestroyEvent):
             self.destroy_turret_sprite(event.turret)
             self.flash_screen([color.gold, color.black], 2)
 
         elif isinstance(event, RadarSpawnedEvent):
-            self.create_radar_sprite(event.radar, event.parents)
+            self.create_radar_sprite(event.radar)
 
         elif isinstance(event, RadarDestroyEvent):
             self.destroy_radar_sprite(event.radar)
@@ -511,9 +511,9 @@ class MoonView(object):
                     )
                 sprite.turrent_angle_override = angle
 
-    def create_mooncrete_sprite(self, mooncrete, parents=None):
+    def create_mooncrete_sprite(self, mooncrete):
         """
-        Create a mooncrete sprite which originates for the list of parents.
+        Create a mooncrete sprite.
 
         """
 

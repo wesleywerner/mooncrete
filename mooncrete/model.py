@@ -671,15 +671,13 @@ class MoonModel(object):
                     if yneigh != this_block and yneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(x, ny)
-                        parents=[(x, y), (nx, ny)]
-                        self._arcade_build_moonbase(new_block, parents)
+                        self._arcade_build_moonbase(new_block)
                         # skip the next test
                         continue
                     if xneigh != this_block and xneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(nx, y)
-                        parents=[(x, y), (nx, ny)]
-                        self._arcade_build_moonbase(new_block, parents)
+                        self._arcade_build_moonbase(new_block)
 
     def _puzzle_block_at(self, x, y):
         """
@@ -934,16 +932,12 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
-    def _arcade_build_moonbase(self, block_type, parents=None):
+    def _arcade_build_moonbase(self, block_type):
         """
         Use this to build the moon base.
 
         It constructs the game object, finds a Destination for it
         and fires matching events.
-
-        Parents is a list of the puzzle block id's that spawned this object,
-        i.e. those paired up successfully. This is optional and informational
-        for views receiving events to do graphical sliding tricks.
 
         """
 
@@ -975,17 +969,17 @@ class MoonModel(object):
             slab = Mooncrete(home_position)
             self._moonbase[home_position] = slab
             self._evman.Post(MooncreteSpawnEvent(
-                mooncrete=slab, parents=parents))
+                mooncrete=slab))
         elif block_type == BLOCK_TURRET:
             turret = Turret(home_position)
             self._moonbase[home_position] = turret
             self._evman.Post(TurretSpawnedEvent(
-                turret=turret, parents=parents))
+                turret=turret))
         elif block_type == BLOCK_RADAR:
             radar = Radar(home_position)
             self._moonbase[home_position] = radar
             self._evman.Post(RadarSpawnedEvent(
-                radar=radar, parents=parents))
+                radar=radar))
         else:
             return
 
