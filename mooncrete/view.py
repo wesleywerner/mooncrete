@@ -598,8 +598,6 @@ class MoonView(object):
 
         """
 
-        # TODO use a dedicated AsteroidSprite here.
-        # No fancy sliding movement required please.
         position = self.convert_arcade_to_panel(asteroid.position)
         rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
         sprite = AsteroidSprite()
@@ -622,7 +620,7 @@ class MoonView(object):
         if sprite:
         # convert indexes to screen coordinates
             position = self.convert_arcade_to_panel(asteroid.position)
-            sprite.rect.topleft = position
+            sprite.rect.center = position
 
     def destroy_asteroid(self, asteroid):
         """
