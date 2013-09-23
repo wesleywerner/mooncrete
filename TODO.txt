@@ -1,6 +1,1 @@
-draw firing solution from the active turret.
-
-do not allow targeting positions below the moonscape boundary.
-
 create an asteroid sprite that tumbles as it falls.
-

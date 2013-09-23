@@ -786,6 +786,10 @@ class MoonModel(object):
 
         """
 
+        # do not allow targeting positions below the moonscape boundary.
+        if (arcade_position[1] >= ARCADE_HEIGHT - ((BASE_HEIGHT + 4) * BLOCK_PADDING)):
+            return
+
         chosen_one = None
         chosen_dist = ARCADE_HEIGHT
         for key, base in self._moonbase.items():
