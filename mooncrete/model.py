@@ -817,7 +817,6 @@ class MoonModel(object):
         self._missiles = []
         self._asteroids = []
         self._generate_lunar_landscape()
-        self._arcade_print_moonbase()
 
         # add some bases for testing
         for n in xrange(10):
@@ -905,20 +904,6 @@ class MoonModel(object):
         x = int(math.floor(float(x) / BLOCK_PADDING) * BLOCK_PADDING)
         y = int(math.floor(float(y) / BLOCK_PADDING) * BLOCK_PADDING)
         return self._moonbase.get((x, y), None)
-
-    def _arcade_print_moonbase(self):
-        # TODO kill this
-        return
-        if trace.TRACE:
-            grid = []
-            for y, row in enumerate(self._moonscape):
-                grid.append('\n')
-                for x, val in enumerate(row):
-                    if val:
-                        grid.append(str(val))
-                    else:
-                        grid.append('__')
-            trace.write(' '.join(grid))
 
     def _arcade_build_moonbase(self, block_type):
         """
