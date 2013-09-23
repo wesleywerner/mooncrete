@@ -391,7 +391,6 @@ class MoonModel(object):
 
         if self._event_chain:
             event = self._event_chain.pop()
-            #TODO can we move this isinstance test to the notify() call?
             if isinstance(event, StateEvent):
                 self._change_state(event.state)
             else:
@@ -496,16 +495,14 @@ class MoonModel(object):
     def _puzzle_merge_board(self, board, shape, shape_location):
         """
         Merge the shape with the board at location and return the new board.
+
         """
+
         clone = self._unshared_copy(board)
         x, y = shape_location
         for cy, row in enumerate(shape):
             for cx, val in enumerate(row):
-                # NOTE the y-component had a -1
-                # assuming since the origin code added an extra line
-                # of blocking values to detect collisions near the bottom
-                # of the playfield. so if something is fishy, this is it.
-                clone[cy + y - 0][cx + x] += val
+                clone[cy + y][cx + x] += val
         return clone
 
     def _puzzle_next_shape(self):
