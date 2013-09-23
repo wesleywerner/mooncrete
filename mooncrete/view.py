@@ -603,9 +603,7 @@ class MoonView(object):
         sprite = MoonbaseSprite()
         sprite.rect = rect
         sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.red)
-
         self.arcade_sprites[asteroid.id] = sprite
-        trace.write('asteroid created at %s' % (rect))
 
     def move_asteroid(self, asteroid):
         """
