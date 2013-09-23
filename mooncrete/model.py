@@ -829,6 +829,14 @@ class MoonModel(object):
         self._build_lunar_landscape()
         self._arcade_print_moonscape()
 
+        # add some bases for testing
+        for n in xrange(10):
+            self._arcade_build_moonbase(BLOCK_MOONCRETE_SLAB)
+        for n in xrange(5):
+            self._arcade_build_moonbase(BLOCK_RADAR)
+        for n in xrange(5):
+            self._arcade_build_moonbase(BLOCK_TURRET)
+
     def _build_lunar_landscape(self):
         """
         Build a lunar land scape.
@@ -905,7 +913,7 @@ class MoonModel(object):
         x, y = position
         return (x >= 0 and x < ARCADE_WIDTH and y >= 0 and y < ARCADE_HEIGHT)
 
-    def _moonscape_block_at(self, position):
+    def _moonbase_at(self, position):
         """
         Get the block value at (x, y) position
         or None if the position is empty.
@@ -916,6 +924,7 @@ class MoonModel(object):
         x, y = position
         x = int(float(x) / BLOCK_PADDING)
         y = int(float(y) / BLOCK_PADDING)
+        trace.write('moonbase block at %s -> (%s, %s)' % (position, x, y))
         return self._moonbase.get((x, y), None)
 
     def _arcade_print_moonscape(self):
@@ -1027,10 +1036,12 @@ class MoonModel(object):
             else:
 
                 # get any moon base object at this position
-                base_object = self._moonscape_block_at(asteroid.position)
+                base_object = self._moonbase_at(asteroid.position)
 
                 if not base_object:
                     continue
+
+                trace.write('asteroid colliding with %s' % base_object)
 
                 # check for asteroid + moonbase collisions
                 if isinstance(base_object, LunarLand):
