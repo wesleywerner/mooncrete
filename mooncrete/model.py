@@ -84,6 +84,7 @@ import copy
 import random
 import trace
 import helper
+from gameObjects import *
 from statemachine import *
 from eventmanager import *
 
@@ -97,30 +98,15 @@ PUZZLE_HEIGHT = 10
 ARCADE_WIDTH = 100
 ARCADE_HEIGHT = 100
 
-# The moonscape is the rocky moon surface where your base is built.
-# It is uses index positioning, and the value of each cell is the block type.
-# Air space lives above the moonscape, and is primarily used to calculate
-# the asteroids collisions with your base - without air space asteroids would
-# collide when they enter that playfield. This gives you some time to shoot
-# them down.
-#   +---------------------+
-#   |                     |
-#   |                     |
-#   |     air space       |
-#   O---------------------+
-#   | moonscape           |
-#   |                     |
-#   +---------------------+
-MOONSCAPE_WIDTH = 20
-MOONSCAPE_HEIGHT = 5
-# This can be seen as squaring up with the moonscape width
-MOONSCAPE_AIRSPACE = 15
-
-# The moonspace ratio where it lives within the air space
-MOONSPACE_RATIO = (
-    ARCADE_WIDTH / MOONSCAPE_WIDTH,
-    ARCADE_HEIGHT / (MOONSCAPE_AIRSPACE + MOONSCAPE_HEIGHT)
-    )
+# padding tells us how many arcade positions moonbase blocks should be apart.
+# this limits moonbase size, so instead of having a 100-block wide moon base
+# to build we only have a (100 / 5 = 20) block moon base.
+# this minimizes the scope of search for collision detection and makes the
+# game more practical.
+# Of course setting this to 0 would allow you to build a massive base.
+# View that will draw the base will need to size their sprites to a ratio of
+# the arcade size to block padding accordingly.
+BLOCK_PADDING = 5
 
 # different kind of puzzle blocks
 BLOCK_CALCIUM_BARREL = 10
@@ -135,6 +121,7 @@ BLOCK_TURRET = 18
 BLOCK_BUILDING = 19
 BLOCK_EMPTY_BARREL = 20
 BLOCK_MOONROCKS = 21
+BLOCK_LUNAR_SURFACE = 22
 
 # our block type names
 BLOCK_NAMES = {
@@ -150,6 +137,7 @@ BLOCK_NAMES = {
     BLOCK_BUILDING: 'moon base',
     BLOCK_EMPTY_BARREL: 'empty barrel',
     BLOCK_MOONROCKS: 'moon rocks',
+    BLOCK_LUNAR_SURFACE: 'lunar surface',
     }
 
 # blocks that make up phase 1 puzzle pieces
@@ -182,11 +170,12 @@ BLOCK_PAIRS = {
         (BLOCK_TURRET_AMMO, BLOCK_TURRET_BASE),
     }
 
-# can only place blocks on top of other specific block
-BLOCK_BASES = {
-    BLOCK_MOONCRETE_SLAB: BLOCK_MOONROCKS,
-    BLOCK_RADAR: BLOCK_MOONCRETE_SLAB,
-    BLOCK_TURRET: BLOCK_MOONCRETE_SLAB,
+# define which moon base types can be placed on top of which other types.
+# note how it maps a block type to a class type.
+BLOCK_BUILD_REQUIREMENTS = {
+    BLOCK_MOONCRETE_SLAB: LunarLand,
+    BLOCK_RADAR: Mooncrete,
+    BLOCK_TURRET: Mooncrete,
     }
 
 # percentage of jutting moonscape features
@@ -213,135 +202,6 @@ TETRIS_SHAPES = [
     [[7, 7],
      [7, 7]]
     ]
-
-
-class Player(object):
-    """
-    Stores player infos like score and level.
-
-    """
-
-    def __init__(self):
-        self.score = 0
-        self.level = 1
-
-
-class Mooncrete(object):
-    """
-    A slab of mooncrete.
-
-    """
-
-    def __init__(self, position):
-        self.position = position
-
-    @property
-    def id(self):
-        return self.position
-
-
-class Asteroid(object):
-    """
-    A dangerous object that will destroy your moon base.
-
-    """
-
-    def __init__(self, position, destination):
-        self.position = position
-        self.destination = destination
-        self.trajectory = list(
-            reversed(helper.get_line_segments(position, destination)))
-
-    def move(self):
-        if self.trajectory:
-            self.position = self.trajectory.pop()
-
-    @property
-    def id(self):
-        return id(self)
-
-
-class Turret(object):
-    """
-    A defense against incoming asteroids.
-
-    """
-
-    def __init__(self):
-        self.position = None
-        self.charge = 20
-        self.max_charge = 20
-
-    def recharge(self):
-        if self.charge < self.max_charge:
-            self.charge += 1
-
-    @property
-    def ready(self):
-        return self.charge == self.max_charge
-
-    @property
-    def id(self):
-        return self.position
-
-
-class Radar(object):
-    """
-    Asteroid detector 3000.
-
-    """
-
-    def __init__(self):
-        self.position = None
-
-    @property
-    def id(self):
-        return self.position
-
-
-class Missile(object):
-    """
-    Munition in transit with a designated impact point.
-
-    """
-
-    def __init__(self, position, destination):
-        self.position = position
-        self.destination = destination
-        self.trajectory = helper.get_line_segments(destination, position)
-
-    def move(self):
-        if self.trajectory:
-            self.position = self.trajectory.pop()
-            self.trajectory = self.trajectory[:-2]
-            return True
-
-    @property
-    def id(self):
-        return id(self)
-
-
-class Explosion(object):
-    """
-    An explosion from a missile detonation.
-    It grows in diameter until it expires.
-
-    """
-
-    def __init__(self, position):
-        self.position = position
-        self.radius = 0.0
-
-    def update(self):
-        if self.radius < 7:
-            self.radius += 0.5
-            return True
-
-    @property
-    def id(self):
-        return id(self)
-
-
 class MoonModel(object):
     """
     Handles game logic. Everything data lives in here.
@@ -394,10 +254,12 @@ class MoonModel(object):
         # explosions that grow in size
         self._explosions = []
 
-        # our gun turrets and radars to defend our base.
-        # a dictionary is used and the key is the moonscape (x, y) position.
-        self._turrets = {}
-        self._radars = {}
+        # store built moonbase objects in a dictionary where the
+        # key is the moonscape (x, y) position.
+        self._moonbase = {}
+        # TODO clear
+        #self._turrets = {}
+        #self._radars = {}
 
     @property
     def state(self):
@@ -570,14 +432,6 @@ class MoonModel(object):
         self.player = Player()
         self._reset_puzzle()
         self._reset_arcade()
-
-        # TODO remove this (for testing)
-        for i in xrange(10):
-            self._arcade_spawn_block(BLOCK_MOONCRETE_SLAB, (10, 10))
-        for i in xrange(5):
-            self._arcade_spawn_block(BLOCK_RADAR, (10, 10))
-        for i in xrange(5):
-            self._arcade_spawn_block(BLOCK_TURRET, (10, 10))
 
     def _unshared_copy(self, inList):
         """
@@ -817,14 +671,15 @@ class MoonModel(object):
                     if yneigh != this_block and yneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(x, ny)
-                        self._arcade_spawn_block(new_block, (x, ny))
-                        # skip the next test and
-                        # continue with the next board item
+                        parents=[(x, y), (nx, ny)]
+                        self._arcade_build_moonbase(new_block, parents)
+                        # skip the next test
                         continue
                     if xneigh != this_block and xneigh in combo:
                         self._puzzle_clear_cell(x, y)
                         self._puzzle_clear_cell(nx, y)
-                        self._arcade_spawn_block(new_block, (x, y))
+                        parents=[(x, y), (nx, ny)]
+                        self._arcade_build_moonbase(new_block, parents)
 
     def _puzzle_block_at(self, x, y):
         """
@@ -842,10 +697,7 @@ class MoonModel(object):
 
         """
 
-        # TODO store the old value and fire an event indicating removal.
         old_value = self._puzzle_board[y][x]
-        trace.write('removing "%s" (%s, %s)' %
-            (BLOCK_NAMES[old_value], x, y))
         self._puzzle_board[y][x] = 0
 
     def _puzzle_move_piece(self, delta_x):
@@ -928,42 +780,123 @@ class MoonModel(object):
 
 #-- Arcade Game Logic -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+    def closest_ready_turret(self, arcade_position):
+        """
+        Returns the closest, charged turret to a position.
+        Position is measured in ARCADE_WIDTH and HEIGHT.
+        It will be translated into a moonscape index position.
+
+        """
+
+        chosen_one = None
+        chosen_dist = ARCADE_HEIGHT
+        for key, turret in self._turrets.items():
+            if turret.ready:
+                distance = helper.distance(* arcade_position + turret.position)
+                if distance < chosen_dist:
+                    chosen_dist = distance
+                    chosen_one = turret
+        return chosen_one
+
+    def fire_missile(self, arcade_position):
+        """
+        Launch a missile towards to given arcade position, the closest
+        ready turret will provide the firing solution.
+
+        """
+
+        turret = self.closest_ready_turret(arcade_position)
+        if turret:
+            trace.write('firing solution number %s' % (turret.id,))
+            turret.charge = 0
+            # translate the turret position into arcade coordinates
+            position = (
+                turret.position[0] * MOONSPACE_RATIO[0],
+                (turret.position[1] + MOONSCAPE_AIRSPACE) * MOONSPACE_RATIO[1])
+            missile = Missile(position, arcade_position)
+            self._missiles.append(missile)
+            self._evman.Post(MissileSpawnedEvent(missile))
+        else:
+            trace.write('no ready turrets found')
+
     def _reset_arcade(self):
         """
         Reset the arcade game.
 
         """
 
-        # create a new arcade moonscape.
-        # the bottom row will be filled with Moonrock blocks.
-        self._moonscape = [
-            [BLOCK_MOONROCKS if y == MOONSCAPE_HEIGHT - 1 else 0
-            for x in xrange(MOONSCAPE_WIDTH)]
-            for y in xrange(MOONSCAPE_HEIGHT)]
-
-        # place some random features on the surface
-        for y in xrange(MOONSCAPE_HEIGHT - 2, MOONSCAPE_HEIGHT - 4, -1):
-            for x in xrange(MOONSCAPE_WIDTH):
-                if random.random() < MOONSCAPE_RUGGEDNESS:
-                    is_empty = self._moonscape[y][x]
-                    has_base = self._moonscape[y + 1][x]
-                    if not is_empty and has_base:
-                        self._moonscape[y][x] = BLOCK_MOONROCKS
-
-        self._evman.Post(MoonscapeGeneratedEvent())
+        # clear our lists of objects
+        self._missiles = []
+        self._asteroids = []
+        self._build_lunar_landscape()
         self._arcade_print_moonscape()
 
-    def moonscape_data(self):
+    def _build_lunar_landscape(self):
         """
-        Provide an iteratble list of the moonscape data in the form:
+        Build a lunar land scape.
 
-            (x, y, block_type)
         """
 
+        self._evman.Post(LunarLandscapeClearedEvent())
+        self._moonbase = {}
 
-        for y, row in enumerate(self._moonscape):
-            for x, cell in enumerate(row):
-                yield (x, y, cell)
+        # fill the bottom with LunarLands
+        for x in xrange(0, ARCADE_WIDTH, BLOCK_PADDING):
+            y = ARCADE_HEIGHT - BLOCK_PADDING
+            position = (x, y)
+            land = LunarLand(position)
+            self._moonbase[position] = land
+            self._evman.Post(LunarLandSpawnEvent(land))
+
+        # for the next n levels up, place some random LunarLands
+        # as dictated by MOONSCAPE_RUGGEDNESS.
+        # only place a land if on top of another land.
+        rlist = list(self._arcade_iterate_moonscape_blocks(n=3))
+        for position in rlist:
+            if random.random() < MOONSCAPE_RUGGEDNESS:
+                # store all moonbase related objects with a key equals
+                # position. don't worry, moon base objects do not overlap.
+                x, y = position
+                current = self._moonbase.get(position, None)
+                base = self._moonbase.get((x, y + BLOCK_PADDING), None)
+                if not current and base:
+                    land = LunarLand(position)
+                    self._moonbase[position] = land
+                    self._evman.Post(LunarLandSpawnEvent(land))
+
+    def _arcade_iterate_moonscape_blocks(self, n=5):
+        """
+        A yielder to iterate over moon base block locations, bottom up
+        for n rows.
+
+        This function simply calculates the range to loop through
+        bottom up, skipping in block padding steps.
+
+        n=1 is the bottom most row, which is ideally a solid line
+        of lunar lands.
+
+        n=2 is where mooncrete can be laid (unless the landscape generated
+        randomly placed additional lands on this row too)
+
+        """
+
+        start = ARCADE_HEIGHT - BLOCK_PADDING
+        end = ARCADE_HEIGHT - (n + 1) * BLOCK_PADDING
+        for y in xrange(start, end, -BLOCK_PADDING):
+            for x in xrange(0, ARCADE_WIDTH, BLOCK_PADDING):
+                yield (x, y)
+
+    #def moonscape_data(self):
+        #"""
+        #Provide an iteratble list of the moonscape data in the form:
+
+            #(x, y, block_type)
+        #"""
+
+
+        #for y, row in enumerate(self._moonscape):
+            #for x, cell in enumerate(row):
+                #yield (x, y, cell)
 
     def _arcade_in_bounds(self, position):
         """
@@ -974,26 +907,22 @@ class MoonModel(object):
         x, y = position
         return (x >= 0 and x < ARCADE_WIDTH and y >= 0 and y < ARCADE_HEIGHT)
 
-    def _moonscape_block_at(self, x, y):
+    def _moonscape_block_at(self, position):
         """
-        Get the block value at x, y.
-        Returns None if x, y is out of range.
-
-        """
-
-        if self._arcade_in_bounds((x, y)):
-            return self._moonscape[y][x]
-
-    def _moonscape_set_block(self, position, block_type):
-        """
-        Set a moonscape block to a new type.
+        Get the block value at (x, y) position
+        or None if the position is empty.
 
         """
 
+        # round the coordinates to the block padding of moon base items.
         x, y = position
-        self._moonscape[y][x] = block_type
+        x = int(float(x) / BLOCK_PADDING)
+        y = int(float(y) / BLOCK_PADDING)
+        return self._moonbase.get((x, y), None)
 
     def _arcade_print_moonscape(self):
+        # TODO kill this
+        return
         if trace.TRACE:
             grid = []
             for y, row in enumerate(self._moonscape):
@@ -1005,92 +934,62 @@ class MoonModel(object):
                         grid.append('__')
             trace.write(' '.join(grid))
 
-    # TODO can we merge this code into the block below, "_arcade_build_moonbase"
-    def _arcade_spawn_block(self, block_type, from_position):
+    def _arcade_build_moonbase(self, block_type, parents=None):
         """
-        Spawn the given block type into the arcade playfield.
-        This call takes care fo finding a place for it.
+        Use this to build the moon base.
+
+        It constructs the game object, finds a Destination for it
+        and fires matching events.
+
+        Parents is a list of the puzzle block id's that spawned this object,
+        i.e. those paired up successfully. This is optional and informational
+        for views receiving events to do graphical sliding tricks.
 
         """
 
-        # 1. pick a random column
-        # 2. move down until we hit a moonrock base
-        # 3. place the tile on the moonscape
-        # 4. fire an event with the tile details.
-
-        # get the required base block we can place this block on
-        required_base = BLOCK_BASES.get(block_type, None)
+        # get the required block we can place this block on
+        required_base = BLOCK_BUILD_REQUIREMENTS.get(block_type, None)
         if not required_base:
-            trace.write('Warning: "%s" does not have a BLOCK_BASES entry.' %
+            trace.write('Warning: "%s" does not have a BLOCK_BUILD_REQUIREMENTS entry.' %
                         (BLOCK_NAMES[block_type],))
 
-        found_home = False
-        x_range = list(xrange(0, MOONSCAPE_WIDTH))
-        random.shuffle(x_range)
-        for x in x_range:
-            if found_home:
+        # shuffle all possible moon base positions.
+        # go through them until we find an open one where the block below
+        # (the base) is the required block type.
+        home_position = None
+        moonbase_positions = list(self._arcade_iterate_moonscape_blocks())
+        random.shuffle(moonbase_positions)
+        for position in moonbase_positions:
+            current = self._moonbase.get(position, None)
+            base = self._moonbase.get((position[0], position[1] + BLOCK_PADDING), None)
+            if not current and isinstance(base, required_base):
+                home_position = position
                 break
-            for y in xrange(0, MOONSCAPE_HEIGHT):
-                current = self._moonscape_block_at(x, y)
-                base = self._moonscape_block_at(x, y + 1)
-                if not current and base == required_base:
-                    found_home = True
-                    self._arcade_build_moonbase(
-                        from_position=from_position,
-                        destination=(x, y),
-                        block_type=block_type
-                        )
-                    break
-                elif base:
-                    # this is some other kind of block. try another column.
-                    break
-        else:
-            # there are no more open moonrocks to build on
-            trace.write('There are no "%s" blocks to place "%s" on' %
-                (BLOCK_NAMES[required_base], BLOCK_NAMES[block_type]))
+        if not home_position:
+            trace.write('There are no "%s" moon base blocks to place "%s" on' %
+                (required_base, BLOCK_NAMES[block_type]))
+            return
 
-        self._arcade_print_moonscape()
-
-    def _arcade_build_moonbase(self, from_position, destination, block_type):
-        """
-        Use this to build the moon base objects.
-        It sets the corresponding moonscape cell value,
-        constructs matching game objects, and fires matching events.
-
-        """
-
-        # update the moonscape matrix for easier collision tests
-        x, y = destination
-        self._moonscape[y][x] = block_type
-
-        # construct a game object for specific types
-        if block_type == BLOCK_TURRET:
-            turret = Turret()
-            turret.position = destination
-            self._turrets[turret.id] = turret
-            self._evman.Post(TurretSpawnedEvent(
-                turret=turret,
-                flyin_position=from_position)
-                )
-        elif block_type == BLOCK_RADAR:
-            radar = Radar()
-            radar.position = destination
-            self._radars[radar.id] = radar
-            self._evman.Post(RadarSpawnedEvent(
-                radar=radar,
-                flyin_position=from_position)
-                )
-        elif block_type == BLOCK_MOONCRETE_SLAB:
-            slab = Mooncrete(destination)
+        # construct game objects
+        if block_type == BLOCK_MOONCRETE_SLAB:
+            slab = Mooncrete(home_position)
+            self._moonbase[home_position] = slab
             self._evman.Post(MooncreteSpawnEvent(
-                mooncrete=slab,
-                flyin_position=from_position)
-                )
-        #else:
-            ## generic spawn event to be replace by specific events above
-            #spawn_event = ArcadeBlockSpawnedEvent(
-                #from_position, destination, block_type, BLOCK_NAMES[block_type])
-            #self._evman.Post(spawn_event)
+                mooncrete=slab, parents=parents))
+        elif block_type == BLOCK_TURRET:
+            turret = Turret(home_position)
+            self._moonbase[home_position] = turret
+            self._evman.Post(TurretSpawnedEvent(
+                turret=turret, parents=parents))
+        elif block_type == BLOCK_RADAR:
+            radar = Radar(home_position)
+            self._moonbase[home_position] = radar
+            self._evman.Post(RadarSpawnedEvent(
+                radar=radar, parents=parents))
+        else:
+            return
+
+
 
     def _arcade_step(self):
         """
@@ -1098,10 +997,16 @@ class MoonModel(object):
 
         """
 
+        for position, base_object in self._moonbase.items():
+
+            # recharge our gun turrets
+            if isinstance(base_object, Turret):
+                base_object.recharge()
+
         self._arcade_move_asteroids()
         self._arcade_move_missiles()
         self._arcade_grow_explosions()
-        self._arcade_recharge_turrets()
+
 
     def _arcade_move_asteroids(self):
         """
@@ -1113,6 +1018,8 @@ class MoonModel(object):
         while len(self._asteroids) < 3:
             self._arcade_spawn_asteroid()
 
+        # we cannot modify the asteroid list while iterating it.
+        # keep track of those to remove after our loop is done.
         remove_list = []
         for asteroid in self._asteroids:
 
@@ -1121,49 +1028,38 @@ class MoonModel(object):
             self._evman.Post(AsteroidMovedEvent(asteroid))
 
             if not self._arcade_in_bounds(asteroid.position):
+                # the asteroid is out of the game boundaries
                 remove_list.append(asteroid)
             else:
-                # get the moonbase block at this translated position
-                xy = self._convert_arcade_to_moonscape(asteroid.position)
-                #trace.write('translated asteroid pos to moonscape %s' % ((x, y),))
-                block_type = self._moonscape_block_at(xy[0], xy[1])
 
-                if not block_type:
-                    # asteroid is not within the moonscape boundaries yet (None).
-                    # or this block has no value (0).
-                    # step the next asteroid.
+                # get any moon base object at this position
+                base_object = self._moonscape_block_at(asteroid.position)
+
+                if not base_object:
                     continue
 
                 # check for asteroid + moonbase collisions
-                if block_type == BLOCK_MOONROCKS:
+                if isinstance(base_object, LunarLand):
                     # we hit the ground and disintegrate in a puff of dust
                     remove_list.append(asteroid)
 
-                elif block_type == BLOCK_MOONCRETE_SLAB:
+                elif isinstance(base_object, Mooncrete):
+                    # we hit a mooncrete slab. destroy both items.
                     remove_list.append(asteroid)
-                    self._moonscape_set_block(xy, 0)
-                    self._evman.Post(MooncreteDestroyEvent(Mooncrete(xy)))
+                    del self._moonbase[base_object.position]
+                    self._evman.Post(MooncreteDestroyEvent(base_object))
 
-                elif block_type == BLOCK_TURRET:
+                elif isinstance(base_object, Turret):
+                    # we hit a gun turret. destroy both items.
                     remove_list.append(asteroid)
-                    self._moonscape_set_block(xy, 0)
-                    turret = self._turrets.get(xy, None)
-                    if turret:
-                        del self._turrets[xy]
-                        self._evman.Post(TurretDestroyEvent(turret))
+                    del self._moonbase[base_object.position]
+                    self._evman.Post(TurretDestroyEvent(base_object))
 
-                elif block_type == BLOCK_RADAR:
+                elif isinstance(base_object, Radar):
+                    # we hit a radar dish. destroy both.
                     remove_list.append(asteroid)
-                    self._moonscape_set_block(xy, 0)
-                    radar = self._radars.get(xy, None)
-                    if radar:
-                        del self._radars[xy]
-                        self._evman.Post(RadarDestroyEvent(radar))
-
-                elif block_type in BLOCK_BASES.keys():
-                    # ah-yup. let's destroy these.
-                    remove_list.append(asteroid)
-                    self._moonscape_set_block(xy, 0)
+                    del self._moonbase[base_object.position]
+                    self._evman.Post(RadarDestroyEvent(base_object))
 
         self._arcade_remove_asteroids(remove_list)
 
@@ -1227,28 +1123,6 @@ class MoonModel(object):
         for asteroid in new_explosions:
             self._arcade_spawn_explosion(asteroid.position)
 
-    def _arcade_recharge_turrets(self):
-        """
-        Recharge turrets for firing missiles.
-
-        """
-
-        for key, turret in self._turrets.items():
-            turret.recharge()
-
-    def _convert_arcade_to_moonscape(self, position):
-        """
-        Converts the asteroid position to find the moonscape block equivalent.
-
-        """
-
-        x, y = position
-        x = x // MOONSPACE_RATIO[0]
-        y = y // MOONSPACE_RATIO[1]
-        # exclude the air space above the moonscape
-        y -= MOONSCAPE_AIRSPACE
-        return (x, y)
-
     def _arcade_spawn_asteroid(self):
         """
         Create a new asteroid and put it in play.
@@ -1260,46 +1134,6 @@ class MoonModel(object):
         asteroid = Asteroid(position, destination)
         self._asteroids.append(asteroid)
         self._evman.Post(AsteroidSpawnedEvent(asteroid))
-
-    def closest_ready_turret(self, arcade_position):
-        """
-        Returns the closest, charged turret to a position.
-        Position is measured in ARCADE_WIDTH and HEIGHT.
-        It will be translated into a moonscape index position.
-
-        """
-
-        coords = self._convert_arcade_to_moonscape(arcade_position)
-        chosen_one = None
-        chosen_dist = ARCADE_HEIGHT
-        for key, turret in self._turrets.items():
-            if turret.ready:
-                distance = helper.distance(* coords + turret.position)
-                if distance < chosen_dist:
-                    chosen_dist = distance
-                    chosen_one = turret
-        return chosen_one
-
-    def fire_missile(self, arcade_position):
-        """
-        Launch a missile towards to given arcade position, the closest
-        ready turret will provide the firing solution.
-
-        """
-
-        turret = self.closest_ready_turret(arcade_position)
-        if turret:
-            trace.write('firing solution number %s' % (turret.id,))
-            turret.charge = 0
-            # translate the turret position into arcade coordinates
-            position = (
-                turret.position[0] * MOONSPACE_RATIO[0],
-                (turret.position[1] + MOONSCAPE_AIRSPACE) * MOONSPACE_RATIO[1])
-            missile = Missile(position, arcade_position)
-            self._missiles.append(missile)
-            self._evman.Post(MissileSpawnedEvent(missile))
-        else:
-            trace.write('no ready turrets found')
 
     def _arcade_spawn_explosion(self, position):
         """

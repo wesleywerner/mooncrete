@@ -27,44 +27,6 @@ import helper
 #   auto angle: yes, with override
 #
 
-class CourierSprite(pygame.sprite.Sprite):
-    """
-    A sprite that flies in from the puzzle area towards the mini moonscape.
-    It carries the sprite object which to create in the moonscape when
-    it reaches it's destination.
-
-    """
-
-    def __init__(self, rect, image, destination, cargo):
-
-        super(CourierSprite, self).__init__()
-        self.name = 'courier'
-        self.rect = rect
-        self.image = image
-        self.cargo = cargo
-        if destination and type(destination) is tuple:
-            self.destination = pygame.Rect(destination, rect.size)
-        elif type(destination) is pygame.Rect:
-            self.destination = destination
-
-    @property
-    def at_destination(self):
-        if self.destination:
-            return self.rect.topleft == self.destination.topleft
-
-    def update(self, t):
-        """
-        Update the sprite position.
-
-        """
-
-        if self.destination:
-            x_diff = self.destination.left - self.rect.left
-            y_diff = self.destination.top - self.rect.top
-            self.rect = self.rect.move(x_diff // 5, y_diff // 5)
-            if (abs(x_diff) < 5) and (abs(y_diff) < 5):
-                self.rect = self.destination
-
 
 class MooncreteSprite(pygame.sprite.Sprite):
     """

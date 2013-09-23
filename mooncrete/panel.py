@@ -29,6 +29,9 @@ class Panel(object):
         # the size to scale to on render. None means no scale.
         self._target_size = None
         self._current_size = size
+        # the crop size to render. None means no crop.
+        self._target_crop = None
+        self._current_crop = size
 
     @property
     def show_position(self):
@@ -69,6 +72,17 @@ class Panel(object):
             return self._show_position
         else:
             return self._hide_position
+
+    def crop(self, rect, instant=False):
+        """
+        Set a new crop rect.
+        The panel will step towards this rect (unless instant is True).
+
+        """
+
+        self._target_crop = rect
+        if instant and size:
+            self._current_crop = rect
 
     def scale(self, size, instant=False):
         """
@@ -142,3 +156,11 @@ class Panel(object):
             else:
                 target.blit(self.image, self.rect)
         return self.busy
+
+    def point_to_screen(self, position):
+        """
+        Translate the given position to screen coordinates.
+
+        """
+
+        return (position[0] + self.rect.left, position[1] + self.rect.top)

@@ -96,12 +96,25 @@ class StepGameEvent(Event):
         self.name = 'Step game event'
 
 
+class LunarLandscapeClearedEvent(Event):
+
+    def __init__(self):
+        self.name = 'Lunar landscape cleared event'
+
+
+class LunarLandSpawnEvent(Event):
+
+    def __init__(self, land):
+        self.name = 'Lunar land spawn event'
+        self.land = land
+
+
 class MooncreteSpawnEvent(Event):
 
-    def __init__(self, mooncrete, flyin_position):
+    def __init__(self, mooncrete, parents):
         self.name = 'Mooncrete spawned event'
         self.mooncrete = mooncrete
-        self.flyin_position = flyin_position
+        self.parents = parents
 
 
 class MooncreteDestroyEvent(Event):
@@ -113,10 +126,10 @@ class MooncreteDestroyEvent(Event):
 
 class TurretSpawnedEvent(Event):
 
-    def __init__(self, turret, flyin_position):
+    def __init__(self, turret, parents):
         self.name = 'Turret spawned event'
         self.turret = turret
-        self.flyin_position = flyin_position
+        self.parents = parents
 
 
 class TurretDestroyEvent(Event):
@@ -128,10 +141,10 @@ class TurretDestroyEvent(Event):
 
 class RadarSpawnedEvent(Event):
 
-    def __init__(self, radar, flyin_position):
+    def __init__(self, radar, parents):
         self.name = 'Radar spawned event'
         self.radar = radar
-        self.flyin_position = flyin_position
+        self.parents = parents
 
 
 class RadarDestroyEvent(Event):
@@ -139,11 +152,6 @@ class RadarDestroyEvent(Event):
     def __init__(self, radar):
         self.name = 'Radar destroy event'
         self.radar = radar
-
-class MoonscapeGeneratedEvent(Event):
-
-    def __init__(self):
-        self.name = 'Moonscape generated event'
 
 
 class AsteroidSpawnedEvent(Event):

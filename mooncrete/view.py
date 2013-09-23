@@ -33,72 +33,50 @@ FPS = 30
 # This is our window size, or resolution in full-screen.
 DRAW_AREA = pygame.Rect(0, 0, 800, 600)
 
-# The region where puzzle gameplay happens.
-# It is achored to the top-right of the screen.
-# It hides to the right off-screen.
-PUZZLE_AREA = pygame.Rect(0, 0, 500, 500)
-PUZZLE_AREA.topleft = (DRAW_AREA.width - PUZZLE_AREA.width, 0)
 
-# The region where arcade gameplay happens
-#ARCADE_AREA = DRAW_AREA.copy()
-
-# The mini moonscape lives below the puzzle area.
-# It has the same width as the puzzle, and uses the remainder draw area height.
-MOONSCAPE_MINI = pygame.Rect(PUZZLE_AREA.bottomleft,
-    (PUZZLE_AREA.width, DRAW_AREA.height - PUZZLE_AREA.height))
-
-# The large moonscape scales to fit the window width.
-# Its height is a ratio of the the big moonscape width & mini moonscape width:
-# Its position is achored to the bottom left of the draw area.
-MOONSCAPE_BIG = pygame.Rect(0, 440, DRAW_AREA.width, 160)
-
-# The size to draw each puzzle block.
-PUZZLE_BLOCK_SIZE = (PUZZLE_AREA.width / model.PUZZLE_WIDTH,
-                     PUZZLE_AREA.height / model.PUZZLE_WIDTH)
-
-# The size to draw each moonscape block.
-MOONSCAPE_BLOCK_SIZE = (MOONSCAPE_BIG.width // model.MOONSCAPE_WIDTH,
-                        MOONSCAPE_BIG.height // model.MOONSCAPE_HEIGHT)
-# This size is strictly used to MAP the screen to the mini moonscape.
-# Used when block float down to the mini view, it uses these to know
-# where to float to, so the sprite matches up to the final panel position.
-MOONSCAPE_MINI_SIZE = (MOONSCAPE_MINI.width // model.MOONSCAPE_WIDTH,
-                        MOONSCAPE_MINI.height // model.MOONSCAPE_HEIGHT)
-
-ARCADE_VIEW_MODEL_RATIO = (DRAW_AREA.width // model.ARCADE_WIDTH,
-                            DRAW_AREA.height // model.ARCADE_HEIGHT)
-
-# The gameplay layout has two types: Puzzle and Arcade.
-# The whole of it is defined as DRAW_AREA.
+# PUZZLE LAYOUT
+#   +-------+----------+
+#   |   B   | mooncrete|
+#   | score +----------+
+#   |  box  |          |
+#   |       |          |
+#   +-------| P        |
+#   |A mini | puzzle   |
+#   +-------+----------+
 #
-# Puzzle:
-#   The PUZZLE_AREA (A) is fixed and the score box (B) is resized to fit.
-#   The mini moonscape view (C) is also resized to fit.
-#
-#
-#   +-------+-------------+
-#   |       |             |
-#   | score | puzzle area |
-#   |  box  |      A      |
-#   |       |             |
-#   |   B   +-------------+
-#   |       | mini view C |
-#   +-------+-------------+
-#
-# Arcade:
-#   The ARCADE mode takes the moonscape panel C and scales it to fit
-#   horizontally into the screen.
-#
-#   +---------------------+
-#   |                     |
-#   |          C          |
-#   |     arcade view     |
-#   +---------------------+
-#   | moonscape ^  ^  ^  ^|
-#   |       <             |
-#   +---------------------+
-#
+# puzzle
+#   fixed size (500, 500).
+#   anchored to bottomright.
+# mini view
+#   fixed size in ratio (300, 225).
+#   anchored to bottom left.
+# score box
+#   takes the remaining width and height.
+#   fixed to topleft.
 
+# score box position and size
+SCORE_BOX = pygame.Rect(0, 0, 300, 375)
+
+# puzzle position and size
+PUZZLE_POS = pygame.Rect(0, 0, 500, 500)
+PUZZLE_POS.topleft = (
+    DRAW_AREA.width - PUZZLE_POS.width,
+    DRAW_AREA.height - PUZZLE_POS.height)
+
+# The size of a puzzle block is in ratio to the puzzle view size
+# to the model puzzle size.
+PUZZLE_BLOCK_SIZE = (
+    PUZZLE_POS.width / model.PUZZLE_WIDTH,
+    PUZZLE_POS.height / model.PUZZLE_WIDTH)
+
+# arcade position and size (takes full draw area)
+ARCADE_POS = DRAW_AREA.copy()
+
+# The size of an arcade sprite is in ratio to the arcade view size
+# to the model arcade size.
+ARCADE_SPRITE_SIZE = (
+    ARCADE_POS.width // (model.ARCADE_WIDTH / model.BLOCK_PADDING),
+    ARCADE_POS.height // (model.ARCADE_HEIGHT / model.BLOCK_PADDING))
 
 
 class MoonView(object):
@@ -119,15 +97,13 @@ class MoonView(object):
         self.image = None
         # moonbase sprites that get drawn onto the moonscape panel
         self.moonbase_sprites = {}
-        # courier sprites between panels with a flying sprite
-        self._courier_sprites = {}
         # all arcade sprites (asteroids, missiles...)
         self.arcade_sprites = {}
         self.panels = {}
         self.windowsize = None
         # True while we are busy moving panels around
         self.transitioning = False
-        # a pre-rendered image of the game moonscape surface
+        # a pre-rendered image of the lunar surface
         self.moon_surface = None
         # list of colors to flash the background each tick
         self.flash_color = []
@@ -147,21 +123,19 @@ class MoonView(object):
 
         elif isinstance(event, StateEvent):
             if event.state in (STATE_PHASE1, STATE_PHASE2):
-                self.panels['arcade'].hide()
                 self.panels['score'].show()
                 self.panels['puzzle'].show()
-                moonscape = self.panels['moonscape']
-                moonscape.show()
-                moonscape.show_position = MOONSCAPE_MINI.topleft
-                moonscape.scale(MOONSCAPE_MINI.size)
+                arcade_panel = self.panels['arcade']
+                arcade_panel.scale((300, 225))
+                arcade_panel.show_position = (0, 375)
+                arcade_panel.show()
             elif event.state == STATE_PHASE3:
-                self.panels['arcade'].show()
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
-                moonscape = self.panels['moonscape']
-                moonscape.show()
-                moonscape.show_position = MOONSCAPE_BIG.topleft
-                moonscape.scale(MOONSCAPE_BIG.size)
+                arcade_panel = self.panels['arcade']
+                arcade_panel.scale(ARCADE_POS.size)
+                arcade_panel.show_position = ARCADE_POS.topleft
+                arcade_panel.show()
             elif event.state == STATE_HELP:
                 # TODO show the help panel
                 pass
@@ -169,27 +143,28 @@ class MoonView(object):
                 self.panels['arcade'].hide()
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
-                self.panels['moonscape'].hide()
 
-        elif isinstance(event, MoonscapeGeneratedEvent):
-            self.prerender_moonscape()
-            self.draw_moonscape()
+        elif isinstance(event, LunarLandscapeClearedEvent):
+            self.clear_lunar_landscape()
+
+        elif isinstance(event, LunarLandSpawnEvent):
+            self.prerender_lunar_landscape(event.land)
 
         elif isinstance(event, MooncreteSpawnEvent):
-            self.create_mooncrete_sprite(event.mooncrete, event.flyin_position)
+            self.create_mooncrete_sprite(event.mooncrete, event.parents)
 
         elif isinstance(event, MooncreteDestroyEvent):
             self.destroy_mooncrete_sprite(event.mooncrete)
 
         elif isinstance(event, TurretSpawnedEvent):
-            self.create_turret_sprite(event.turret, event.flyin_position)
+            self.create_turret_sprite(event.turret, event.parents)
 
         elif isinstance(event, TurretDestroyEvent):
             self.destroy_turret_sprite(event.turret)
             self.flash_screen([color.gold, color.black], 2)
 
         elif isinstance(event, RadarSpawnedEvent):
-            self.create_radar_sprite(event.radar, event.flyin_position)
+            self.create_radar_sprite(event.radar, event.parents)
 
         elif isinstance(event, RadarDestroyEvent):
             self.destroy_radar_sprite(event.radar)
@@ -288,34 +263,24 @@ class MoonView(object):
 
         """
 
-        score_box_width = DRAW_AREA.width - PUZZLE_AREA.width
-        score_panel = Panel((300, 600), DRAW_AREA)
+        score_panel = Panel(SCORE_BOX.size, DRAW_AREA)
         # the score panel is visible at the top-left of the screen
-        score_panel.show_position = (0, 0)
+        score_panel.show_position = SCORE_BOX.topleft
         # and it hides to the left
-        score_panel.hide_position = (-300, 0)
+        score_panel.hide_position = (- SCORE_BOX.width, 0)
         score_panel.hide(instant=True)
         self.panels['score'] = score_panel
 
-        puzzle_panel = Panel(PUZZLE_AREA.size, DRAW_AREA)
+        puzzle_panel = Panel(PUZZLE_POS.size, DRAW_AREA)
         # puzle grid is visible at the top-left of the screen
-        puzzle_panel.show_position = PUZZLE_AREA.topleft
+        puzzle_panel.show_position = PUZZLE_POS.topleft
         # and it hides to the right, off-screen
         puzzle_panel.hide_position = (DRAW_AREA.width, 0)
         puzzle_panel.hide(instant=True)
         self.panels['puzzle'] = puzzle_panel
 
-        moonscape_panel = Panel(MOONSCAPE_BIG.size, DRAW_AREA)
-        # start of as a mini moonscape view
-        moonscape_panel.show_position = MOONSCAPE_MINI.topleft
-        # hide it by moving it down outside the draw area
-        moonscape_panel.hide_position = (MOONSCAPE_MINI.left, DRAW_AREA.height)
-        moonscape_panel.hide(instant=True)
-        self.panels['moonscape'] = moonscape_panel
-
-        arcade_panel = Panel(DRAW_AREA.size, DRAW_AREA)
-        arcade_panel.show_position = DRAW_AREA.topleft
-        arcade_panel.hide_position = (DRAW_AREA.left, - DRAW_AREA.height)
+        arcade_panel = Panel(ARCADE_POS.size, DRAW_AREA)
+        arcade_panel.hide_position = (0, ARCADE_POS.height)
         arcade_panel.hide(instant=True)
         self.panels['arcade'] = arcade_panel
 
@@ -334,6 +299,7 @@ class MoonView(object):
             # but only if we have been set up :0
             return
 
+        ticks = pygame.time.get_ticks()
         state = self.model.state
         if self.flash_color:
             self.image.fill(self.flash_color.pop())
@@ -359,22 +325,21 @@ class MoonView(object):
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
-            self.draw_moonscape()
+            self.clear_arcade()
+            self.draw_moonbase(ticks)
 
         elif state == STATE_PHASE3:
             self.angle_turrets()
-            self.draw_arcade_sprites()
-            self.draw_moonscape()
-            self.draw_firing_solution()
+            self.clear_arcade()
+            self.draw_moonbase(ticks)
+            self.draw_missiles_and_asteroids(ticks)
+            #self.draw_firing_solution()
 
         # update panels
         self.transitioning = False
         for key, panel in self.panels.items():
             if panel.draw(self.image):
                 self.transitioning = True
-
-        # moving moonbases are draw on top of all other panels
-        self.courier_deliver_sprite()
 
         pix = self.smallfont.render(
             'Mooncrete -- press space to play',
@@ -385,40 +350,36 @@ class MoonView(object):
         pygame.display.flip()
 
     def convert_puzzle_to_panel(self, position):
-        return (position[0] * PUZZLE_BLOCK_SIZE[0],
-                position[1] * PUZZLE_BLOCK_SIZE[1])
+        """
+        Convert a puzzle model position into a view pixel value.
+
+        """
+
+        return (int(float(position[0]) / model.PUZZLE_WIDTH * PUZZLE_POS.width),
+                int(float(position[1]) / model.PUZZLE_HEIGHT * PUZZLE_POS.height))
 
     def convert_mini_moonscape_to_panel(self, position):
+        # TODO perhaps provide this as a helper function
+        # on the panel to return the scaled size.
         return (position[0] * MOONSCAPE_MINI_SIZE[0],
                 position[1] * MOONSCAPE_MINI_SIZE[1])
 
-    def convert_moonscape_to_panel(self, position):
-        return (position[0] * MOONSCAPE_BLOCK_SIZE[0],
-                position[1] * MOONSCAPE_BLOCK_SIZE[1])
+    def convert_arcade_to_panel(self, position):
+        """
+        Convert an arcade model position into a view pixel value.
 
-    def translate_to_screen(self, position, container_position):
-        return (position[0] + container_position[0],
-                position[1] + container_position[1])
+        """
+
+        return (int(float(position[0]) / model.ARCADE_WIDTH * ARCADE_POS.width),
+                int(float(position[1]) / model.ARCADE_HEIGHT * ARCADE_POS.height))
 
     def convert_puzzle_to_screen(self, position):
         pos = self.convert_puzzle_to_panel(position)
-        pos = self.translate_to_screen(
-            pos, self.panels['puzzle'].rect.topleft)
-        return pos
-
-    def convert_moonscape_to_screen(self, position):
-        # position is already in view sizes (pixels) no need to convert
-        # from panel indices to pixels.
-        #pos = self.convert_moonscape_to_panel(position)
-        pos = self.translate_to_screen(
-            position, self.panels['moonscape'].rect.topleft)
-        return pos
+        return self.panels['puzzle'].point_to_screen(pos)
 
     def convert_mini_moonscape_to_screen(self, position):
         pos = self.convert_mini_moonscape_to_panel(position)
-        pos = self.translate_to_screen(
-            pos, self.panels['moonscape'].rect.topleft)
-        return pos
+        return self.panels['moonscape'].point_to_screen(pos)
 
     def convert_screen_to_arcade(self, position):
         """
@@ -432,7 +393,7 @@ class MoonView(object):
 
     def convert_arcade_to_screen(self, position):
         """
-        Take a arcade position and translate to a screen equivalent.
+        Take an arcade position and translate to a screen equivalent.
 
         """
 
@@ -470,109 +431,58 @@ class MoonView(object):
         pix.fill(acolor)
         return pix
 
-    def courier_send_sprite(self, cargo_id, cargo, fly_from, fly_to):
+    def clear_lunar_landscape(self):
         """
-        courier a sprite from the puzzle area to the moonscape via
-        a flying sprite. It carries the cargo and upon reaching its
-        destination, drops the cargo in the moonbase sprite list.
-
-        cargo_id is the key used storing dictionary entries.
-        fly_from is puzzle grid coordinates.
-        fly_to is moonscape grid coordinates.
+        Clear the lunar landscape surface.
 
         """
 
-        from_coords = pygame.Rect(
-            self.convert_puzzle_to_screen(fly_from), MOONSCAPE_BLOCK_SIZE)
-        to_coords = self.convert_mini_moonscape_to_screen(fly_to)
-        fly = CourierSprite(
-            rect=from_coords,
-            image=cargo.image,
-            destination=to_coords,
-            cargo=cargo
-            )
-        self._courier_sprites[cargo_id] = fly
-
-    def courier_deliver_sprite(self):
-        """
-        Update courier sprites that deliver a cargo sprite to the moonscape.
-
-        """
-
-        t = pygame.time.get_ticks()
-        retirement_list = []
-        for key, courier in self._courier_sprites.items():
-            courier.update(t)
-            self.image.blit(courier.image, courier.rect)
-            if courier.at_destination:
-                self.moonbase_sprites[key] = courier.cargo
-                retirement_list.append(key)
-        for delivery in retirement_list:
-            del self._courier_sprites[delivery]
-
-    def prerender_moonscape(self):
-        """
-        Draw the moonscape from the model.
-
-        """
-
-        self.moon_surface = pygame.Surface(MOONSCAPE_BIG.size)
+        self.moon_surface = pygame.Surface(ARCADE_POS.size)
         self.moon_surface.set_colorkey(color.magenta)
         self.moon_surface.fill(color.magenta)
 
-        draw_w = MOONSCAPE_BIG.width // model.MOONSCAPE_WIDTH
-        draw_h = MOONSCAPE_BIG.height // model.MOONSCAPE_HEIGHT
-        for x, y, v in self.model.moonscape_data():
-            if v:
-                rect = pygame.Rect(
-                    (x * draw_w, y * draw_h),
-                    (draw_w, draw_h)
-                    )
-                pygame.draw.rect(self.moon_surface, (128, 128, 128), rect)
-
-    def draw_moonscape(self):
+    def prerender_lunar_landscape(self, land):
         """
-        Assemble the moonscape image.
+        Draw the given land (a lunar land) onto a surface.
 
         """
 
-        # clear
-        moonscape = self.panels['moonscape']
-        moonscape.image.fill(color.magenta)
+        position = self.convert_arcade_to_panel(land.position)
+        rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
+        pygame.draw.rect(self.moon_surface, color.gray, rect)
 
-        # animate moon base sprites
-        t = pygame.time.get_ticks()
+    def clear_arcade(self):
+        """
+        Clears the arcade image.
+
+        """
+
+        self.panels['arcade'].image.fill(color.red)
+
+    def draw_missiles_and_asteroids(self, ticks):
+        """
+        Draw missile and asteroid sprites.
+
+        """
+
+        for key, sprite in self.arcade_sprites.items():
+            sprite.update(ticks)
+            if sprite.image:
+                self.panels['arcade'].image.blit(sprite.image, sprite.rect)
+
+    def draw_moonbase(self, ticks):
+        """
+        Draw the moon base sprites and the lunar land scape.
+
+        """
+
         for key, sprite in self.moonbase_sprites.items():
-            sprite.update(t)
-            moonscape.image.blit(sprite.image, sprite.rect)
+            sprite.update(ticks)
+            self.panels['arcade'].image.blit(sprite.image, sprite.rect)
 
         # draw the pre-rendered moon surface
         if self.moon_surface:
-            moonscape.image.blit(self.moon_surface, (0, 0))
-
-    def draw_arcade_sprites(self):
-        """
-        Animate and draw flying asteroids.
-
-        """
-
-        pan = self.panels['arcade']
-        pan.image.fill(color.magenta)
-        t = pygame.time.get_ticks()
-        for key, sprite in self.arcade_sprites.items():
-            sprite.update(t)
-
-            if sprite.image:
-                pan.image.blit(sprite.image, sprite.rect)
-
-            ## draw the missile firing solution
-            #if isinstance(sprite, MissileSprite):
-                #if sprite.missile.trajectory:
-                    #pygame.draw.line(
-                        #pan.image, color.white,
-                        #sprite.rect.center,
-                        #sprite.destination.center
-                        #)
+            self.panels['arcade'].image.blit(self.moon_surface, (0, 0))
 
     def draw_firing_solution(self):
         """
@@ -595,26 +505,29 @@ class MoonView(object):
 
         for key, sprite in self.moonbase_sprites.items():
             if isinstance(sprite, TurretSprite):
-                tpos = self.convert_moonscape_to_screen(sprite.rect.center)
-                mpos = pygame.mouse.get_pos()
                 angle = helper.angle(
-                    tpos,
-                    mpos
+                    sprite.rect.center,
+                    pygame.mouse.get_pos()
                     )
                 sprite.turrent_angle_override = angle
 
-    def create_mooncrete_sprite(self, mooncrete, flyin_position):
+    def create_mooncrete_sprite(self, mooncrete, parents=None):
         """
-        Create a mooncrete sprite.
+        Create a mooncrete sprite which originates for the list of parents.
 
         """
 
-        rect = self.convert_moonscape_to_panel(mooncrete.position)
-        cargo = MooncreteSprite(rect)
-        cargo.image = self.placeholder_pix(
-            MOONSCAPE_BLOCK_SIZE, color.darker_gray)
-        self.courier_send_sprite(
-            mooncrete.id, cargo, flyin_position, mooncrete.position)
+        origin = pygame.Rect(
+            (ARCADE_POS.width, 0),
+            ARCADE_SPRITE_SIZE
+            )
+        destination = pygame.Rect(
+            self.convert_arcade_to_panel(mooncrete.position),
+            ARCADE_SPRITE_SIZE)
+        sprite = MooncreteSprite(origin)
+        sprite.destination = destination
+        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.darker_gray)
+        self.moonbase_sprites[mooncrete.id] = sprite
 
     def destroy_mooncrete_sprite(self, mooncrete):
         """
@@ -631,13 +544,14 @@ class MoonView(object):
 
         """
 
-        position = self.convert_moonscape_to_panel(turret.position)
-        cargo = TurretSprite(pygame.Rect(position, MOONSCAPE_BLOCK_SIZE))
-        cargo.turret = turret
-        cargo.image = self.placeholder_pix(
-            MOONSCAPE_BLOCK_SIZE, color.gold)
-        self.courier_send_sprite(
-            turret.id, cargo, flyin_position, turret.position)
+        pass
+        #position = self.convert_arcade_to_panel(turret.position)
+        #cargo = TurretSprite(pygame.Rect(position, ARCADE_SPRITE_SIZE))
+        #cargo.turret = turret
+        #cargo.image = self.placeholder_pix(
+            #ARCADE_SPRITE_SIZE, color.gold)
+        #self.courier_moonbase_sprite(
+            #turret.id, cargo, flyin_position, turret.position)
 
     def destroy_turret_sprite(self, turret):
         """
@@ -654,14 +568,15 @@ class MoonView(object):
 
         """
 
-        # TODO use dedicated radar sprite
-        rect = self.convert_moonscape_to_panel(radar.position)
-        cargo = Sprite('radar', rect)
-        cargo.radar = radar
-        cargo.image = self.placeholder_pix(
-            MOONSCAPE_BLOCK_SIZE, color.copper)
-        self.courier_send_sprite(
-            radar.id, cargo, flyin_position, radar.position)
+        pass
+        ## TODO use dedicated radar sprite
+        #rect = self.convert_arcade_to_panel(radar.position)
+        #cargo = Sprite('radar', rect)
+        #cargo.radar = radar
+        #cargo.image = self.placeholder_pix(
+            #ARCADE_SPRITE_SIZE, color.copper)
+        #self.courier_moonbase_sprite(
+            #radar.id, cargo, flyin_position, radar.position)
 
     def destroy_radar_sprite(self, radar):
         """
@@ -680,12 +595,12 @@ class MoonView(object):
 
         # TODO use a dedicated AsteroidSprite here.
         # No fancy sliding movement required please.
-        position = self.convert_moonscape_to_panel(asteroid.position)
-        rect = pygame.Rect(position, MOONSCAPE_BLOCK_SIZE)
+        position = self.convert_arcade_to_panel(asteroid.position)
+        rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
         sprite = Sprite('asteroid %s' % (asteroid.id,), rect)
 
         # use a placehold image
-        pix = pygame.Surface(MOONSCAPE_BLOCK_SIZE)
+        pix = pygame.Surface(ARCADE_SPRITE_SIZE)
         pix.fill(color.red)
         sprite.addimage(pix, 1, -1)
 
@@ -701,11 +616,8 @@ class MoonView(object):
         sprite = self.arcade_sprites.get(asteroid.id, None)
         if sprite:
         # convert indexes to screen coordinates
-            x, y = asteroid.position
-            x = x * ARCADE_VIEW_MODEL_RATIO[0]
-            y = y * ARCADE_VIEW_MODEL_RATIO[1]
-            sprite.rect.topleft = (x, y)
-            #sprite.set_position((x, y))
+            position = self.convert_arcade_to_panel(asteroid.position)
+            sprite.rect.topleft = position
 
     def destroy_asteroid(self, asteroid):
         """
@@ -724,13 +636,13 @@ class MoonView(object):
 
         # the missile position and destination is the arcade coordinate target.
         position = self.convert_arcade_to_screen(missile.position)
-        rect = pygame.Rect(position, MOONSCAPE_BLOCK_SIZE)
+        rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
         # destination used by the sprite to calc it's angle of rotation
         dest_coords = self.convert_arcade_to_screen(missile.destination)
-        destination = pygame.Rect((0, 0), MOONSCAPE_BLOCK_SIZE)
+        destination = pygame.Rect((0, 0), ARCADE_SPRITE_SIZE)
         destination.center = dest_coords
         # use a placehold image
-        pix = self.placeholder_pix(MOONSCAPE_BLOCK_SIZE, color.magenta)
+        pix = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.magenta)
         sprite = MissileSprite(rect, pix, destination)
         sprite.missile = missile
         self.arcade_sprites[missile.id] = sprite
