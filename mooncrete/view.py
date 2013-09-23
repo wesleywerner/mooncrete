@@ -358,12 +358,6 @@ class MoonView(object):
         return (int(float(position[0]) / model.PUZZLE_WIDTH * PUZZLE_POS.width),
                 int(float(position[1]) / model.PUZZLE_HEIGHT * PUZZLE_POS.height))
 
-    def convert_mini_moonscape_to_panel(self, position):
-        # TODO perhaps provide this as a helper function
-        # on the panel to return the scaled size.
-        return (position[0] * MOONSCAPE_MINI_SIZE[0],
-                position[1] * MOONSCAPE_MINI_SIZE[1])
-
     def convert_arcade_to_panel(self, position):
         """
         Convert an arcade model position into a view pixel value.
@@ -376,10 +370,6 @@ class MoonView(object):
     def convert_puzzle_to_screen(self, position):
         pos = self.convert_puzzle_to_panel(position)
         return self.panels['puzzle'].point_to_screen(pos)
-
-    def convert_mini_moonscape_to_screen(self, position):
-        pos = self.convert_mini_moonscape_to_panel(position)
-        return self.panels['moonscape'].point_to_screen(pos)
 
     def convert_screen_to_arcade(self, position):
         """
