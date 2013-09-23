@@ -90,6 +90,17 @@ class StateEvent(Event):
         return ('%s: %s' % (self.name, str(self.state)))
 
 
+class ResetGameEvent(Event):
+    """
+    Signals the game is resetting.
+    Clear any resources from any previous games.
+
+    """
+
+    def __init__(self):
+        self.name = 'Reset game event'
+
+
 class StepGameEvent(Event):
 
     def __init__(self):
