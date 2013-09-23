@@ -70,14 +70,6 @@
 # is full to the point where the puzzle has ended.
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-# Arcade Moonscape
-#
-#
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 
 import math
 import copy
@@ -256,11 +248,8 @@ class MoonModel(object):
         self._explosions = []
 
         # store built moonbase objects in a dictionary where the
-        # key is the moonscape (x, y) position.
+        # key is the (x, y) position.
         self._moonbase = {}
-        # TODO clear
-        #self._turrets = {}
-        #self._radars = {}
 
     @property
     def state(self):
@@ -786,7 +775,7 @@ class MoonModel(object):
 
         """
 
-        # do not allow targeting positions below the moonscape boundary.
+        # do not allow targeting positions below the boundary.
         if (arcade_position[1] >= ARCADE_HEIGHT - ((BASE_HEIGHT + 4) * BLOCK_PADDING)):
             return
 
@@ -828,7 +817,7 @@ class MoonModel(object):
         self._missiles = []
         self._asteroids = []
         self._generate_lunar_landscape()
-        self._arcade_print_moonscape()
+        self._arcade_print_moonbase()
 
         # add some bases for testing
         for n in xrange(10):
@@ -893,18 +882,6 @@ class MoonModel(object):
             for x in xrange(0, ARCADE_WIDTH, BLOCK_PADDING):
                 yield (x, y)
 
-    #def moonscape_data(self):
-        #"""
-        #Provide an iteratble list of the moonscape data in the form:
-
-            #(x, y, block_type)
-        #"""
-
-
-        #for y, row in enumerate(self._moonscape):
-            #for x, cell in enumerate(row):
-                #yield (x, y, cell)
-
     def _arcade_in_bounds(self, position):
         """
         Checks if a point is in arcade boundaries.
@@ -929,7 +906,7 @@ class MoonModel(object):
         y = int(math.floor(float(y) / BLOCK_PADDING) * BLOCK_PADDING)
         return self._moonbase.get((x, y), None)
 
-    def _arcade_print_moonscape(self):
+    def _arcade_print_moonbase(self):
         # TODO kill this
         return
         if trace.TRACE:
