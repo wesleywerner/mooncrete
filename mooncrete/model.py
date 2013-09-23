@@ -179,6 +179,9 @@ BLOCK_BUILD_REQUIREMENTS = {
 # percentage of jutting moonscape features
 MOONSCAPE_RUGGEDNESS = 0.3
 
+# how high the lunar landscape could go
+BASE_HEIGHT = 3
+
 TETRIS_SHAPES = [
     [[1, 1, 1],
      [0, 1, 0]],
@@ -820,7 +823,7 @@ class MoonModel(object):
         # clear our lists of objects
         self._missiles = []
         self._asteroids = []
-        self._build_lunar_landscape()
+        self._generate_lunar_landscape()
         self._arcade_print_moonscape()
 
         # add some bases for testing
@@ -831,7 +834,7 @@ class MoonModel(object):
         for n in xrange(5):
             self._arcade_build_moonbase(BLOCK_TURRET)
 
-    def _build_lunar_landscape(self):
+    def _generate_lunar_landscape(self):
         """
         Build a lunar land scape.
 
@@ -851,7 +854,7 @@ class MoonModel(object):
         # for the next n levels up, place some random LunarLands
         # as dictated by MOONSCAPE_RUGGEDNESS.
         # only place a land if on top of another land.
-        rlist = list(self._arcade_iterate_moonscape_blocks(n=3))
+        rlist = list(self._arcade_iterate_moonscape_blocks(n=BASE_HEIGHT))
         for position in rlist:
             if random.random() < MOONSCAPE_RUGGEDNESS:
                 # store all moonbase related objects with a key equals
