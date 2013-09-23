@@ -358,7 +358,7 @@ class MoonModel(object):
         if not self._playing:
             trace.write('starting a new game...')
             self._reset_game()
-            self._change_state(STATE_PHASE1, swap_state=True)
+            self._change_state(STATE_PHASE1)
         else:
             # continue the game with the last known player phase
             if self.state != self._last_phase:
