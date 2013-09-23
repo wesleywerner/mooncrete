@@ -29,17 +29,6 @@ class LunarLand(object):
         return id(self)
 
 
-class Player(object):
-    """
-    Stores player infos like score and level.
-
-    """
-
-    def __init__(self):
-        self.score = 0
-        self.level = 1
-
-
 class Mooncrete(object):
     """
     A slab of mooncrete.
