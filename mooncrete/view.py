@@ -449,7 +449,7 @@ class MoonView(object):
 
         position = self.convert_arcade_to_panel(land.position)
         rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
-        pygame.draw.rect(self.moon_surface, color.gray, rect)
+        pygame.draw.rect(self.moon_surface, color.darker_gray, rect)
 
     def clear_arcade(self):
         """
@@ -457,7 +457,7 @@ class MoonView(object):
 
         """
 
-        self.panels['arcade'].image.fill(color.red)
+        self.panels['arcade'].image.fill(color.magenta)
 
     def draw_missiles_and_asteroids(self, ticks):
         """
@@ -530,7 +530,7 @@ class MoonView(object):
             ARCADE_SPRITE_SIZE)
         sprite = MooncreteSprite(self.moonbase_sprite_origin())
         sprite.destination = destination
-        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.darker_gray)
+        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.dark_gray)
         self.moonbase_sprites[mooncrete.id] = sprite
 
     def destroy_mooncrete_sprite(self, mooncrete):
@@ -575,7 +575,8 @@ class MoonView(object):
         destination = pygame.Rect(
             self.convert_arcade_to_panel(radar.position),
             ARCADE_SPRITE_SIZE)
-        sprite = Sprite('radar', self.moonbase_sprite_origin())
+        sprite = MoonbaseSprite()
+        sprite.rect = self.moonbase_sprite_origin()
         sprite.destination = destination
         sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.copper)
         self.moonbase_sprites[radar.id] = sprite
@@ -599,12 +600,9 @@ class MoonView(object):
         # No fancy sliding movement required please.
         position = self.convert_arcade_to_panel(asteroid.position)
         rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
-        sprite = Sprite('asteroid %s' % (asteroid.id,), rect)
-
-        # use a placehold image
-        pix = pygame.Surface(ARCADE_SPRITE_SIZE)
-        pix.fill(color.red)
-        sprite.addimage(pix, 1, -1)
+        sprite = MoonbaseSprite()
+        sprite.rect = rect
+        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.red)
 
         self.arcade_sprites[asteroid.id] = sprite
         trace.write('asteroid created at %s' % (rect))
