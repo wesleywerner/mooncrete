@@ -121,6 +121,10 @@ class MoonView(object):
         elif isinstance(event, InitializeEvent):
             self.initialize()
 
+        elif isinstance(event, ResetGameEvent):
+            self.moonbase_sprites = {}
+            self.arcade_sprites = {}
+
         elif isinstance(event, StateEvent):
             if event.state in (STATE_PHASE1, STATE_PHASE2):
                 self.panels['score'].show()
@@ -318,7 +322,11 @@ class MoonView(object):
             pass
 
         elif state == STATE_LOSE:
-            pass
+            pix = self.smallfont.render(
+                'You Lose!',
+                False, color.white, color.magenta)
+            pix.set_colorkey(color.magenta)
+            self.panels['score'].image.blit(pix, (0, 50))
 
         elif state == STATE_LEVELDONE:
             pass
