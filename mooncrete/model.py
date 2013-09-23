@@ -79,7 +79,7 @@
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
-
+import math
 import copy
 import random
 import trace
@@ -918,13 +918,14 @@ class MoonModel(object):
         Get the block value at (x, y) position
         or None if the position is empty.
 
+        Since the moon base blocks use padding, we snap the position to
+        the closest padding position.
+
         """
 
-        # round the coordinates to the block padding of moon base items.
         x, y = position
-        x = int(float(x) / BLOCK_PADDING)
-        y = int(float(y) / BLOCK_PADDING)
-        trace.write('moonbase block at %s -> (%s, %s)' % (position, x, y))
+        x = int(math.floor(float(x) / BLOCK_PADDING) * BLOCK_PADDING)
+        y = int(math.floor(float(y) / BLOCK_PADDING) * BLOCK_PADDING)
         return self._moonbase.get((x, y), None)
 
     def _arcade_print_moonscape(self):
