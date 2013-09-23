@@ -95,9 +95,9 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
-        # moonbase sprites that get drawn onto the moonscape panel
+        # moonbase sprites (crete, radars, turrets)
         self.moonbase_sprites = {}
-        # all arcade sprites (asteroids, missiles...)
+        # arcade sprites (asteroids, missiles, explosions)
         self.arcade_sprites = {}
         self.panels = {}
         self.windowsize = None
@@ -333,7 +333,7 @@ class MoonView(object):
             self.clear_arcade()
             self.draw_moonbase(ticks)
             self.draw_missiles_and_asteroids(ticks)
-            #self.draw_firing_solution()
+            self.draw_firing_solution()
 
         # update panels
         self.transitioning = False
@@ -491,11 +491,13 @@ class MoonView(object):
         """
 
         mouse_pos = pygame.mouse.get_pos()
-        mouse_pos = self.convert_screen_to_arcade(mouse_pos)
-        turret = self.model.closest_ready_turret(mouse_pos)
+        arcade_pos = self.convert_screen_to_arcade(mouse_pos)
+        turret = self.model.closest_ready_turret(arcade_pos)
         if turret:
             turret_pos = self.convert_arcade_to_screen(turret.position)
-            pygame.draw.line(self.image, color.white, mouse_pos, turret_pos)
+            # center the origin x
+            turret_pos = (turret_pos[0] + ARCADE_SPRITE_SIZE[0] / 2, turret_pos[1])
+            pygame.draw.line(self.image, color.darkest_green, mouse_pos, turret_pos)
 
     def angle_turrets(self):
         """
