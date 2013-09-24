@@ -1,6 +1,5 @@
 # VIEW
 
-create the level win screen.
 create a title screen.
 draw a starry background for all the views.
 draw borders on the puzzle panel.
