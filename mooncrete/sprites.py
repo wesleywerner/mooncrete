@@ -109,6 +109,8 @@ class AsteroidSprite(MoonbaseSprite):
             if not self.original_image:
                 self.original_image = self.image.copy()
             self.image = pygame.transform.rotate(self.original_image, self.angle)
+            # this magical line keeps the rotated sprite center where it was
+            self.rect = self.image.get_rect(center=self.rect.center)
 
 
 class MooncreteSprite(MoonbaseSprite):
