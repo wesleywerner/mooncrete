@@ -417,6 +417,7 @@ class MoonModel(object):
         elif self.state == STATE_PHASE3:
             self._change_state(STATE_REPRIEVE, swap_state=True)
         elif self.state == STATE_REPRIEVE:
+            self._arcade_calculate_score_bonus()
             self._change_state(STATE_LEVELDONE, swap_state=True)
         elif self.state == STATE_LEVELDONE:
             self.level += 1
