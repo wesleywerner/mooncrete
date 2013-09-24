@@ -380,7 +380,10 @@ class MoonModel(object):
         self._arcade_destroy_all_your_base()
         self._playing = False
         self.lose_sequence_explosion_counter = 30
-        self._change_state(STATE_LOSE, swap_state=True)
+
+        # queue the LOSE state and change to a reprieve
+        self._state.swap(STATE_LOSE)
+        self._change_state(STATE_REPRIEVE)
 
     def _chain_event(self, next_event):
         """
@@ -412,15 +415,22 @@ class MoonModel(object):
 
         if self.state == STATE_PHASE1:
             self._change_state(STATE_PHASE2, swap_state=True)
+
         elif self.state == STATE_PHASE2:
             self._puzzle_shape = None
             self._reset_arcade()
             self._change_state(STATE_PHASE3, swap_state=True)
+
         elif self.state == STATE_PHASE3:
-            self._change_state(STATE_REPRIEVE, swap_state=True)
+            # queue the LEVELDONE state and change to a reprieve
+            self._state.swap(STATE_LEVELDONE)
+            self._change_state(STATE_REPRIEVE)
+
         elif self.state == STATE_REPRIEVE:
             self._arcade_calculate_score_bonus()
-            self._change_state(STATE_LEVELDONE, swap_state=True)
+            self._change_state(None)
+            #self._change_state(STATE_LEVELDONE, swap_state=True)
+
         elif self.state == STATE_LEVELDONE:
             self.level += 1
             self._change_state(STATE_PHASE1, swap_state=True)
