@@ -354,6 +354,8 @@ class MoonView(object):
             pass
 
         elif state == STATE_LEVELDONE:
+            self.clear_arcade()
+            self.draw_moonbase(ticks)
             self.draw_win_screen(ticks)
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
@@ -364,10 +366,9 @@ class MoonView(object):
         elif state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
             self.clear_arcade()
             self.draw_moonbase(ticks)
-            if (state != STATE_LOSE):
-                self.angle_turrets()
-                self.draw_missiles_and_asteroids(ticks)
-                self.draw_firing_solution()
+            self.angle_turrets()
+            self.draw_missiles_and_asteroids(ticks)
+            self.draw_firing_solution()
 
         # update panels
         self.transitioning = False
