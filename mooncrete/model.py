@@ -502,7 +502,6 @@ class MoonModel(object):
         # create a new puzzle board
         self._puzzle_board = [[0 for x in xrange(PUZZLE_WIDTH)]
                                 for y in xrange(PUZZLE_HEIGHT)]
-
         # TODO add some random elements for higher levels
 
     def _puzzle_merge_board(self, board, shape, shape_location):
@@ -525,7 +524,7 @@ class MoonModel(object):
         """
 
         # list of available piece types for the current phase
-        piece_types = self._puzzle_allowed_block_types(include_flotsam=False)
+        piece_types = self._puzzle_allowed_block_types(include_flotsam=True)
         if not piece_types:
             trace.write('state %s does not have puzzle shapes to choose from' % (self.state,))
             return
@@ -1036,7 +1035,7 @@ class MoonModel(object):
         """
 
         # spawn some asteroids
-        while (self._playing and len(self._asteroids) < 3):
+        while (self._playing and len(self._asteroids) < self.level):
             position = (random.randint(0, ARCADE_WIDTH), 0)
             # TODO let asteroids target base objects directly on higer levels
             destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
