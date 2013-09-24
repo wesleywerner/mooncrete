@@ -333,11 +333,6 @@ class MoonView(object):
             pass
 
         elif state == STATE_HELP:
-            pix = self.smallfont.render(
-                'help screen for phase %s' % (self.model._last_phase),
-                False, color.white, color.magenta)
-            pix.set_colorkey(color.magenta)
-            self.panels['score'].image.blit(pix, (0, 0))
             pass
 
         elif state == STATE_LEVELDONE:
