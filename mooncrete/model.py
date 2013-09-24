@@ -502,6 +502,7 @@ class MoonModel(object):
         # create a new puzzle board
         self._puzzle_board = [[0 for x in xrange(PUZZLE_WIDTH)]
                                 for y in xrange(PUZZLE_HEIGHT)]
+        self._puzzle_shape = None
         # TODO add some random elements for higher levels
 
     def _puzzle_merge_board(self, board, shape, shape_location):
