@@ -111,6 +111,8 @@ class MoonView(object):
         self.flash_color = []
         # number counter sprites
         self.counters = []
+        # track previous level score for resuming counters
+        self.previous_score = 0
 
     def notify(self, event):
         """
@@ -360,14 +362,12 @@ class MoonView(object):
             self.draw_moonbase(ticks)
 
         elif state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
-            self.angle_turrets()
             self.clear_arcade()
             self.draw_moonbase(ticks)
-            self.draw_missiles_and_asteroids(ticks)
-            self.draw_firing_solution()
-
-            if (state == STATE_LOSE):
-                pass
+            if (state != STATE_LOSE):
+                self.angle_turrets()
+                self.draw_missiles_and_asteroids(ticks)
+                self.draw_firing_solution()
 
         # update panels
         self.transitioning = False
@@ -457,8 +457,9 @@ class MoonView(object):
             self.counters.append(
                 NumberCounterSprite(
                     pygame.Rect((230, 135), ARCADE_SPRITE_SIZE),
-                    0, self.model.score,
+                    self.previous_score, self.model.score,
                     self.bigfont, color.white))
+            self.previous_score = self.model.score
 
         for counter in self.counters:
             counter.update(ticks)
