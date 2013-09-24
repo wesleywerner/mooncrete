@@ -428,20 +428,20 @@ class MoonView(object):
         pix = self.smallfont.render(
             'level %s complete!' % (self.model.level),
             False, color.lighter_green)
-        image.blit(pix, (15, 15))
+        image.blit(pix, (25, 15))
 
         pix = self.smallfont.render(
             '+%s asteroids:' % (self.model.asteroids_destroyed),
             False, color.lighter_blue)
-        image.blit(pix, (15, 55))
+        image.blit(pix, (25, 55))
 
         pix = self.smallfont.render(
             '+%s moonbases:' % (self.model.moonbases_built),
             False, color.lighter_yellow)
-        image.blit(pix, (15, 95))
+        image.blit(pix, (25, 95))
 
         pix = self.bigfont.render('score', False, color.white)
-        image.blit(pix, (15, 135))
+        image.blit(pix, (25, 235))
 
         # add bonus counters
         if not self.counters:
@@ -457,7 +457,7 @@ class MoonView(object):
                     self.smallfont, color.lighter_yellow))
             self.counters.append(
                 NumberCounterSprite(
-                    pygame.Rect((230, 135), ARCADE_SPRITE_SIZE),
+                    pygame.Rect((200, 235), ARCADE_SPRITE_SIZE),
                     self.previous_score, self.model.score,
                     self.bigfont, color.white))
             self.previous_score = self.model.score
