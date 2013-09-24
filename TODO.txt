@@ -5,15 +5,13 @@ draw a starry background for all the views.
 draw borders on the arcade panel.
 draw borders on the score box.
 add a title panel.
-add lose screen.
 show list of high scores on the main screen.
-inthe scorebox draw the time left to the next phase change.
+in the scorebox draw the time left to the next phase change.
 
 # MODEL
 
 add high score tracking.
-spawn more asteroids on higher levels.
-let asteroids target base objects.
+
 
 # CONTROLLER
 
