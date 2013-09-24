@@ -95,6 +95,8 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
+        # message sprite overlays
+        self.messages = []
         # moonbase sprites (crete, radars, turrets)
         self.moonbase_sprites = {}
         # arcade sprites (asteroids, missiles, explosions)
@@ -147,6 +149,20 @@ class MoonView(object):
                 self.panels['arcade'].hide()
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
+
+            # display game messages
+            if event.state == STATE_PHASE1:
+                self.create_message('Build Foundation', color.gold)
+            elif event.state == STATE_PHASE2:
+                self.create_message('Construct Moonbase', color.gold)
+            elif event.state == STATE_PHASE3:
+                self.create_message('Asteroids Incoming!', color.gold)
+            elif event.state == STATE_REPRIEVE:
+                self.create_message('Wave Complete', color.gold)
+            elif event.state == STATE_LOSE:
+                self.create_message('Moonbase Destroyed', color.gold)
+            elif event.state == STATE_LEVELDONE:
+                self.create_message('Level Complete', color.gold)
 
         elif isinstance(event, LunarLandscapeClearedEvent):
             self.clear_lunar_landscape()
@@ -247,6 +263,9 @@ class MoonView(object):
         # load resources
         self.smallfont = pygame.font.Font(
             os.path.join('..','data','DejaVuSansMono-Bold.ttf'), 16)
+        self.bigfont = pygame.font.Font(
+            os.path.join('..','data','Vermin Vibes 2 Black.otf'), 42)
+
         #self.background = image.load('background.png').convert()
 
         self.create_panels()
@@ -349,6 +368,14 @@ class MoonView(object):
             if panel.draw(self.image):
                 self.transitioning = True
 
+        # update messages
+        for message_sprite in self.messages:
+            message_sprite.update(ticks)
+            message_sprite.draw(self.image)
+            if message_sprite.expired:
+                self.messages.remove(message_sprite)
+                break
+
         pix = self.smallfont.render(
             'Mooncrete -- press space to play',
             False, color.white, color.magenta)
@@ -356,6 +383,26 @@ class MoonView(object):
         self.image.blit(pix, (15, 15))
         self.screen.blit(self.image, DRAW_AREA)
         pygame.display.flip()
+
+    def create_message(self, message, forecolor):
+        """
+        Create a message overlay.
+
+        """
+
+        # the current phase determines color and movement
+        timeout = 5
+        origin = (0, ARCADE_POS.height / 2)
+        destination = (ARCADE_POS.width / 2, ARCADE_POS.height / 2)
+        sprite = MessageSprite(
+            message=message,
+            font=self.bigfont,
+            timeout=timeout,
+            forecolor=forecolor)
+        sprite.rect.center = origin
+        # center the destination with the sprite image size
+        sprite.destination = sprite.image.get_rect(center=destination).topleft
+        self.messages.append(sprite)
 
     def convert_puzzle_to_panel(self, position):
         """
