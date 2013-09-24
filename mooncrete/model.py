@@ -844,14 +844,19 @@ class MoonModel(object):
 
         """
 
+        remove_list = []
         for key, base in self._moonbase.items():
             if isinstance(base, Turret):
                 self._evman.Post(TurretDestroyEvent(base))
+                remove_list.append(base)
             elif isinstance(base, Radar):
                 self._evman.Post(RadarDestroyEvent(base))
+                remove_list.append(base)
             elif isinstance(base, Mooncrete):
                 self._evman.Post(MooncreteDestroyEvent(base))
-        self._moonbase = {}
+                remove_list.append(base)
+        for dead_base in remove_list:
+            del self._moonbase[dead_base.position]
 
     def _reset_arcade(self):
         """
