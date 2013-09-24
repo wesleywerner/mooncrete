@@ -87,6 +87,15 @@ class MoonbaseSprite(pygame.sprite.Sprite):
         #if self.can_update(ticks):
             # do frame rotation or animation now
 
+    def draw(self, target):
+        """
+        Draw us on the target surface.
+
+        """
+
+        if self.image and self.rect:
+            target.blit(self.image, self.rect)
+
 
 class AsteroidSprite(MoonbaseSprite):
     """
@@ -350,10 +359,30 @@ class MessageSprite(MoonbaseSprite):
             self.time_passed = ticks
             self.timeout -= 1
 
-    def draw(self, target):
-        """
-        Draw us on the target surface.
 
-        """
+class NumberCounterSprite(MoonbaseSprite):
+    """
+    Shows a counter that increments until max is reached.
 
-        target.blit(self.image, self.rect)
+    """
+
+    def __init__(self, rect, start, maximum, font, forecolor):
+        super(NumberCounterSprite, self).__init__()
+        self.rect = rect
+        self.value = start
+        self.maximum = maximum
+        self.font = font
+        self.forecolor = forecolor
+        self.fps = 30
+        self._refresh_image()
+
+    def update(self, ticks):
+        if self.can_update(ticks):
+            if self.value < self.maximum:
+                self.value += 1
+                self._refresh_image()
+
+    def _refresh_image(self):
+        self.image = self.font.render(
+            str(self.value), False, self.forecolor, color.magenta)
+        self.image.set_colorkey(color.magenta)
