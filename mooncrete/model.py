@@ -1052,9 +1052,10 @@ class MoonModel(object):
 
         self.bonus_asteroids = self.asteroids_destroyed * 25
         self.bonus_base = self.moonbases_built * 15
-        self.bonus_base_destroyed = - self.moonbases_destroyed * 12
+        self.bonus_base_destroyed = self.moonbases_destroyed * 12
         self.score += self.bonus_asteroids
         self.score += self.bonus_base
+        self.score -= self.bonus_base_destroyed
 
     def _arcade_spawn_asteroids(self):
         """
