@@ -377,8 +377,9 @@ class MoonModel(object):
 
         """
 
+        self._arcade_destroy_all_your_base()
         self._playing = False
-        self.lose_sequence_explosion_counter = 20
+        self.lose_sequence_explosion_counter = 30
         self._change_state(STATE_LOSE, swap_state=True)
 
     def _chain_event(self, next_event):
@@ -827,21 +828,26 @@ class MoonModel(object):
         else:
             trace.write('no ready turrets found')
 
+    def _arcade_destroy_all_your_base(self):
+        """
+        Self destruct initiated....
+
+        """
+
+        for key, base in self._moonbase.items():
+            if isinstance(base, Turret):
+                self._evman.Post(TurretDestroyEvent(base))
+            elif isinstance(base, Radar):
+                self._evman.Post(RadarDestroyEvent(base))
+            elif isinstance(base, Mooncrete):
+                self._evman.Post(MooncreteDestroyEvent(base))
+
     def _reset_arcade(self):
         """
         Reset the arcade game.
 
         """
 
-        for explosion in self._explosions:
-            self._evman.Post(ExplosionDestroyEvent(explosion))
-        for missile in self._missiles:
-            self._evman.Post(MissileDestroyEvent(missile))
-        for asteroid in self._asteroids:
-            self._evman.Post(AsteroidDestroyEvent(asteroid))
-        self._explosions = []
-        self._missiles = []
-        self._asteroids = []
         self.asteroids_destroyed = 0
         self.moonbases_built = 0
         self.bonus_asteroids = 0
@@ -852,8 +858,8 @@ class MoonModel(object):
             self._arcade_build_moonbase(BLOCK_MOONCRETE_SLAB)
         for n in xrange(3):
             self._arcade_build_moonbase(BLOCK_RADAR)
-        for n in xrange(2):
-            self._arcade_build_moonbase(BLOCK_TURRET)
+        #for n in xrange(2):
+            #self._arcade_build_moonbase(BLOCK_TURRET)
 
     def _generate_lunar_landscape(self):
         """
