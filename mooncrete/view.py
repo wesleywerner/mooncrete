@@ -131,6 +131,7 @@ class MoonView(object):
             if event.state in (STATE_PHASE1, STATE_PHASE2):
                 self.panels['score'].show()
                 self.panels['puzzle'].show()
+                self.panels['win'].hide()
                 arcade_panel = self.panels['arcade']
                 arcade_panel.scale((300, 225))
                 arcade_panel.show_position = (0, 375)
@@ -142,6 +143,8 @@ class MoonView(object):
                 arcade_panel.scale(ARCADE_POS.size)
                 arcade_panel.show_position = ARCADE_POS.topleft
                 arcade_panel.show()
+            elif event.state == STATE_LEVELDONE:
+                self.panels['win'].show()
             elif event.state == STATE_HELP:
                 # TODO show the help panel
                 pass
@@ -306,6 +309,16 @@ class MoonView(object):
         arcade_panel.hide_position = (0, ARCADE_POS.height)
         arcade_panel.hide(instant=True)
         self.panels['arcade'] = arcade_panel
+
+        win_screen = pygame.image.load(data.load('win-screen.png'))
+        win_panel = Panel(win_screen.get_size(), DRAW_AREA)
+        win_panel.image = win_screen
+        win_panel.show_position = (
+            (DRAW_AREA.width - win_panel.rect.width) / 2,
+            (DRAW_AREA.height - win_panel.rect.height) / 2)
+        win_panel.hide_position = (DRAW_AREA.width, 0)
+        win_panel.hide(instant=True)
+        self.panels['win'] = win_panel
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
