@@ -394,8 +394,9 @@ class MoonView(object):
 
         # the current phase determines color and movement
         timeout = 5
-        origin = (0, ARCADE_POS.height / 2)
-        destination = (ARCADE_POS.width / 2, ARCADE_POS.height / 2)
+        y = 60
+        origin = (0, y)
+        destination = (ARCADE_POS.width / 2, y)
         sprite = MessageSprite(
             message=message,
             font=self.bigfont,
