@@ -280,7 +280,7 @@ class MoonModel(object):
                 state = self._state.peek()
                 if state in (STATE_PHASE1, STATE_PHASE2):
                     self._puzzle_step()
-                elif state in (STATE_PHASE3, STATE_LOSE):
+                elif state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
                     self._arcade_step()
 
         elif isinstance(event, QuitEvent):
@@ -410,6 +410,8 @@ class MoonModel(object):
         elif self.state == STATE_PHASE2:
             self._change_state(STATE_PHASE3, swap_state=True)
         elif self.state == STATE_PHASE3:
+            self._change_state(STATE_REPRIEVE, swap_state=True)
+        elif self.state == STATE_REPRIEVE:
             self._change_state(STATE_LEVELDONE, swap_state=True)
         elif self.state == STATE_LEVELDONE:
             self._level += 1
@@ -979,6 +981,8 @@ class MoonModel(object):
                 turrets_alive += 1
                 base_object.recharge()
 
+        if (self.state == STATE_PHASE3):
+            self._arcade_spawn_asteroids()
         self._arcade_move_asteroids()
         self._arcade_move_missiles()
         self._arcade_grow_explosions()
@@ -995,16 +999,26 @@ class MoonModel(object):
                     random.randint(0, ARCADE_HEIGHT))
                 self._arcade_spawn_explosion(position)
 
+    def _arcade_spawn_asteroids(self):
+        """
+        Create a new asteroid and put it in play.
+
+        """
+
+        # spawn some asteroids
+        while (self._playing and len(self._asteroids) < 3):
+            position = (random.randint(0, ARCADE_WIDTH), 0)
+            # TODO let asteroids target base objects directly on higer levels
+            destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
+            asteroid = Asteroid(position, destination)
+            self._asteroids.append(asteroid)
+            self._evman.Post(AsteroidSpawnedEvent(asteroid))
 
     def _arcade_move_asteroids(self):
         """
         Move lunar asteroids coming your way.
 
         """
-
-        # spawn some asteroids
-        while (self._playing and len(self._asteroids) < 3):
-            self._arcade_spawn_asteroid()
 
         # we cannot modify the asteroid list while iterating it.
         # keep track of those to remove after our loop is done.
@@ -1112,18 +1126,6 @@ class MoonModel(object):
             self._evman.Post(ExplosionDestroyEvent(explosion))
         for asteroid in new_explosions:
             self._arcade_spawn_explosion(asteroid.position)
-
-    def _arcade_spawn_asteroid(self):
-        """
-        Create a new asteroid and put it in play.
-
-        """
-
-        position = (random.randint(0, ARCADE_WIDTH), 0)
-        destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
-        asteroid = Asteroid(position, destination)
-        self._asteroids.append(asteroid)
-        self._evman.Post(AsteroidSpawnedEvent(asteroid))
 
     def _arcade_spawn_explosion(self, position):
         """
