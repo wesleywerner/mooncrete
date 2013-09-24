@@ -23,6 +23,7 @@ PLAYTIME = {
     STATE_PHASE1: 10,
     STATE_PHASE2: 5,
     STATE_PHASE3: 15,
+    STATE_REPRIEVE: 10,
     }
 
 class MoonController(object):
@@ -52,7 +53,7 @@ class MoonController(object):
         # the puzzle and arcade modes have different speeds
         if model_state in (STATE_PHASE1, STATE_PHASE2):
             frequency = self.puzzle_update_freq
-        elif model_state in (STATE_PHASE3, STATE_LOSE):
+        elif model_state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
             frequency = self.arcade_update_freq
         else:
             return
@@ -119,7 +120,7 @@ class MoonController(object):
                     elif state in (STATE_PHASE1, STATE_PHASE2):
                         self.puzzle_keys(event)
 
-                    elif state == STATE_PHASE3:
+                    elif state in (STATE_PHASE3, STATE_REPRIEVE):
                         self.arcade_keys(event)
 
                     elif state == STATE_LEVELDONE:
@@ -135,7 +136,7 @@ class MoonController(object):
 
                 elif event.type == MOUSEBUTTONDOWN:
 
-                    if state == STATE_PHASE3:
+                    if state in (STATE_PHASE3, STATE_REPRIEVE):
                         pos = self.view.convert_screen_to_arcade(event.pos)
                         self.model.fire_missile(pos)
 
