@@ -373,7 +373,7 @@ class NumberCounterSprite(MoonbaseSprite):
         self.maximum = maximum
         self.font = font
         self.forecolor = forecolor
-        self.fps = 30
+        self.fps = 90
         self._refresh_image()
 
     def update(self, ticks):
