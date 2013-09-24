@@ -1113,7 +1113,7 @@ class MoonModel(object):
                 # check for collisions with asteroids
                 for asteroid in self._asteroids:
                     dist = helper.distance(* asteroid.position + explosion.position)
-                    if (dist < explosion.radius * 2):
+                    if (dist < explosion.radius * 4):
                         asteroid_remove_list.append(asteroid)
                         new_explosions.append(asteroid)
             else:
