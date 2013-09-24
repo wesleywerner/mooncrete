@@ -133,7 +133,7 @@ class MoonView(object):
                 arcade_panel.scale((300, 225))
                 arcade_panel.show_position = (0, 375)
                 arcade_panel.show()
-            elif event.state in (STATE_PHASE3, STATE_LOSE):
+            elif event.state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
                 arcade_panel = self.panels['arcade']
@@ -329,7 +329,7 @@ class MoonView(object):
             self.clear_arcade()
             self.draw_moonbase(ticks)
 
-        elif state in (STATE_PHASE3, STATE_LOSE):
+        elif state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
             self.angle_turrets()
             self.clear_arcade()
             self.draw_moonbase(ticks)
