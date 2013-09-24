@@ -972,11 +972,13 @@ class MoonModel(object):
             self._evman.Post(MooncreteSpawnEvent(
                 mooncrete=slab))
         elif block_type == BLOCK_TURRET:
+            self.moonbases_built += 1
             turret = Turret(home_position)
             self._moonbase[home_position] = turret
             self._evman.Post(TurretSpawnedEvent(
                 turret=turret))
         elif block_type == BLOCK_RADAR:
+            self.moonbases_built += 1
             radar = Radar(home_position)
             self._moonbase[home_position] = radar
             self._evman.Post(RadarSpawnedEvent(
