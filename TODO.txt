@@ -25,3 +25,10 @@ create asteroid images.
 create asteroid disintegrate images.
 create radar dish images.
 create gun turret images.
+
+
+# IDEAS
+
+Have "news flash" states that span over levels, some are bogus news. some offer improvements from the R&D team back on earth, like: improved missile speed, increased blast radius, superfluous construction rubble is cleared (puzzle area).
+
+Have a flying saucer make appearances.
