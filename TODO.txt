@@ -14,8 +14,6 @@ add win and lose screens.
 add score tracking.
 add timers or counters to limit phase duration.
 add 3 waves of asteroids to the phase 3. each harder than the last, and amplified by the level.
-add win conditions: phase 3 ends with moon base intact.
-add lose conditions: all turrets are destroyed in phase 3.
 let asteroids target base objects.
 
 # CONTROLLER
