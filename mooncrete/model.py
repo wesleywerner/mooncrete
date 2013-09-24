@@ -225,8 +225,10 @@ class MoonModel(object):
         self.score = 0
         self.asteroids_destroyed = 0
         self.moonbases_built = 0
+        self.moonbases_destroyed = 0
         self.bonus_asteroids = 0
         self.bonus_base = 0
+        self.bonus_base_destroyed = 0
         self._last_phase = 0
 
         # flag if there is a game in progress
@@ -866,8 +868,10 @@ class MoonModel(object):
 
         self.asteroids_destroyed = 0
         self.moonbases_built = 0
+        self.moonbases_destroyed = 0
         self.bonus_asteroids = 0
         self.bonus_base = 0
+        self.bonus_base_destroyed = 0
 
         # add some bases for testing
         for n in xrange(5):
@@ -1048,6 +1052,7 @@ class MoonModel(object):
 
         self.bonus_asteroids = self.asteroids_destroyed * 25
         self.bonus_base = self.moonbases_built * 15
+        self.bonus_base_destroyed = - self.moonbases_destroyed * 12
         self.score += self.bonus_asteroids
         self.score += self.bonus_base
 
@@ -1068,11 +1073,31 @@ class MoonModel(object):
                             (random.random() < chance_to_spawn) and
                             len(self._asteroids) < total_asteroids):
             position = (random.randint(0, ARCADE_WIDTH), 0)
-            # TODO let asteroids target base objects directly on higer levels
             destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
+            # let asteroids target base objects directly on higer levels
+            if self.level > 1:
+                base_target = self._arcade_get_random_moonbase_target([Turret, Radar, Mooncrete])
+                if base_target:
+                    destination = base_target
             asteroid = Asteroid(position, destination)
             self._asteroids.append(asteroid)
             self._evman.Post(AsteroidSpawnedEvent(asteroid))
+
+    def _arcade_get_random_moonbase_target(self, type_list):
+        """
+        Return a random key for a moon base object of the given type list.
+
+        """
+
+        choices = []
+        for key, base in self._moonbase.items():
+            if type(base) in type_list:
+                choices.append(key)
+        if choices:
+            target = random.choice(choices)
+            # center the target by half the padding and ensure it goes beyond
+            # the game boundary.
+            return (target[0] + (BLOCK_PADDING / 2), ARCADE_HEIGHT)
 
     def _arcade_move_asteroids(self):
         """
@@ -1115,12 +1140,14 @@ class MoonModel(object):
 
                 elif isinstance(base_object, Turret):
                     # we hit a gun turret. destroy both items.
+                    self.moonbases_destroyed += 1
                     remove_list.append(asteroid)
                     del self._moonbase[base_object.position]
                     self._evman.Post(TurretDestroyEvent(base_object))
 
                 elif isinstance(base_object, Radar):
                     # we hit a radar dish. destroy both.
+                    self.moonbases_destroyed += 1
                     remove_list.append(asteroid)
                     del self._moonbase[base_object.position]
                     self._evman.Post(RadarDestroyEvent(base_object))
