@@ -30,7 +30,7 @@ class MoonController(object):
         self.model = model
         self.view = view
         self.puzzle_update_freq = 1000
-        self.arcade_update_freq = 100
+        self.arcade_update_freq = 50
         self.last_model_update = 0
 
     def can_step_model(self, model_state):
