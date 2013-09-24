@@ -15,6 +15,7 @@ class Panel(object):
         self.image.set_colorkey(color.magenta)
         self.image.fill(color.blue)
         self.background_image = None
+        self.border_image = None
         # current draw position
         self.rect = pygame.Rect((0, 0), size)
         # show position
@@ -164,8 +165,13 @@ class Panel(object):
             if self._target_size:
                 resized = pygame.transform.scale(self.image, self._current_size)
                 target.blit(resized, self.rect)
+                if self.border_image:
+                    resized = pygame.transform.scale(self.border_image, self._current_size)
+                    target.blit(resized, self.rect)
             else:
                 target.blit(self.image, self.rect)
+                if self.border_image:
+                    target.blit(self.border_image, self.rect)
         return self.busy
 
     def point_to_screen(self, position):
