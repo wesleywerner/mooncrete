@@ -851,6 +851,7 @@ class MoonModel(object):
                 self._evman.Post(RadarDestroyEvent(base))
             elif isinstance(base, Mooncrete):
                 self._evman.Post(MooncreteDestroyEvent(base))
+        self._moonbase = {}
 
     def _reset_arcade(self):
         """
