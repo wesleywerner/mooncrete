@@ -18,7 +18,7 @@ class MoonbaseSprite(pygame.sprite.Sprite):
         self.rect = None
         self.image = None
         self._destination = None
-        self._fps = 10
+        self._fps = 30
         self._delay = 1000 / self._fps
         self._last_update = 0
 
@@ -322,3 +322,38 @@ class TurretSprite(MoonbaseSprite):
                 charged = int(self.rect.height * charge_ratio)
                 bar = pygame.Rect(0, self.rect.height - charged, 4, charged)
                 pygame.draw.rect(self.image, color.white, bar)
+
+
+class MessageSprite(MoonbaseSprite):
+    """
+    Shows moving words on the screen with a time limit.
+
+    """
+
+    def __init__(self, message, font, timeout, forecolor, backcolor=color.magenta):
+        super(MessageSprite, self).__init__()
+        self.image = font.render(message, False, forecolor, backcolor)
+        self.image.set_colorkey(color.magenta)
+        self.rect = self.image.get_rect()
+        self.timeout = timeout
+        self.time_passed = 0
+
+    @property
+    def expired(self):
+        return (self.timeout <= 0)
+
+    def update(self, ticks):
+        if self.can_update(ticks):
+            self.move_sprite()
+        # each second passed reduce the timeout
+        if (ticks - self.time_passed > 1000):
+            self.time_passed = ticks
+            self.timeout -= 1
+
+    def draw(self, target):
+        """
+        Draw us on the target surface.
+
+        """
+
+        target.blit(self.image, self.rect)
