@@ -303,6 +303,8 @@ class MoonView(object):
         self.panels['score'] = score_panel
 
         puzzle_panel = Panel(PUZZLE_POS.size, DRAW_AREA)
+        puzzle_panel.border_image = pygame.image.load(data.load('puzzle.png')).convert()
+        puzzle_panel.border_image.set_colorkey(color.magenta)
         # puzle grid is visible at the top-left of the screen
         puzzle_panel.show_position = PUZZLE_POS.topleft
         # and it hides to the right, off-screen
@@ -315,7 +317,7 @@ class MoonView(object):
         arcade_panel.hide(instant=True)
         self.panels['arcade'] = arcade_panel
 
-        win_screen = pygame.image.load(data.load('win-screen.png'))
+        win_screen = pygame.image.load(data.load('win-screen.png')).convert()
         win_panel = Panel(win_screen.get_size(), DRAW_AREA)
         win_panel.background_image = win_screen
         win_panel.show_position = (
@@ -510,7 +512,8 @@ class MoonView(object):
 
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
-        pan.image.fill(color.darker_gray)
+        #pan.image.fill(color.darker_gray)
+        pan.clear()
         for x, y, v in self.model.puzzle_board_data():
             if v:
                 rect = pygame.Rect(
