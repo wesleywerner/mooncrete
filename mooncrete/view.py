@@ -735,7 +735,8 @@ class MoonView(object):
 
         """
 
-        del self.arcade_sprites[asteroid.id]
+        if self.arcade_sprites.has_key(asteroid.id):
+            del self.arcade_sprites[asteroid.id]
         # TODO spawn an asteroid destroy animation
 
     def create_missile(self, missile):
