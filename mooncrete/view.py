@@ -398,9 +398,8 @@ class MoonView(object):
 
         # the current phase determines color and movement
         timeout = 5
-        y = 60
-        origin = (0, y)
-        destination = (ARCADE_POS.width / 2, y)
+        origin = (ARCADE_POS.width / 2, -10)
+        destination = (origin[0], 0)
         sprite = MessageSprite(
             message=message,
             font=self.bigfont,
@@ -408,7 +407,7 @@ class MoonView(object):
             forecolor=forecolor)
         sprite.rect.center = origin
         # center the destination with the sprite image size
-        sprite.destination = sprite.image.get_rect(center=destination).topleft
+        sprite.destination = sprite.image.get_rect(midtop=destination).topleft
         self.messages.append(sprite)
 
     def draw_results(self, ticks):
