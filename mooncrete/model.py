@@ -87,8 +87,8 @@ PUZZLE_HEIGHT = 10
 
 # The arcade size is in a much more refined scale.
 # views should scale accordingly to their screen size.
-ARCADE_WIDTH = 100
-ARCADE_HEIGHT = 100
+ARCADE_WIDTH = 300
+ARCADE_HEIGHT = 300
 
 # Block padding defines the minimum open blocks between moon base objects.
 # This limits moonbase size so instead of having a 100-block moon base
@@ -96,7 +96,7 @@ ARCADE_HEIGHT = 100
 # Setting this to 1 allow you to build a massive base.
 # Views that draw the base will need to size their sprites to a ratio of
 # the arcade size to block padding accordingly.
-BLOCK_PADDING = 5
+BLOCK_PADDING = 15
 
 # different kind of puzzle blocks
 BLOCK_CALCIUM_BARREL = 10
@@ -833,8 +833,8 @@ class MoonModel(object):
             self._arcade_build_moonbase(BLOCK_MOONCRETE_SLAB)
         for n in xrange(3):
             self._arcade_build_moonbase(BLOCK_RADAR)
-        #for n in xrange(2):
-            #self._arcade_build_moonbase(BLOCK_TURRET)
+        for n in xrange(2):
+            self._arcade_build_moonbase(BLOCK_TURRET)
 
     def _generate_lunar_landscape(self):
         """
