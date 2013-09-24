@@ -136,8 +136,8 @@ class Explosion(object):
         self.radius = 0.0
 
     def update(self):
-        if self.radius < 7:
-            self.radius += 0.5
+        if self.radius < 8:
+            self.radius += 0.2
             return True
 
     @property
