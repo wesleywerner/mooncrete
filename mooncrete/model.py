@@ -224,7 +224,9 @@ class MoonModel(object):
         self.level = 0
         self.score = 0
         self.asteroids_destroyed = 0
-        self.bases_built = 0
+        self.moonbases_built = 0
+        self.bonus_asteroids = 0
+        self.bonus_base = 0
         self._last_phase = 0
 
         # flag if there is a game in progress
@@ -839,7 +841,9 @@ class MoonModel(object):
         self._missiles = []
         self._asteroids = []
         self.asteroids_destroyed = 0
-        self.bases_built = 0
+        self.moonbases_built = 0
+        self.bonus_asteroids = 0
+        self.bonus_base = 0
 
         # add some bases for testing
         for n in xrange(5):
@@ -1009,6 +1013,17 @@ class MoonModel(object):
                     random.randint(0, ARCADE_WIDTH),
                     random.randint(0, ARCADE_HEIGHT))
                 self._arcade_spawn_explosion(position)
+
+    def _arcade_calculate_score_bonus(self):
+        """
+        Calculate how much bonus score we get.
+
+        """
+
+        self.bonus_asteroids = self.asteroids_destroyed * 25
+        self.bonus_base = self.moonbases_built * 15
+        self.score += self.bonus_asteroids
+        self.score += self.bonus_base
 
     def _arcade_spawn_asteroids(self):
         """
