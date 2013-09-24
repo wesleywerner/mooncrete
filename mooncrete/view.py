@@ -152,15 +152,15 @@ class MoonView(object):
 
             # display game messages
             if event.state == STATE_PHASE1:
-                self.create_message('lay mooncrete', color.gold)
+                self.create_message('lay mooncrete', color.lighter_green)
             elif event.state == STATE_PHASE2:
-                self.create_message('build moonbase', color.gold)
+                self.create_message('build moonbase', color.lighter_blue)
             elif event.state == STATE_PHASE3:
-                self.create_message('asteroids incoming!', color.gold)
+                self.create_message('asteroids incoming!', color.lighter_yellow)
             #elif event.state == STATE_REPRIEVE:
                 #self.create_message('wave complete', color.gold)
             elif event.state == STATE_LOSE:
-                self.create_message('moonbase destroyed!', color.gold)
+                self.create_message('moonbase destroyed!', color.lighter_red)
             elif event.state == STATE_LEVELDONE:
                 self.create_message('level win', color.gold)
 
