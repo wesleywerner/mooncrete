@@ -318,9 +318,9 @@ class MoonView(object):
         arcade_panel.hide(instant=True)
         self.panels['arcade'] = arcade_panel
 
-        win_screen = pygame.image.load(data.load('win-screen.png')).convert()
-        results_panel = Panel(win_screen.get_size(), DRAW_AREA)
-        results_panel.background_image = win_screen
+        results_screen = pygame.image.load(data.load('results.png')).convert()
+        results_panel = Panel(results_screen.get_size(), DRAW_AREA)
+        results_panel.background_image = results_screen
         results_panel.show_position = (
             (DRAW_AREA.width - results_panel.rect.width) / 2,
             (DRAW_AREA.height - results_panel.rect.height) / 2)
@@ -430,43 +430,58 @@ class MoonView(object):
 
         if self.model.state == STATE_LEVELDONE:
             pix = self.smallfont.render(
-                'level %s complete!' % (self.model.level),
-                False, color.lighter_green)
+                'level %s - base survived' % (self.model.level),
+                False, color.white)
             image.blit(pix, (25, 15))
+
         elif self.model.state == STATE_LOSE:
             pix = self.smallfont.render(
-                'level %s lost!' % (self.model.level),
+                'level %s - base destroyed' % (self.model.level),
                 False, color.lighter_red)
             image.blit(pix, (25, 15))
 
         pix = self.smallfont.render(
-            '+%s asteroids:' % (self.model.asteroids_destroyed),
+            '%s asteroids stopped' % (self.model.asteroids_destroyed),
             False, color.lighter_blue)
         image.blit(pix, (25, 55))
 
         pix = self.smallfont.render(
-            '+%s moonbases:' % (self.model.moonbases_built),
-            False, color.lighter_yellow)
-        image.blit(pix, (25, 95))
+            '%s bases built' % (self.model.moonbases_built),
+            False, color.lighter_blue)
+        image.blit(pix, (25, 85))
+
+        pix = self.smallfont.render(
+            '%s bases destroyed' % (self.model.moonbases_destroyed),
+            False, color.lighter_red)
+        image.blit(pix, (25, 115))
 
         pix = self.bigfont.render('score', False, color.white)
-        image.blit(pix, (25, 200))
+        image.blit(pix, (25, 230))
+
+        if self.model.state == STATE_LOSE:
+            pix = self.bigfont.render('game over', False, color.lighter_red)
+            image.blit(pix, (25, 180))
 
         # add bonus counters
         if not self.counters:
             self.counters.append(
                 NumberCounterSprite(
-                    pygame.Rect((230, 55), ARCADE_SPRITE_SIZE),
+                    pygame.Rect((330, 55), ARCADE_SPRITE_SIZE),
                     0, self.model.bonus_asteroids,
                     self.smallfont, color.lighter_blue))
             self.counters.append(
                 NumberCounterSprite(
-                    pygame.Rect((230, 95), ARCADE_SPRITE_SIZE),
+                    pygame.Rect((330, 85), ARCADE_SPRITE_SIZE),
                     0, self.model.bonus_base,
-                    self.smallfont, color.lighter_yellow))
+                    self.smallfont, color.lighter_blue))
             self.counters.append(
                 NumberCounterSprite(
-                    pygame.Rect((200, 235), ARCADE_SPRITE_SIZE),
+                    pygame.Rect((330, 115), ARCADE_SPRITE_SIZE),
+                    0, self.model.bonus_base_destroyed,
+                    self.smallfont, color.lighter_red))
+            self.counters.append(
+                NumberCounterSprite(
+                    pygame.Rect((330, 230), ARCADE_SPRITE_SIZE),
                     self.previous_score, self.model.score,
                     self.bigfont, color.white))
             self.previous_score = self.model.score
