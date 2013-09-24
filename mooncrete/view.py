@@ -152,17 +152,17 @@ class MoonView(object):
 
             # display game messages
             if event.state == STATE_PHASE1:
-                self.create_message('Build Foundation', color.gold)
+                self.create_message('lay mooncrete', color.gold)
             elif event.state == STATE_PHASE2:
-                self.create_message('Construct Moonbase', color.gold)
+                self.create_message('build moonbase', color.gold)
             elif event.state == STATE_PHASE3:
-                self.create_message('Asteroids Incoming!', color.gold)
-            elif event.state == STATE_REPRIEVE:
-                self.create_message('Wave Complete', color.gold)
+                self.create_message('asteroids incoming!', color.gold)
+            #elif event.state == STATE_REPRIEVE:
+                #self.create_message('wave complete', color.gold)
             elif event.state == STATE_LOSE:
-                self.create_message('Moonbase Destroyed', color.gold)
+                self.create_message('moonbase destroyed!', color.gold)
             elif event.state == STATE_LEVELDONE:
-                self.create_message('Level Complete', color.gold)
+                self.create_message('level win', color.gold)
 
         elif isinstance(event, LunarLandscapeClearedEvent):
             self.clear_lunar_landscape()
@@ -264,7 +264,7 @@ class MoonView(object):
         self.smallfont = pygame.font.Font(
             os.path.join('..','data','DejaVuSansMono-Bold.ttf'), 16)
         self.bigfont = pygame.font.Font(
-            os.path.join('..','data','Vermin Vibes 2 Black.otf'), 42)
+            os.path.join('..','data','BLADRMF_.TTF'), 42)
 
         #self.background = image.load('background.png').convert()
 
@@ -356,11 +356,7 @@ class MoonView(object):
             self.draw_firing_solution()
 
             if (state == STATE_LOSE):
-                pix = self.smallfont.render(
-                    'You Lose!',
-                    False, color.white, color.magenta)
-                pix.set_colorkey(color.magenta)
-                self.panels['arcade'].image.blit(pix, (300, 250))
+                pass
 
         # update panels
         self.transitioning = False
@@ -376,11 +372,6 @@ class MoonView(object):
                 self.messages.remove(message_sprite)
                 break
 
-        pix = self.smallfont.render(
-            'Mooncrete -- press space to play',
-            False, color.white, color.magenta)
-        pix.set_colorkey(color.magenta)
-        self.image.blit(pix, (15, 15))
         self.screen.blit(self.image, DRAW_AREA)
         pygame.display.flip()
 
