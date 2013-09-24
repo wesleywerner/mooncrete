@@ -109,6 +109,8 @@ class MoonView(object):
         self.moon_surface = None
         # list of colors to flash the background each tick
         self.flash_color = []
+        # number counter sprites
+        self.counters = []
 
     def notify(self, event):
         """
@@ -129,6 +131,7 @@ class MoonView(object):
 
         elif isinstance(event, StateEvent):
             if event.state in (STATE_PHASE1, STATE_PHASE2):
+                self.counters = []
                 self.panels['score'].show()
                 self.panels['puzzle'].show()
                 self.panels['win'].hide()
@@ -349,7 +352,7 @@ class MoonView(object):
             pass
 
         elif state == STATE_LEVELDONE:
-            self.draw_win_screen()
+            self.draw_win_screen(ticks)
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
@@ -403,7 +406,7 @@ class MoonView(object):
         sprite.destination = sprite.image.get_rect(center=destination).topleft
         self.messages.append(sprite)
 
-    def draw_win_screen(self):
+    def draw_win_screen(self, ticks):
         """
         Draw the win screen details.
 
@@ -435,10 +438,30 @@ class MoonView(object):
             False, color.lighter_yellow)
         image.blit(pix, (15, 95))
 
-        pix = self.smallfont.render(
-            'score: %s' % (self.model.score),
-            False, color.white)
+        pix = self.bigfont.render('score', False, color.white)
         image.blit(pix, (15, 135))
+
+        # add bonus counters
+        if not self.counters:
+            self.counters.append(
+                NumberCounterSprite(
+                    pygame.Rect((230, 55), ARCADE_SPRITE_SIZE),
+                    0, self.model.bonus_asteroids,
+                    self.smallfont, color.lighter_blue))
+            self.counters.append(
+                NumberCounterSprite(
+                    pygame.Rect((230, 95), ARCADE_SPRITE_SIZE),
+                    0, self.model.bonus_base,
+                    self.smallfont, color.lighter_yellow))
+            self.counters.append(
+                NumberCounterSprite(
+                    pygame.Rect((230, 135), ARCADE_SPRITE_SIZE),
+                    0, self.model.score,
+                    self.bigfont, color.white))
+
+        for counter in self.counters:
+            counter.update(ticks)
+            counter.draw(self.panels['win'].image)
 
     def convert_puzzle_to_panel(self, position):
         """
