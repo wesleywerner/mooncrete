@@ -1,5 +1,6 @@
 # VIEW
 
+create a message sprite class to display words on screen with a timeout.
 create a title screen.
 draw a starry background for all the views.
 draw borders on the puzzle panel.
@@ -12,7 +13,6 @@ add win and lose screens.
 # MODEL
 
 add score tracking.
-add timers or counters to limit phase duration.
 spawn more asteroids on higher levels.
 let asteroids target base objects.
 
