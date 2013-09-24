@@ -370,19 +370,19 @@ class MoonView(object):
             self.draw_missiles_and_asteroids(ticks)
             self.draw_firing_solution()
 
-        # update panels
+        # render game panels
         self.transitioning = False
         for key, panel in self.panels.items():
             if panel.draw(self.image):
                 self.transitioning = True
 
-        # update messages
-        for message_sprite in self.messages:
+        # render game messages
+        if self.messages:
+            message_sprite = self.messages[0]
             message_sprite.update(ticks)
             message_sprite.draw(self.image)
             if message_sprite.expired:
                 self.messages.remove(message_sprite)
-                break
 
         self.screen.blit(self.image, DRAW_AREA)
         pygame.display.flip()
