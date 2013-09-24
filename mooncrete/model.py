@@ -412,6 +412,7 @@ class MoonModel(object):
         if self.state == STATE_PHASE1:
             self._change_state(STATE_PHASE2, swap_state=True)
         elif self.state == STATE_PHASE2:
+            self._puzzle_shape = None
             self._reset_arcade()
             self._change_state(STATE_PHASE3, swap_state=True)
         elif self.state == STATE_PHASE3:
