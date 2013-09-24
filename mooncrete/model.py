@@ -221,7 +221,7 @@ class MoonModel(object):
         self.paused = False
 
         # stores current player score and level
-        self._level = 0
+        self.level = 0
         self.score = 0
         self.asteroids_destroyed = 0
         self.bases_built = 0
@@ -328,7 +328,7 @@ class MoonModel(object):
             if new_state in (STATE_PHASE1, STATE_PHASE2, STATE_PHASE3):
                 self._last_phase = new_state
                 ## TODO auto chain help screens for main game phases for new games
-                #if (self._level == 1):
+                #if (self.level == 1):
                     #self._chain_event(StateEvent(STATE_HELP))
             # swap the current state for another
             if swap_state:
@@ -417,7 +417,7 @@ class MoonModel(object):
         elif self.state == STATE_REPRIEVE:
             self._change_state(STATE_LEVELDONE, swap_state=True)
         elif self.state == STATE_LEVELDONE:
-            self._level += 1
+            self.level += 1
             self._change_state(STATE_PHASE1, swap_state=True)
 
     def _reset_game(self):
@@ -427,7 +427,7 @@ class MoonModel(object):
         """
 
         self._evman.Post(ResetGameEvent())
-        self._level = 1
+        self.level = 1
         self.score = 0
         self._reset_puzzle()
         self._reset_arcade()
