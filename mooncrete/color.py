@@ -33,7 +33,7 @@ gold = (229, 191, 0)
 
 #lightest_gray = (223, 223, 223)
 #lighter_gray = (191, 191, 191)
-#light_gray = (159, 159, 159)
+light_gray = (159, 159, 159)
 gray = (128, 128, 128)
 dark_gray = (95, 95, 95)
 darker_gray = (43, 43, 43)
