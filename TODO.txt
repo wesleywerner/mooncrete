@@ -13,7 +13,7 @@ add win and lose screens.
 
 add score tracking.
 add timers or counters to limit phase duration.
-add 3 waves of asteroids to the phase 3. each harder than the last, and amplified by the level.
+spawn more asteroids on higher levels.
 let asteroids target base objects.
 
 # CONTROLLER
