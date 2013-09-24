@@ -14,6 +14,7 @@ class Panel(object):
         self.image = pygame.Surface(size)
         self.image.set_colorkey(color.magenta)
         self.image.fill(color.blue)
+        self.background_image = None
         # current draw position
         self.rect = pygame.Rect((0, 0), size)
         # show position
@@ -72,6 +73,16 @@ class Panel(object):
             return self._show_position
         else:
             return self._hide_position
+
+    def clear(self):
+        """
+        Clears our image and draw the background_image on if it exists.
+
+        """
+
+        self.image.fill(color.magenta)
+        if self.background_image:
+            self.image.blit(self.background_image, (0, 0))
 
     def crop(self, rect, instant=False):
         """
