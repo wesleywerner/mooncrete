@@ -507,10 +507,6 @@ class MoonView(object):
         return (int(float(position[0]) / model.ARCADE_WIDTH * ARCADE_POS.width),
                 int(float(position[1]) / model.ARCADE_HEIGHT * ARCADE_POS.height))
 
-    def convert_puzzle_to_screen(self, position):
-        pos = self.convert_puzzle_to_panel(position)
-        return self.panels['puzzle'].point_to_screen(pos)
-
     def convert_screen_to_arcade(self, position):
         """
         Take a screen position and translate to an arcade equivalent.
