@@ -18,6 +18,13 @@ from statemachine import *
 from eventmanager import *
 
 
+# the seconds of play the player has per phase
+PLAYTIME = {
+    STATE_PHASE1: 10,
+    STATE_PHASE2: 5,
+    STATE_PHASE3: 15,
+    }
+
 class MoonController(object):
     """
     Handles everything about user input: mouse and keyboard.
@@ -32,8 +39,10 @@ class MoonController(object):
         self.puzzle_update_freq = 1000
         self.arcade_update_freq = 50
         self.last_model_update = 0
+        self.stopwatch = 0
+        self.time_passed = 0
 
-    def can_step_model(self, model_state):
+    def can_step_model(self, ticks, model_state):
         """
         Limits the model update frequency.
         (Updating each Tick would be too fast a game, of course!)
@@ -48,10 +57,29 @@ class MoonController(object):
         else:
             return
 
-        ticks = pygame.time.get_ticks()
         if ticks - self.last_model_update > frequency:
             self.last_model_update = ticks
             return True
+
+    def playtime_countdown(self, ticks, model_state):
+        """
+        Update the time the player has left for the current phase.
+        This also triggers the next phase when time is up.
+
+        """
+
+        # check if 1 second has passed since last time.
+        if (ticks - self.stopwatch > 1000):
+            self.stopwatch = ticks
+            self.time_passed += 1
+        else:
+            return
+
+        # has enough time passed for this phase?
+        max_time = PLAYTIME.get(model_state, None)
+        if (max_time and self.time_passed > max_time):
+            self.time_passed = 0
+            self.model._next_phase()
 
     def notify(self, event):
         """
@@ -61,14 +89,17 @@ class MoonController(object):
 
         if isinstance(event, TickEvent):
 
+            ticks = pygame.time.get_ticks()
             state = self.model.state
 
             # update the model pause state
             self.model.paused = self.view.transitioning
 
             # step the model if it is time
-            if self.can_step_model(state):
+            if self.can_step_model(ticks, state):
                 self.evman.Post(StepGameEvent())
+                # update the playtime countdown
+                self.playtime_countdown(ticks, state)
 
             for event in pygame.event.get():
 
