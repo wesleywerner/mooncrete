@@ -140,6 +140,11 @@ class MoonController(object):
                         pos = self.view.convert_screen_to_arcade(event.pos)
                         self.model.fire_missile(pos)
 
+        elif isinstance(event, StateEvent):
+
+            # reset the time passed counter on state changes
+            self.time_passed = 0
+
     def menu_keys(self, event):
 
         if event.key == K_ESCAPE:
