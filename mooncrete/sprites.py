@@ -339,10 +339,22 @@ class MessageSprite(MoonbaseSprite):
 
     """
 
-    def __init__(self, message, font, timeout, forecolor, backcolor=color.magenta):
+    def __init__(self, message, font, timeout, forecolor, backcolor=color.black):
         super(MessageSprite, self).__init__()
-        self.image = font.render(message, False, forecolor, backcolor)
-        self.image.set_colorkey(color.magenta)
+        text = font.render(message, False, forecolor, color.magenta)
+        text.set_colorkey(color.magenta)
+        # create a slightly larger new image
+        rect = text.get_rect().copy()
+        rect = rect.inflate(10, 10)
+        rect.topleft = (0, 0)
+        self.image = pygame.Surface(rect.size)
+        self.image.fill(backcolor)
+        # draw a border
+        pygame.draw.rect(self.image, color.white, rect.inflate(-1, -1), 4)
+        pygame.draw.rect(self.image, color.light_gray, rect.inflate(-5, -5), 4)
+        # overlay the text
+        center = text.get_rect(center=rect.center)
+        self.image.blit(text, center.topleft)
         self.rect = self.image.get_rect()
         self.timeout = timeout
         self.time_passed = 0
