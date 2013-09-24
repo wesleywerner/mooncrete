@@ -78,23 +78,32 @@ class MoonController(object):
 
                 # all key downs
                 if event.type == KEYDOWN:
+
                     if event.key == K_F11:
                         self.view.toggle_fullscreen()
+
                     if state == STATE_MENU:
                         self.menu_keys(event)
+
                     elif state in (STATE_PHASE1, STATE_PHASE2):
                         self.puzzle_keys(event)
+
                     elif state == STATE_PHASE3:
                         self.arcade_keys(event)
+
                     elif state == STATE_LEVELDONE:
                         self.level_done_keys(event)
+
                     elif state == STATE_HELP:
                         self.help_keys(event)
+
                     else:
                         # allow escaping from unhandled states
-                        self.model.escape_state()
+                        if (event.key in (K_ESCAPE, K_RETURN, K_SPACE)):
+                            self.model.escape_state()
 
                 elif event.type == MOUSEBUTTONDOWN:
+
                     if state == STATE_PHASE3:
                         pos = self.view.convert_screen_to_arcade(event.pos)
                         self.model.fire_missile(pos)
