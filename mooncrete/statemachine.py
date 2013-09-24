@@ -12,10 +12,15 @@
 #  along with this program. If not, see http://www.gnu.org/licenses/.
 
 
+# GAME STATES
+# Each level consists of multiple phases.
+# Reprieve is a cool down period after the arcade phase (phase 3)
+
 STATE_MENU = -1
 STATE_PHASE1 = 1
 STATE_PHASE2 = 2
 STATE_PHASE3 = 3
+STATE_REPRIEVE = 50
 STATE_LEVELDONE = 100
 STATE_LOSE = -100
 STATE_HELP = 42
