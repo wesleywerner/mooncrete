@@ -265,7 +265,7 @@ class MoonView(object):
 
         # load resources
         self.smallfont = pygame.font.Font(
-            os.path.join('..','data','DejaVuSansMono-Bold.ttf'), 16)
+            os.path.join('..','data','BLADRMF_.TTF'), 20)
         self.bigfont = pygame.font.Font(
             os.path.join('..','data','BLADRMF_.TTF'), 42)
 
@@ -312,7 +312,7 @@ class MoonView(object):
 
         win_screen = pygame.image.load(data.load('win-screen.png'))
         win_panel = Panel(win_screen.get_size(), DRAW_AREA)
-        win_panel.image = win_screen
+        win_panel.background_image = win_screen
         win_panel.show_position = (
             (DRAW_AREA.width - win_panel.rect.width) / 2,
             (DRAW_AREA.height - win_panel.rect.height) / 2)
@@ -349,7 +349,7 @@ class MoonView(object):
             pass
 
         elif state == STATE_LEVELDONE:
-            pass
+            self.draw_win_screen()
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
@@ -402,6 +402,43 @@ class MoonView(object):
         # center the destination with the sprite image size
         sprite.destination = sprite.image.get_rect(center=destination).topleft
         self.messages.append(sprite)
+
+    def draw_win_screen(self):
+        """
+        Draw the win screen details.
+
+        """
+
+        # draw the title "Level n complete"
+        # draw "Asteroids destroyed"
+        # draw an animating score adder upper next to that.
+        # draw "Moon bases built"
+        # draw an animating score adder upper next to that.
+        # draw an animating score adder upper for total score.
+
+        panel = self.panels['win']
+        panel.clear()
+        image = panel.image
+
+        pix = self.smallfont.render(
+            'level %s complete!' % (self.model.level),
+            False, color.lighter_green)
+        image.blit(pix, (15, 15))
+
+        pix = self.smallfont.render(
+            '+%s asteroids:' % (self.model.asteroids_destroyed),
+            False, color.lighter_blue)
+        image.blit(pix, (15, 55))
+
+        pix = self.smallfont.render(
+            '+%s moonbases:' % (self.model.moonbases_built),
+            False, color.lighter_yellow)
+        image.blit(pix, (15, 95))
+
+        pix = self.smallfont.render(
+            'score: %s' % (self.model.score),
+            False, color.white)
+        image.blit(pix, (15, 135))
 
     def convert_puzzle_to_panel(self, position):
         """
