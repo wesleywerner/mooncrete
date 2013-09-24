@@ -222,7 +222,9 @@ class MoonModel(object):
 
         # stores current player score and level
         self._level = 0
-        self._score = 0
+        self.score = 0
+        self.asteroids_destroyed = 0
+        self.bases_built = 0
         self._last_phase = 0
 
         # flag if there is a game in progress
@@ -408,6 +410,7 @@ class MoonModel(object):
         if self.state == STATE_PHASE1:
             self._change_state(STATE_PHASE2, swap_state=True)
         elif self.state == STATE_PHASE2:
+            self._reset_arcade()
             self._change_state(STATE_PHASE3, swap_state=True)
         elif self.state == STATE_PHASE3:
             self._change_state(STATE_REPRIEVE, swap_state=True)
@@ -425,9 +428,10 @@ class MoonModel(object):
 
         self._evman.Post(ResetGameEvent())
         self._level = 1
-        self._score = 0
+        self.score = 0
         self._reset_puzzle()
         self._reset_arcade()
+        self._generate_lunar_landscape()
         self._playing = True
 
     def _unshared_copy(self, inList):
@@ -825,10 +829,17 @@ class MoonModel(object):
 
         """
 
-        # clear our lists of objects
+        for explosion in self._explosions:
+            self._evman.Post(ExplosionDestroyEvent(explosion))
+        for missile in self._missiles:
+            self._evman.Post(MissileDestroyEvent(missile))
+        for asteroid in self._asteroids:
+            self._evman.Post(AsteroidDestroyEvent(asteroid))
+        self._explosions = []
         self._missiles = []
         self._asteroids = []
-        self._generate_lunar_landscape()
+        self.asteroids_destroyed = 0
+        self.bases_built = 0
 
         # add some bases for testing
         for n in xrange(5):
@@ -1114,6 +1125,7 @@ class MoonModel(object):
                 for asteroid in self._asteroids:
                     dist = helper.distance(* asteroid.position + explosion.position)
                     if (dist < explosion.radius * 4):
+                        self.asteroids_destroyed += 1
                         asteroid_remove_list.append(asteroid)
                         new_explosions.append(asteroid)
             else:
