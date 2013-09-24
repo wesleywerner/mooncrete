@@ -136,20 +136,20 @@ class MoonView(object):
                 self.counters = []
                 self.panels['score'].show()
                 self.panels['puzzle'].show()
-                self.panels['win'].hide()
+                self.panels['results'].hide()
                 arcade_panel = self.panels['arcade']
                 arcade_panel.scale((300, 225))
                 arcade_panel.show_position = (0, 375)
                 arcade_panel.show()
-            elif event.state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
+            elif event.state in (STATE_PHASE3, STATE_REPRIEVE):
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
                 arcade_panel = self.panels['arcade']
                 arcade_panel.scale(ARCADE_POS.size)
                 arcade_panel.show_position = ARCADE_POS.topleft
                 arcade_panel.show()
-            elif event.state == STATE_LEVELDONE:
-                self.panels['win'].show()
+            elif event.state in (STATE_LEVELDONE, STATE_LOSE):
+                self.panels['results'].show()
             elif event.state == STATE_HELP:
                 # TODO show the help panel
                 pass
@@ -157,6 +157,7 @@ class MoonView(object):
                 self.panels['arcade'].hide()
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
+                self.panels['results'].hide()
 
             # display game messages
             if event.state == STATE_PHASE1:
@@ -318,14 +319,14 @@ class MoonView(object):
         self.panels['arcade'] = arcade_panel
 
         win_screen = pygame.image.load(data.load('win-screen.png')).convert()
-        win_panel = Panel(win_screen.get_size(), DRAW_AREA)
-        win_panel.background_image = win_screen
-        win_panel.show_position = (
-            (DRAW_AREA.width - win_panel.rect.width) / 2,
-            (DRAW_AREA.height - win_panel.rect.height) / 2)
-        win_panel.hide_position = (DRAW_AREA.width, 0)
-        win_panel.hide(instant=True)
-        self.panels['win'] = win_panel
+        results_panel = Panel(win_screen.get_size(), DRAW_AREA)
+        results_panel.background_image = win_screen
+        results_panel.show_position = (
+            (DRAW_AREA.width - results_panel.rect.width) / 2,
+            (DRAW_AREA.height - results_panel.rect.height) / 2)
+        results_panel.hide_position = (DRAW_AREA.width, 0)
+        results_panel.hide(instant=True)
+        self.panels['results'] = results_panel
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
@@ -355,10 +356,10 @@ class MoonView(object):
         elif state == STATE_HELP:
             pass
 
-        elif state == STATE_LEVELDONE:
+        elif state in (STATE_LEVELDONE, STATE_LOSE):
             self.clear_arcade()
             self.draw_moonbase(ticks)
-            self.draw_win_screen(ticks)
+            self.draw_results(ticks)
 
         elif state in (STATE_PHASE1, STATE_PHASE2):
             self.draw_puzzle_blocks()
@@ -410,27 +411,33 @@ class MoonView(object):
         sprite.destination = sprite.image.get_rect(center=destination).topleft
         self.messages.append(sprite)
 
-    def draw_win_screen(self, ticks):
+    def draw_results(self, ticks):
         """
-        Draw the win screen details.
+        Draw the game results panel.
 
         """
 
-        # draw the title "Level n complete"
+        # draw the title "Level n complete" / "fail"
         # draw "Asteroids destroyed"
         # draw an animating score adder upper next to that.
         # draw "Moon bases built"
         # draw an animating score adder upper next to that.
         # draw an animating score adder upper for total score.
 
-        panel = self.panels['win']
+        panel = self.panels['results']
         panel.clear()
         image = panel.image
 
-        pix = self.smallfont.render(
-            'level %s complete!' % (self.model.level),
-            False, color.lighter_green)
-        image.blit(pix, (25, 15))
+        if self.model.state == STATE_LEVELDONE:
+            pix = self.smallfont.render(
+                'level %s complete!' % (self.model.level),
+                False, color.lighter_green)
+            image.blit(pix, (25, 15))
+        elif self.model.state == STATE_LOSE:
+            pix = self.smallfont.render(
+                'level %s lost!' % (self.model.level),
+                False, color.lighter_red)
+            image.blit(pix, (25, 15))
 
         pix = self.smallfont.render(
             '+%s asteroids:' % (self.model.asteroids_destroyed),
@@ -443,7 +450,7 @@ class MoonView(object):
         image.blit(pix, (25, 95))
 
         pix = self.bigfont.render('score', False, color.white)
-        image.blit(pix, (25, 235))
+        image.blit(pix, (25, 200))
 
         # add bonus counters
         if not self.counters:
@@ -466,7 +473,7 @@ class MoonView(object):
 
         for counter in self.counters:
             counter.update(ticks)
-            counter.draw(self.panels['win'].image)
+            counter.draw(self.panels['results'].image)
 
     def convert_puzzle_to_panel(self, position):
         """
