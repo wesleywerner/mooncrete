@@ -676,7 +676,9 @@ class MoonModel(object):
         #   ? are both in a block pair list
         #   remove them and spawn the combined block in the arcade structure
 
-        for new_block, combo in BLOCK_PAIRS.items():
+        shuffled_pairs = BLOCK_PAIRS.items()
+        random.shuffle(shuffled_pairs)
+        for new_block, combo in shuffled_pairs:
             for x, y, this_block in self.puzzle_board_data(include_player_shape=False):
                 # if this block is a possible combination value
                 if (this_block in combo):
@@ -1050,9 +1052,9 @@ class MoonModel(object):
 
         """
 
-        self.bonus_asteroids = self.asteroids_destroyed * 25
-        self.bonus_base = self.moonbases_built * 15
-        self.bonus_base_destroyed = self.moonbases_destroyed * 12
+        self.bonus_asteroids = self.asteroids_destroyed * 10
+        self.bonus_base = self.moonbases_built * 5
+        self.bonus_base_destroyed = self.moonbases_destroyed * 3
         self.score += self.bonus_asteroids
         self.score += self.bonus_base
         self.score -= self.bonus_base_destroyed
