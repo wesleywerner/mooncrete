@@ -82,8 +82,8 @@ from eventmanager import *
 
 
 # The puzzle mode uses index positioning.
-PUZZLE_WIDTH = 10
-PUZZLE_HEIGHT = 10
+PUZZLE_WIDTH = 15
+PUZZLE_HEIGHT = 15
 
 # The arcade size is in a much more refined scale.
 # views should scale accordingly to their screen size.
