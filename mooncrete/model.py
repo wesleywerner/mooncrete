@@ -158,12 +158,15 @@ BLOCK_PAIRS = {
         (BLOCK_RADAR_BITS, BLOCK_RADAR_DISH),
     BLOCK_TURRET:
         (BLOCK_TURRET_AMMO, BLOCK_TURRET_BASE),
+    BLOCK_BUILDING:
+        (BLOCK_CALCIUM_BARREL, BLOCK_WATER_BARREL),
     }
 
 # define which moon base types can be placed on top of which other types.
 # note how it maps a block type to a class type.
 BLOCK_BUILD_REQUIREMENTS = {
     BLOCK_MOONCRETE_SLAB: LunarLand,
+    BLOCK_BUILDING: LunarLand,
     BLOCK_RADAR: Mooncrete,
     BLOCK_TURRET: Mooncrete,
     }
@@ -1000,6 +1003,12 @@ class MoonModel(object):
             self._moonbase[home_position] = slab
             self._evman.Post(MooncreteSpawnEvent(
                 mooncrete=slab))
+        elif block_type == BLOCK_BUILDING:
+            self.moonbases_built += 1
+            base = Building(home_position)
+            self._moonbase[home_position] = base
+            self._evman.Post(BuildingSpawnEvent(
+                building=base))
         elif block_type == BLOCK_TURRET:
             self.moonbases_built += 1
             turret = Turret(home_position)
@@ -1140,6 +1149,13 @@ class MoonModel(object):
                     remove_list.append(asteroid)
                     del self._moonbase[base_object.position]
                     self._evman.Post(MooncreteDestroyEvent(base_object))
+
+                elif isinstance(base_object, Building):
+                    # we hit a moon base building. destroy both.
+                    self.moonbases_destroyed += 1
+                    remove_list.append(asteroid)
+                    del self._moonbase[base_object.position]
+                    self._evman.Post(BuildingDestroyEvent(base_object))
 
                 elif isinstance(base_object, Turret):
                     # we hit a gun turret. destroy both items.
