@@ -43,6 +43,20 @@ class Mooncrete(object):
         return self.position
 
 
+class Building(object):
+    """
+    A moon base building.
+
+    """
+
+    def __init__(self, position):
+        self.position = position
+
+    @property
+    def id(self):
+        return self.position
+
+
 class Asteroid(object):
     """
     A dangerous object that will destroy your moon base.
