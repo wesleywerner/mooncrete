@@ -185,6 +185,12 @@ class MoonView(object):
         elif isinstance(event, MooncreteDestroyEvent):
             self.destroy_mooncrete_sprite(event.mooncrete)
 
+        elif isinstance(event, BuildingSpawnEvent):
+            self.create_building_sprite(event.building)
+
+        elif isinstance(event, BuildingDestroyEvent):
+            self.destroy_building_sprite(event.building)
+
         elif isinstance(event, TurretSpawnedEvent):
             self.create_turret_sprite(event.turret)
 
@@ -670,6 +676,30 @@ class MoonView(object):
 
         if self.moonbase_sprites.has_key(mooncrete.id):
             del self.moonbase_sprites[mooncrete.id]
+
+    def create_building_sprite(self, building):
+        """
+        Create a moon base building.
+
+        """
+
+        destination = pygame.Rect(
+            self.convert_arcade_to_panel(building.position),
+            ARCADE_SPRITE_SIZE)
+        sprite = MoonbaseSprite()
+        sprite.rect = self.moonbase_sprite_origin()
+        sprite.destination = destination
+        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.light_gray)
+        self.moonbase_sprites[building.id] = sprite
+
+    def destroy_building_sprite(self, building):
+        """
+        Destroy a moon base building sprite.
+
+        """
+
+        if self.moonbase_sprites.has_key(building.id):
+            del self.moonbase_sprites[building.id]
 
     def create_turret_sprite(self, turret):
         """
