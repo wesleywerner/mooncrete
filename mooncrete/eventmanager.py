@@ -134,6 +134,20 @@ class MooncreteDestroyEvent(Event):
         self.mooncrete = mooncrete
 
 
+class BuildingSpawnEvent(Event):
+
+    def __init__(self, building):
+        self.name = 'Building spawn event'
+        self.building = building
+
+
+class BuildingDestroyEvent(Event):
+
+    def __init__(self, building):
+        self.name = 'Building destroy event'
+        self.building = building
+
+
 class TurretSpawnedEvent(Event):
 
     def __init__(self, turret):
