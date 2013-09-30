@@ -259,7 +259,7 @@ class MoonView(object):
         flags = 0
         if self.fullscreen:
             # use native monitor resolution
-            target_size = (0, 0)
+            #target_size = (0, 0)
             flags = FULLSCREEN
         self.screen = pygame.display.set_mode(target_size, flags)
         # TODO calculate the native res to game_area height ratio
