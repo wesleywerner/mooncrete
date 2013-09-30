@@ -20,9 +20,9 @@ from eventmanager import *
 
 # the seconds of play the player has per phase
 PLAYTIME = {
-    STATE_PHASE1: 60,
-    STATE_PHASE2: 60,
-    STATE_PHASE3: 90,
+    STATE_PHASE1: 10,
+    STATE_PHASE2: 10,
+    STATE_PHASE3: 10,
     STATE_REPRIEVE: 10,
     }
 
@@ -41,7 +41,7 @@ class MoonController(object):
         self.arcade_update_freq = 50
         self.last_model_update = 0
         self.stopwatch = 0
-        self.time_passed = 0
+        self.time_left = 0
 
     def can_step_model(self, ticks, model_state):
         """
@@ -72,14 +72,14 @@ class MoonController(object):
         # check if 1 second has passed since last time.
         if (ticks - self.stopwatch > 1000):
             self.stopwatch = ticks
-            self.time_passed += 1
+            self.time_left -= 1
         else:
             return
 
         # has enough time passed for this phase?
-        max_time = PLAYTIME.get(model_state, None)
-        if (max_time and self.time_passed > max_time):
-            self.time_passed = 0
+        max_time = PLAYTIME.get(model_state, 0)
+        if (max_time and self.time_left == 0):
+            self.time_left = max_time
             self.model._next_phase()
 
     def notify(self, event):
@@ -143,7 +143,7 @@ class MoonController(object):
         elif isinstance(event, StateEvent):
 
             # reset the time passed counter on state changes
-            self.time_passed = 0
+            self.time_left = PLAYTIME.get(self.model.state, 0)
 
     def menu_keys(self, event):
 
