@@ -6,7 +6,6 @@ draw borders on the arcade panel.
 draw borders on the score box.
 add a title panel.
 show list of high scores on the main screen.
-in the scorebox draw the time left to the next phase change.
 
 # MODEL
 
