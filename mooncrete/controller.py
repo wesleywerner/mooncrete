@@ -23,7 +23,7 @@ PLAYTIME = {
     STATE_PHASE1: 10,
     STATE_PHASE2: 10,
     STATE_PHASE3: 10,
-    STATE_REPRIEVE: 10,
+    STATE_REPRIEVE: 5,
     }
 
 class MoonController(object):
