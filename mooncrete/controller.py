@@ -20,9 +20,9 @@ from eventmanager import *
 
 # the seconds of play the player has per phase
 PLAYTIME = {
-    STATE_PHASE1: 10,
-    STATE_PHASE2: 10,
-    STATE_PHASE3: 10,
+    STATE_PHASE1: 30,
+    STATE_PHASE2: 30,
+    STATE_PHASE3: 90,
     STATE_REPRIEVE: 5,
     }
 
