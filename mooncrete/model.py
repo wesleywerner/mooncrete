@@ -423,7 +423,7 @@ class MoonModel(object):
 
         elif self.state == STATE_PHASE2:
             self._puzzle_shape = None
-            self._reset_arcade()
+            self._arcade_prepare()
             self._change_state(STATE_PHASE3, swap_state=True)
 
         elif self.state == STATE_PHASE3:
@@ -450,7 +450,7 @@ class MoonModel(object):
         self.level = 1
         self.score = 0
         self._reset_puzzle()
-        self._reset_arcade()
+        self._arcade_prepare()
         self._generate_lunar_landscape()
         self._playing = True
 
@@ -865,9 +865,9 @@ class MoonModel(object):
         for dead_base in remove_list:
             del self._moonbase[dead_base.position]
 
-    def _reset_arcade(self):
+    def _arcade_prepare(self):
         """
-        Reset the arcade game.
+        Prepare the arcade game for a new phase.
 
         """
 
