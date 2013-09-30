@@ -73,6 +73,7 @@ class MoonController(object):
         if (ticks - self.stopwatch > 1000):
             self.stopwatch = ticks
             self.time_left -= 1
+            self.view.set_time_left(self.time_left)
         else:
             return
 
