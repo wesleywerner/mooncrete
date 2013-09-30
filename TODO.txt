@@ -30,3 +30,8 @@ create gun turret images.
 Have "news flash" states that span over levels, some are bogus news. some offer improvements from the R&D team back on earth, like: improved missile speed, increased blast radius, superfluous construction rubble is cleared (puzzle area).
 
 Have a flying saucer make appearances.
+
+
+# TWEAKING
+
+A few levels in moon rocks and empty barrels pile up. Need a mechanism to reduce these. Perhaps filled rows can disappear.
