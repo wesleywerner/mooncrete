@@ -878,6 +878,17 @@ class MoonModel(object):
         self.bonus_base = 0
         self.bonus_base_destroyed = 0
 
+        # clear remnant asteroids and missiles and explosions
+        for asteroid in self._asteroids:
+            self._evman.Post(AsteroidDestroyEvent(asteroid))
+        for explosion in self._explosions:
+            self._evman.Post(ExplosionDestroyEvent(explosion))
+        for missile in self._missiles:
+            self._evman.Post(MissileDestroyEvent(missile))
+        self._asteroids = []
+        self._explosions = []
+        self._missiles = []
+
         # add some bases for testing
         for n in xrange(5):
             self._arcade_build_moonbase(BLOCK_MOONCRETE_SLAB)
