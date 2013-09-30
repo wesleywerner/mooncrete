@@ -67,7 +67,7 @@ PUZZLE_POS.topleft = (
 # to the model puzzle size.
 PUZZLE_BLOCK_SIZE = (
     PUZZLE_POS.width / model.PUZZLE_WIDTH,
-    PUZZLE_POS.height / model.PUZZLE_WIDTH)
+    PUZZLE_POS.height / model.PUZZLE_HEIGHT)
 
 # arcade position and size (takes full draw area)
 ARCADE_POS = DRAW_AREA.copy()
