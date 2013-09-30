@@ -430,6 +430,7 @@ class MoonModel(object):
             # queue the LEVELDONE state and change to a reprieve
             self._state.swap(STATE_LEVELDONE)
             self._change_state(STATE_REPRIEVE)
+            self._arcade_destroy_all_asteroids()
 
         elif self.state == STATE_REPRIEVE:
             self._arcade_calculate_score_bonus()
@@ -878,9 +879,6 @@ class MoonModel(object):
         self.bonus_base = 0
         self.bonus_base_destroyed = 0
 
-        # clear remnant asteroids and missiles and explosions
-        for asteroid in self._asteroids:
-            self._evman.Post(AsteroidDestroyEvent(asteroid))
         for explosion in self._explosions:
             self._evman.Post(ExplosionDestroyEvent(explosion))
         for missile in self._missiles:
@@ -896,6 +894,17 @@ class MoonModel(object):
             self._arcade_build_moonbase(BLOCK_RADAR)
         for n in xrange(2):
             self._arcade_build_moonbase(BLOCK_TURRET)
+
+    def _arcade_destroy_all_asteroids(self):
+        """
+        Destroy all asteroids.
+
+        """
+
+        # clear remnant asteroids and missiles and explosions
+        for asteroid in self._asteroids:
+            self._arcade_spawn_explosion(asteroid.position)
+        self._arcade_remove_asteroids(copy.copy(self._asteroids))
 
     def _generate_lunar_landscape(self):
         """
