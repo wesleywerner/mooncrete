@@ -113,6 +113,8 @@ class MoonView(object):
         self.counters = []
         # track previous level score for resuming counters
         self.previous_score = 0
+        # the sprite of time left to play the phase. set via controller.
+        self.time_left = None
 
     def notify(self, event):
         """
@@ -371,6 +373,7 @@ class MoonView(object):
             self.draw_puzzle_blocks()
             self.clear_arcade()
             self.draw_moonbase(ticks)
+            self.draw_scorebox()
 
         elif state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
             self.clear_arcade()
@@ -415,6 +418,30 @@ class MoonView(object):
         # center the destination with the sprite image size
         sprite.destination = sprite.image.get_rect(midtop=destination).topleft
         self.messages.append(sprite)
+
+    def set_time_left(self, seconds):
+        """
+        Set the time left to play the phase.
+
+        """
+
+        minutes = seconds / 60
+        seconds = seconds % 60
+        left_text = '%02d:%02d' % (minutes, seconds)
+        self.time_left = self.bigfont.render(
+            left_text, False,
+            color.white)
+
+    def draw_scorebox(self):
+        """
+        Draw the score box for phases I & II.
+
+        """
+
+        score_panel = self.panels['score']
+        score_panel.clear()
+        if self.time_left:
+            score_panel.image.blit(self.time_left, (0, 0))
 
     def draw_results(self, ticks):
         """
@@ -609,13 +636,19 @@ class MoonView(object):
 
         """
 
+        arcade_image = self.panels['arcade'].image
+
+        if (self.model.state == STATE_PHASE3):
+            if self.time_left:
+                arcade_image.blit(self.time_left, (0, 0))
+
         for key, sprite in self.moonbase_sprites.items():
             sprite.update(ticks)
-            self.panels['arcade'].image.blit(sprite.image, sprite.rect)
+            arcade_image.blit(sprite.image, sprite.rect)
 
         # draw the pre-rendered moon surface
         if self.moon_surface:
-            self.panels['arcade'].image.blit(self.moon_surface, (0, 0))
+            arcade_image.blit(self.moon_surface, (0, 0))
 
     def draw_firing_solution(self):
         """
