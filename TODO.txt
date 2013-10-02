@@ -6,6 +6,7 @@ draw borders on the arcade panel.
 draw borders on the score box.
 add a title panel.
 show list of high scores on the main screen.
+add a Panel shake ability to compliment explosions
 
 # MODEL
 
@@ -33,9 +34,9 @@ Have a flying saucer make appearances.
 
 # TWEAKING
 
-A few levels in moon rocks and empty barrels pile up. Need a mechanism to reduce these. Perhaps filled rows can disappear.
-
-Move asteroids faster.
+A few levels in moon rocks and empty barrels pile up. Need a mechanism to reduce these.
+Perhaps filled rows can disappear.
+Perhaps a bomb block type.
 
 Improve the asteroid spawn function to not release all at the same time.
 
