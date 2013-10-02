@@ -13,6 +13,7 @@
 
 
 import pygame
+import helper
 from pygame.locals import *
 from statemachine import *
 from eventmanager import *
@@ -26,6 +27,10 @@ PLAYTIME = {
     STATE_REPRIEVE: 5,
     }
 
+# arcade game speed per game level.
+# levels higher than the max will be clamped.
+ARCADE_SPEEDS = (50, 46, 42, 38, 34, 30, 26, 22, 20)
+
 class MoonController(object):
     """
     Handles everything about user input: mouse and keyboard.
@@ -38,7 +43,7 @@ class MoonController(object):
         self.model = model
         self.view = view
         self.puzzle_update_freq = 1000
-        self.arcade_update_freq = 50
+        self.arcade_update_freq = ARCADE_SPEEDS[0]
         self.last_model_update = 0
         self.stopwatch = 0
         self.time_left = 0
@@ -145,6 +150,10 @@ class MoonController(object):
 
             # reset the time passed counter on state changes
             self.time_left = PLAYTIME.get(self.model.state, 0)
+
+            # set the arcade speed per level
+            speed_index = helper.clamp(self.model.level - 1, 0, len(ARCADE_SPEEDS) - 1)
+            self.arcade_update_freq = ARCADE_SPEEDS[speed_index]
 
     def menu_keys(self, event):
 
