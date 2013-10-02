@@ -31,6 +31,9 @@ PLAYTIME = {
 # levels higher than the max will be clamped.
 ARCADE_SPEEDS = (50, 46, 42, 38, 34, 30, 26, 22, 20)
 
+# puzzle game speed per game level.
+PUZZLE_SPEEDS = (1000, 950, 900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350)
+
 class MoonController(object):
     """
     Handles everything about user input: mouse and keyboard.
@@ -42,7 +45,7 @@ class MoonController(object):
         self.evman.RegisterListener(self)
         self.model = model
         self.view = view
-        self.puzzle_update_freq = 1000
+        self.puzzle_update_freq = PUZZLE_SPEEDS[0]
         self.arcade_update_freq = ARCADE_SPEEDS[0]
         self.last_model_update = 0
         self.stopwatch = 0
@@ -154,6 +157,10 @@ class MoonController(object):
             # set the arcade speed per level
             speed_index = helper.clamp(self.model.level - 1, 0, len(ARCADE_SPEEDS) - 1)
             self.arcade_update_freq = ARCADE_SPEEDS[speed_index]
+
+            # set the puzzle speed per level
+            speed_index = helper.clamp(self.model.level - 1, 0, len(PUZZLE_SPEEDS) - 1)
+            self.puzzle_update_freq = PUZZLE_SPEEDS[speed_index]
 
     def menu_keys(self, event):
 
