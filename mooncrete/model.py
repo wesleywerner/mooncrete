@@ -1097,7 +1097,7 @@ class MoonModel(object):
         # create n asteroids + level
         min_asteroids = 2
         extra_per_level = 1.5
-        chance_to_spawn = 0.05
+        chance_to_spawn = 0.02
         total_asteroids = int(min_asteroids + (self.level * extra_per_level))
 
         # spawn some asteroids
