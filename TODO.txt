@@ -7,10 +7,12 @@ draw borders on the score box.
 add a title panel.
 show list of high scores on the main screen.
 add a Panel shake ability to compliment explosions
+on reprieve state enter show the message "reinforcements arrived"
 
 # MODEL
 
 add high score tracking.
+destroying a mooncrete block should also destroy any building on top of it.
 
 
 # CONTROLLER
@@ -37,8 +39,6 @@ Have a flying saucer make appearances.
 A few levels in moon rocks and empty barrels pile up. Need a mechanism to reduce these.
 Perhaps filled rows can disappear.
 Perhaps a bomb block type.
-
-Improve the asteroid spawn function to not release all at the same time.
 
 increase turret reload time.
 
