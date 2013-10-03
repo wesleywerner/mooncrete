@@ -826,20 +826,30 @@ class MoonView(object):
         """
         Create a sprite for a missile.
 
+        Missiles are drawn with their centers at the point of contact.
+        The angle between their starting position and destination is
+        used to rotate their image.
+
         """
 
-        # the missile position and destination is the arcade coordinate target.
-        position = self.convert_arcade_to_screen(missile.position)
-        rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
-        # destination used by the sprite to calc it's angle of rotation
-        dest_coords = self.convert_arcade_to_screen(missile.destination)
-        destination = pygame.Rect((0, 0), ARCADE_SPRITE_SIZE)
-        destination.center = dest_coords
+        start_rect = pygame.Rect((0, 0), ARCADE_SPRITE_SIZE)
+        start_rect.center = self.convert_arcade_to_screen(missile.position)
+        end_rect = pygame.Rect((0, 0), ARCADE_SPRITE_SIZE)
+        end_rect.center = self.convert_arcade_to_screen(missile.destination)
+
         # use a placehold image
-        pix = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.magenta)
-        sprite = MissileSprite(rect, pix, destination)
-        sprite.missile = missile
+        pix = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.blue)
+        pygame.draw.line(
+            pix, color.white, (0, start_rect.height / 2),
+            (start_rect.width, start_rect.height / 2), 2)
+
+        # rotate the image by the angle
+        angle = helper.angle(start_rect.center, end_rect.center)
+        pix = pygame.transform.rotate(pix, angle)
+        sprite = MissileSprite(start_rect, pix)
         self.arcade_sprites[missile.id] = sprite
+        # set initial position
+        self.move_missile(missile)
 
     def move_missile(self, missile):
         """
@@ -850,7 +860,7 @@ class MoonView(object):
         sprite = self.arcade_sprites.get(missile.id, None)
         if sprite:
             position = self.convert_arcade_to_screen(missile.position)
-            sprite.rect.topleft = position
+            sprite.rect.center = position
 
     def destroy_missile(self, missile):
         """

@@ -151,23 +151,12 @@ class MissileSprite(MoonbaseSprite):
 
     """
 
-    def __init__(self, rect, image, destination):
+    def __init__(self, rect, image):
 
         super(MissileSprite, self).__init__()
         self.name = 'missile'
         self.rect = rect
         self.image = image
-
-        pygame.draw.line(
-            self.image,
-            color.white,
-            (0, self.rect.height / 2),
-            (self.rect.width, self.rect.height / 2),
-            2)
-
-        # calculate the angle to face our image
-        self.angle = helper.angle(rect.topleft, destination)
-        self.image = pygame.transform.rotate(self.image, self.angle)
 
     def update(self, ticks):
         pass
