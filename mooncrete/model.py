@@ -1118,15 +1118,12 @@ class MoonModel(object):
         """
 
         # create n asteroids + level
-        min_asteroids = 2
+        min_asteroids = 6
         extra_per_level = 1.5
-        chance_to_spawn = 0.02
         total_asteroids = int(min_asteroids + (self.level * extra_per_level))
 
         # spawn some asteroids
-        if (self._playing and
-                            (random.random() < chance_to_spawn) and
-                            len(self._asteroids) < total_asteroids):
+        if (self._playing and len(self._asteroids) < total_asteroids):
             position = (random.randint(0, ARCADE_WIDTH), 0)
             destination = (random.randint(0, ARCADE_WIDTH), ARCADE_HEIGHT)
             # let asteroids target base objects directly on higer levels
