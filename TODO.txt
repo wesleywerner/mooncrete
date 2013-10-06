@@ -12,7 +12,6 @@ on reprieve state enter show the message "reinforcements arrived"
 # MODEL
 
 add high score tracking.
-destroying a mooncrete block should also destroy any building on top of it.
 
 
 # CONTROLLER
@@ -39,8 +38,6 @@ Have a flying saucer make appearances.
 increase turret reload time.
 
 lose more points on bases destroyed.
-
-in arcade mode, destroy the incoming asteroids until the defense strike arrives (the countdown timer).
 
 reseat panels on fullscreen toggle.
 
