@@ -1173,48 +1173,59 @@ class MoonModel(object):
                 # the asteroid is out of the game boundaries
                 remove_list.append(asteroid)
             else:
-
-                # get any moon base object at this position
-                base_object = self._moonbase_at(asteroid.position)
-
-                if not base_object:
-                    continue
-
-                trace.write('asteroid colliding with %s' % base_object)
-
-                # check for asteroid + moonbase collisions
-                if isinstance(base_object, LunarLand):
-                    # we hit the ground and disintegrate in a puff of dust
+                if self._arcade_destroy_base_at(asteroid.position):
                     remove_list.append(asteroid)
-
-                elif isinstance(base_object, Mooncrete):
-                    # we hit a mooncrete slab. destroy both items.
-                    remove_list.append(asteroid)
-                    del self._moonbase[base_object.position]
-                    self._evman.Post(MooncreteDestroyEvent(base_object))
-
-                elif isinstance(base_object, Building):
-                    # we hit a moon base building. destroy both.
-                    self.moonbases_destroyed += 1
-                    remove_list.append(asteroid)
-                    del self._moonbase[base_object.position]
-                    self._evman.Post(BuildingDestroyEvent(base_object))
-
-                elif isinstance(base_object, Turret):
-                    # we hit a gun turret. destroy both items.
-                    self.moonbases_destroyed += 1
-                    remove_list.append(asteroid)
-                    del self._moonbase[base_object.position]
-                    self._evman.Post(TurretDestroyEvent(base_object))
-
-                elif isinstance(base_object, Radar):
-                    # we hit a radar dish. destroy both.
-                    self.moonbases_destroyed += 1
-                    remove_list.append(asteroid)
-                    del self._moonbase[base_object.position]
-                    self._evman.Post(RadarDestroyEvent(base_object))
 
         self._arcade_remove_asteroids(remove_list)
+
+    def _arcade_destroy_base_at(self, position):
+        """
+        Destroy the base structure at a position.
+
+        If it is a mooncrete object, it will also destroy anything
+        built on top of it.
+
+        Returns True if something got hit.
+
+        """
+
+        # get any moon base object at this position
+        base_object = self._moonbase_at(position)
+
+        if base_object:
+
+            # check for asteroid + moonbase collisions
+            if isinstance(base_object, LunarLand):
+                # we hit the ground and disintegrate in a puff of dust
+                return True
+
+            elif isinstance(base_object, Mooncrete):
+                # we hit a mooncrete slab. destroy both items.
+                del self._moonbase[base_object.position]
+                self._evman.Post(MooncreteDestroyEvent(base_object))
+                self._arcade_destroy_base_at((position[0], position[1] - BLOCK_PADDING))
+                return True
+
+            elif isinstance(base_object, Building):
+                # we hit a moon base building. destroy both.
+                self.moonbases_destroyed += 1
+                del self._moonbase[base_object.position]
+                self._evman.Post(BuildingDestroyEvent(base_object))
+                return True
+
+            elif isinstance(base_object, Turret):
+                # we hit a gun turret. destroy both items.
+                self.moonbases_destroyed += 1
+                del self._moonbase[base_object.position]
+                self._evman.Post(TurretDestroyEvent(base_object))
+                return True
+
+            elif isinstance(base_object, Radar):
+                # we hit a radar dish. destroy both.
+                self.moonbases_destroyed += 1
+                del self._moonbase[base_object.position]
+                self._evman.Post(RadarDestroyEvent(base_object))
+                return True
 
     def _arcade_remove_asteroids(self, asteroid_list):
         """
