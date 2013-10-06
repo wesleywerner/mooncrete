@@ -287,7 +287,8 @@ class MoonView(object):
         self.bigfont = pygame.font.Font(
             data.filepath('BLADRMF_.TTF'), 42)
 
-        #self.background = image.load('background.png').convert()
+        background_filename = 'title-screen-%s.png' % random.randint(1, 4)
+        self.background = pygame.image.load(data.filepath(background_filename)).convert()
 
         self.create_panels()
 
@@ -363,7 +364,7 @@ class MoonView(object):
             self.image.fill((0, 0, 0))
 
         if state == STATE_MENU:
-            pass
+            self.image.blit(self.background, (0, 0))
 
         elif state == STATE_HELP:
             pass
