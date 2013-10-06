@@ -382,6 +382,7 @@ class MoonModel(object):
 
         """
 
+        self._arcade_clear_bonuses()
         self._arcade_destroy_all_your_base()
         self._playing = False
         self.lose_sequence_explosion_counter = 30
@@ -880,9 +881,9 @@ class MoonModel(object):
         for dead_base in remove_list:
             del self._moonbase[dead_base.position]
 
-    def _arcade_prepare(self):
+    def _arcade_clear_bonuses(self):
         """
-        Prepare the arcade game for a new phase.
+        Clear bonus counters for the level.
 
         """
 
@@ -892,6 +893,14 @@ class MoonModel(object):
         self.bonus_asteroids = 0
         self.bonus_base = 0
         self.bonus_base_destroyed = 0
+
+    def _arcade_prepare(self):
+        """
+        Prepare the arcade game for a new phase.
+
+        """
+
+        self._arcade_clear_bonuses()
 
         for explosion in self._explosions:
             self._evman.Post(ExplosionDestroyEvent(explosion))
