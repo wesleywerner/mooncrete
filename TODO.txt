@@ -6,8 +6,6 @@ draw borders on the arcade panel.
 draw borders on the score box.
 add a title panel.
 show list of high scores on the main screen.
-add a Panel shake ability to compliment explosions
-on reprieve state enter show the message "reinforcements arrived"
 
 # MODEL
 
