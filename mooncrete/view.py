@@ -838,7 +838,7 @@ class MoonView(object):
         end_rect.center = self.convert_arcade_to_screen(missile.destination)
 
         # use a placehold image
-        pix = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.blue)
+        pix = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.magenta)
         pygame.draw.line(
             pix, color.white, (0, start_rect.height / 2),
             (start_rect.width, start_rect.height / 2), 2)
