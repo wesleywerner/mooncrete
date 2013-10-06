@@ -599,6 +599,7 @@ class MoonModel(object):
         self._puzzle_drop_piece()
         self._puzzle_pair_blocks()
         self._puzzle_drop_board()
+        self._puzzle_clear_filled_lines()
 
         # choose a new puzzle piece
         if not self._puzzle_shape:
@@ -651,6 +652,19 @@ class MoonModel(object):
                     if not below:
                         self._puzzle_board[y + 1][x] = self._puzzle_board[y][x]
                         self._puzzle_board[y][x] = 0
+
+    def _puzzle_clear_filled_lines(self):
+        """
+        Clears puzzle lines that are filled up.
+
+        """
+
+        for y in xrange(PUZZLE_HEIGHT - 1, -1, -1):
+            if self._puzzle_board[y].count(0) == 0:
+                for x in xrange(PUZZLE_WIDTH):
+                    self._puzzle_board[y][x] = 0
+                self._evman.Post(PuzzleRowCleared(row_number=y))
+                break
 
     def _puzzle_piece_collides(self, board, shape, offset):
         """
