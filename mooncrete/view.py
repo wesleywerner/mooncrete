@@ -283,9 +283,9 @@ class MoonView(object):
 
         # load resources
         self.smallfont = pygame.font.Font(
-            os.path.join('..','data','BLADRMF_.TTF'), 20)
+            data.filepath('BLADRMF_.TTF'), 20)
         self.bigfont = pygame.font.Font(
-            os.path.join('..','data','BLADRMF_.TTF'), 42)
+            data.filepath('BLADRMF_.TTF'), 42)
 
         #self.background = image.load('background.png').convert()
 
