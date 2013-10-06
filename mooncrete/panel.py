@@ -1,3 +1,4 @@
+import random
 import pygame
 from pygame.locals import *
 import color
@@ -34,6 +35,7 @@ class Panel(object):
         # the crop size to render. None means no crop.
         self._target_crop = None
         self._current_crop = size
+        self._shake_counter = 0
 
     @property
     def show_position(self):
@@ -151,6 +153,21 @@ class Panel(object):
             if (abs(w_diff) < 5) and (abs(h_diff) < 5):
                 self._current_size = self._target_size
 
+    def _apply_shake(self):
+        """
+        Apply any shakes we may have.
+
+        """
+
+        if self._shake_counter:
+            shake_x = random.choice((-1, 1)) * self._shake_counter
+            shake_y = random.choice((-1, 1)) * self._shake_counter
+            shake_rect = self.rect.move(shake_x, shake_y)
+            self._shake_counter -= 1
+            return shake_rect
+        else:
+            return self.rect
+
     def draw(self, target):
         """
         Draw us on the target surface.
@@ -160,16 +177,17 @@ class Panel(object):
 
         self.rescale()
         self.move()
+        shaken_rect = self._apply_shake()
         # only draw us if we are inside the image boundary
         if self.rect.colliderect(self._boundary):
             if self._target_size:
                 resized = pygame.transform.scale(self.image, self._current_size)
-                target.blit(resized, self.rect)
+                target.blit(resized, shaken_rect)
                 if self.border_image:
                     resized = pygame.transform.scale(self.border_image, self._current_size)
                     target.blit(resized, self.rect)
             else:
-                target.blit(self.image, self.rect)
+                target.blit(self.image, shaken_rect)
                 if self.border_image:
                     target.blit(self.border_image, self.rect)
         return self.busy
@@ -181,3 +199,11 @@ class Panel(object):
         """
 
         return (position[0] + self.rect.left, position[1] + self.rect.top)
+
+    def shake(self, amount):
+        """
+        Shakes the panel by the given amount.
+
+        """
+
+        self._shake_counter = amount
