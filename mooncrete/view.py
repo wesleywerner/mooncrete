@@ -427,8 +427,11 @@ class MoonView(object):
 
         minutes = seconds / 60
         seconds = seconds % 60
-        left_text = '%02d:%02d' % (minutes, seconds)
-        self.time_left = self.bigfont.render(
+        if (self.model.state == STATE_PHASE3):
+            left_text = 'reinforcements in %02d:%02d' % (minutes, seconds)
+        else:
+            left_text = 'time left: %02d:%02d' % (minutes, seconds)
+        self.time_left = self.smallfont.render(
             left_text, False,
             color.white)
 
@@ -441,7 +444,7 @@ class MoonView(object):
         score_panel = self.panels['score']
         score_panel.clear()
         if self.time_left:
-            score_panel.image.blit(self.time_left, (0, 0))
+            score_panel.image.blit(self.time_left, (10, 60))
 
     def draw_results(self, ticks):
         """
@@ -638,10 +641,6 @@ class MoonView(object):
 
         arcade_image = self.panels['arcade'].image
 
-        if (self.model.state == STATE_PHASE3):
-            if self.time_left:
-                arcade_image.blit(self.time_left, (0, 0))
-
         for key, sprite in self.moonbase_sprites.items():
             sprite.update(ticks)
             arcade_image.blit(sprite.image, sprite.rect)
@@ -649,6 +648,12 @@ class MoonView(object):
         # draw the pre-rendered moon surface
         if self.moon_surface:
             arcade_image.blit(self.moon_surface, (0, 0))
+
+        if (self.model.state == STATE_PHASE3):
+            if self.time_left:
+                arcade_image.blit(self.time_left,
+                    (10, ARCADE_POS.height - self.time_left.get_height()))
+
 
     def draw_firing_solution(self):
         """
