@@ -186,12 +186,14 @@ class MoonView(object):
 
         elif isinstance(event, MooncreteDestroyEvent):
             self.destroy_mooncrete_sprite(event.mooncrete)
+            self.panels['arcade'].shake(5)
 
         elif isinstance(event, BuildingSpawnEvent):
             self.create_building_sprite(event.building)
 
         elif isinstance(event, BuildingDestroyEvent):
             self.destroy_building_sprite(event.building)
+            self.panels['arcade'].shake(5)
 
         elif isinstance(event, TurretSpawnedEvent):
             self.create_turret_sprite(event.turret)
@@ -199,6 +201,7 @@ class MoonView(object):
         elif isinstance(event, TurretDestroyEvent):
             self.destroy_turret_sprite(event.turret)
             self.flash_screen([color.gold, color.black], 2)
+            self.panels['arcade'].shake(15)
 
         elif isinstance(event, RadarSpawnedEvent):
             self.create_radar_sprite(event.radar)
@@ -206,6 +209,7 @@ class MoonView(object):
         elif isinstance(event, RadarDestroyEvent):
             self.destroy_radar_sprite(event.radar)
             self.flash_screen([color.copper, color.black], 2)
+            self.panels['arcade'].shake(5)
 
         elif isinstance(event, AsteroidSpawnedEvent):
             self.create_asteroid_sprite(event.asteroid)
