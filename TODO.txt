@@ -36,10 +36,6 @@ Have a flying saucer make appearances.
 
 # TWEAKING
 
-A few levels in moon rocks and empty barrels pile up. Need a mechanism to reduce these.
-Perhaps filled rows can disappear.
-Perhaps a bomb block type.
-
 increase turret reload time.
 
 lose more points on bases destroyed.
