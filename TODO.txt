@@ -47,4 +47,3 @@ reseat panels on fullscreen toggle.
 
 # BUGS
 
-during puzzle phase if the board fills up and the game ends, it must reset the arcade mode bonus counters.
