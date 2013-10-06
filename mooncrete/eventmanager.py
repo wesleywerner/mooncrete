@@ -237,3 +237,14 @@ class ExplosionDestroyEvent(Event):
     def __init__(self, explosion):
         self.name = 'Explosion destroy event'
         self.explosion = explosion
+
+
+class PuzzleRowCleared(Event):
+
+    def __init__(self, row_number):
+        self.name = 'Puzzle row cleared event'
+        self.row_number = row_number
+
+    def __str__(self):
+
+        return 'Puzzle row %s cleared' % (self.row_number,)
