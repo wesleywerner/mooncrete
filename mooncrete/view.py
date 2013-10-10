@@ -118,6 +118,8 @@ class MoonView(object):
         self.previous_score = 0
         # the sprite of time left to play the phase. set via controller.
         self.time_left = None
+        # a counter for seconds passed while on the main menu.
+        self.menu_ticker = 0
 
     def notify(self, event):
         """
@@ -607,6 +609,14 @@ class MoonView(object):
         y = (DRAW_AREA.height / float(model.ARCADE_HEIGHT)) * position[1]
         return (int(x), int(y))
 
+    def menu_ticker_step(self):
+        """
+        Called to step the menu ticker counter.
+
+        """
+
+        self.menu_ticker = (self.menu_ticker + 1) % 30
+
     def draw_menu(self):
         """
         Draw the menu screen.
@@ -617,28 +627,30 @@ class MoonView(object):
         pix = self.bigfont.render('mooncrete', False, color.white)
         self.image.blit(pix, (20, 20))
 
-        # draw high scores
-        pix = self.bigfont.render('scores', False, color.lighter_green)
-        self.image.blit(pix, (20, 100))
-
-        scores = (
-            ('flarty', 'Jan 2013', 1000),
-            ('snafu', 'Feb 2013', 900),
-            ('nurgle', 'Mar 2013', 800),
-            ('spamley', 'Apr 2013', 700),
-            )
-        score_y = 160
-        for position, (name, date, score) in enumerate(scores):
-            position_str = '#%s --' % (position + 1)
-            score_str = (' %s points ' % (score,)).ljust(20, '-')
-            name_str = (' %s ' % (name,)).ljust(20, '-')
-            pix = self.smallfont.render(
-                '%s%s%s %s' % (position_str, score_str, name_str, date),
-                False,
-                color.lighter_green
+        # draw high scores after n seconds
+        score_delay = 4
+        if self.menu_ticker >= score_delay:
+            pix = self.bigfont.render('scores', False, color.lighter_green)
+            self.image.blit(pix, (20, 100))
+            scores = (
+                ('flarty', 'Jan 2013', 1000),
+                ('snafu', 'Feb 2013', 900),
+                ('nurgle', 'Mar 2013', 800),
+                ('spamley', 'Apr 2013', 700),
                 )
-            self.image.blit(pix, (20, score_y))
-            score_y += pix.get_height()
+            score_y = 160
+            for position, (name, date, score) in enumerate(scores):
+                if position < self.menu_ticker - score_delay:
+                    position_str = '#%s --' % (position + 1)
+                    score_str = (' %s points ' % (score,)).ljust(20, '-')
+                    name_str = (' %s ' % (name,)).ljust(20, '-')
+                    pix = self.smallfont.render(
+                        '%s%s%s %s' % (position_str, score_str, name_str, date),
+                        False,
+                        color.lighter_green
+                        )
+                    self.image.blit(pix, (20, score_y))
+                    score_y += pix.get_height()
 
         # tell the player how to start
         if self.model.isplaying:
