@@ -390,8 +390,7 @@ class MoonView(object):
             self.image.blit(self.background, (0, 0))
 
         if state == STATE_MENU:
-            #self.image.blit(self.background, (0, 0))
-            pass
+            self.draw_menu()
 
         elif state == STATE_HELP:
             pass
@@ -607,6 +606,39 @@ class MoonView(object):
         x = (DRAW_AREA.width / float(model.ARCADE_WIDTH)) * position[0]
         y = (DRAW_AREA.height / float(model.ARCADE_HEIGHT)) * position[1]
         return (int(x), int(y))
+
+    def draw_menu(self):
+        """
+        Draw the menu screen.
+
+        """
+
+        # draw the game title
+        pix = self.bigfont.render('mooncrete', False, color.white)
+        self.image.blit(pix, (20, 20))
+
+        # draw high scores
+        pix = self.bigfont.render('scores', False, color.lighter_green)
+        self.image.blit(pix, (20, 100))
+
+        scores = (
+            ('flarty', 'Jan 2013', 1000),
+            ('snafu', 'Feb 2013', 900),
+            ('nurgle', 'Mar 2013', 800),
+            ('spamley', 'Apr 2013', 700),
+            )
+        score_y = 160
+        for position, (name, date, score) in enumerate(scores):
+            position_str = '#%s --' % (position + 1)
+            score_str = (' %s points ' % (score,)).ljust(20, '-')
+            name_str = (' %s ' % (name,)).ljust(20, '-')
+            pix = self.smallfont.render(
+                '%s%s%s %s' % (position_str, score_str, name_str, date),
+                False,
+                color.lighter_green
+                )
+            self.image.blit(pix, (20, score_y))
+            score_y += pix.get_height()
 
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
