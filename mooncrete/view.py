@@ -14,6 +14,7 @@
 
 import os
 import random
+import collections
 import pygame
 from pygame.locals import *
 import data
@@ -104,7 +105,7 @@ class MoonView(object):
         self.moonbase_sprites = {}
         # arcade sprites (asteroids, missiles, explosions)
         self.arcade_sprites = {}
-        self.panels = {}
+        self.panels = collections.OrderedDict()
         self.windowsize = None
         # True while we are busy moving panels around
         self.transitioning = False
@@ -269,6 +270,11 @@ class MoonView(object):
         pygame.font.init()
         self.clock = pygame.time.Clock()
         pygame.display.set_caption('Mooncrete')
+
+        ## load music
+        #pygame.mixer.music.load(data.filepath('moon-defense.xm'))
+        #pygame.mixer.music.play()
+
         # TODO custom cursor
         pygame.mouse.set_visible(True)
         # switch the target resolution based on fullscreen mode
@@ -288,20 +294,20 @@ class MoonView(object):
 
         # load resources
         self.image = pygame.Surface(DRAW_AREA.size)
-
-        # we are done
-        self.isinitialized = True
-
-        # load resources
         self.smallfont = pygame.font.Font(
             data.filepath('BLADRMF_.TTF'), 20)
         self.bigfont = pygame.font.Font(
             data.filepath('BLADRMF_.TTF'), 42)
 
+        # load a random title screen image
         background_filename = 'title-screen-%s.png' % random.randint(1, 4)
         self.background = pygame.image.load(data.filepath(background_filename)).convert()
 
+        # create floating game panels
         self.create_panels()
+
+        # we are done
+        self.isinitialized = True
 
     def flash_screen(self, color_list, duration):
         """
