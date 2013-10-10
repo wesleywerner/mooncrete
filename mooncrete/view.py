@@ -640,6 +640,14 @@ class MoonView(object):
             self.image.blit(pix, (20, score_y))
             score_y += pix.get_height()
 
+        # tell the player how to start
+        if self.model.isplaying:
+            start_message = 'spacebar continues your game...'
+        else:
+            start_message = 'spacebar begins a new game'
+        pix = self.smallfont.render(start_message, False, color.lighter_yellow)
+        self.image.blit(pix, (20, DRAW_AREA.height - 30))
+
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
         #pan.image.fill(color.darker_gray)
