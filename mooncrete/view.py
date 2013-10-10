@@ -181,6 +181,8 @@ class MoonView(object):
                 self.create_message('moonbase destroyed!', color.lighter_red)
             elif event.state == STATE_LEVELDONE:
                 self.create_message('level win', color.gold)
+            elif event.state == STATE_MENU:
+                self.messages = []
 
         elif isinstance(event, LunarLandscapeClearedEvent):
             self.clear_lunar_landscape()
