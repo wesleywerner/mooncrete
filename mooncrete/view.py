@@ -707,7 +707,8 @@ class MoonView(object):
             turret_pos = self.convert_arcade_to_screen(turret.position)
             # center the origin x
             turret_pos = (turret_pos[0] + ARCADE_SPRITE_SIZE[0] / 2, turret_pos[1])
-            pygame.draw.line(self.image, color.darkest_green, mouse_pos, turret_pos)
+            image = self.panels['arcade'].image
+            pygame.draw.line(image, color.darkest_green, mouse_pos, turret_pos)
 
     def angle_turrets(self):
         """
