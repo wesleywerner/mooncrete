@@ -337,6 +337,10 @@ class MoonView(object):
         arcade_panel.background_image = pygame.image.load(data.load('arcade_bg.png')).convert()
         arcade_panel.border_image = pygame.image.load(data.load('arcade.png')).convert()
         arcade_panel.border_image.set_colorkey(color.magenta)
+        earth = pygame.image.load(data.load('earth.png')).convert()
+        earth.set_colorkey(color.magenta)
+        somewhere_over_the_rainbow = (random.randint(0, ARCADE_POS.width), random.randint(0, ARCADE_POS.height))
+        arcade_panel.background_image.blit(earth, somewhere_over_the_rainbow)
         arcade_panel.hide_position = (0, ARCADE_POS.height)
         arcade_panel.hide(instant=True)
         self.panels['arcade'] = arcade_panel
