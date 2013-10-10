@@ -83,7 +83,7 @@ class Panel(object):
 
         """
 
-        self.image.fill(color.magenta)
+        self.image.fill(color.black)
         if self.background_image:
             self.image.blit(self.background_image, (0, 0))
 
