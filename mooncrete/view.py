@@ -327,7 +327,7 @@ class MoonView(object):
         puzzle_panel.border_image = pygame.image.load(data.load('puzzle.png')).convert()
         puzzle_panel.border_image.set_colorkey(color.magenta)
         puzzle_panel.show_position = PUZZLE_POS.topleft
-        puzzle_panel.hide_position = (DRAW_AREA.width, 0)
+        puzzle_panel.hide_position = DRAW_AREA.bottomright
         puzzle_panel.hide(instant=True)
         self.panels['puzzle'] = puzzle_panel
 
