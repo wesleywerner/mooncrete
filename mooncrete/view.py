@@ -442,7 +442,9 @@ class MoonView(object):
             message=message,
             font=self.bigfont,
             timeout=timeout,
-            forecolor=forecolor)
+            forecolor=forecolor,
+            backcolor=color.magenta,
+            draw_border=False)
         # center the destination with the sprite image size
         sprite.rect.center = origin
         sprite.destination = sprite.image.get_rect(midtop=destination).topleft
