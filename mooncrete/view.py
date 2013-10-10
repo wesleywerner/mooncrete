@@ -316,6 +316,7 @@ class MoonView(object):
         """
 
         score_panel = Panel(SCORE_BOX.size, DRAW_AREA)
+        score_panel.background_image = pygame.image.load(data.load('puzzle_info_bg.png')).convert()
         score_panel.border_image = pygame.image.load(data.load('puzzle_info.png')).convert()
         score_panel.border_image.set_colorkey(color.magenta)
         score_panel.show_position = SCORE_BOX.topleft
@@ -324,6 +325,7 @@ class MoonView(object):
         self.panels['score'] = score_panel
 
         puzzle_panel = Panel(PUZZLE_POS.size, DRAW_AREA)
+        puzzle_panel.background_image = pygame.image.load(data.load('puzzle_bg.png')).convert()
         puzzle_panel.border_image = pygame.image.load(data.load('puzzle.png')).convert()
         puzzle_panel.border_image.set_colorkey(color.magenta)
         puzzle_panel.show_position = PUZZLE_POS.topleft
@@ -332,6 +334,7 @@ class MoonView(object):
         self.panels['puzzle'] = puzzle_panel
 
         arcade_panel = Panel(ARCADE_POS.size, DRAW_AREA)
+        arcade_panel.background_image = pygame.image.load(data.load('arcade_bg.png')).convert()
         arcade_panel.border_image = pygame.image.load(data.load('arcade.png')).convert()
         arcade_panel.border_image.set_colorkey(color.magenta)
         arcade_panel.hide_position = (0, ARCADE_POS.height)
@@ -349,6 +352,7 @@ class MoonView(object):
         self.panels['results'] = results_panel
 
         msg_panel = Panel(MESSAGE_POS.size, DRAW_AREA)
+        msg_panel.background_image = pygame.image.load(data.load('messages_bg.png')).convert()
         msg_panel.border_image = pygame.image.load(data.load('messages.png')).convert()
         msg_panel.border_image.set_colorkey(color.magenta)
         msg_panel.show_position = MESSAGE_POS.topleft
@@ -376,10 +380,12 @@ class MoonView(object):
         if self.flash_color:
             self.image.fill(self.flash_color.pop())
         else:
-            self.image.fill((0, 0, 0))
+            #self.image.fill((0, 0, 0))
+            self.image.blit(self.background, (0, 0))
 
         if state == STATE_MENU:
-            self.image.blit(self.background, (0, 0))
+            #self.image.blit(self.background, (0, 0))
+            pass
 
         elif state == STATE_HELP:
             pass
@@ -653,7 +659,7 @@ class MoonView(object):
 
         """
 
-        self.panels['arcade'].image.fill(color.magenta)
+        self.panels['arcade'].clear()
 
     def draw_missiles_and_asteroids(self, ticks):
         """
