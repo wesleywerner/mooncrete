@@ -274,6 +274,15 @@ class MoonModel(object):
 
         return self._state.peek()
 
+    @property
+    def isplaying(self):
+        """
+        A property that says if the game is playing, or if the game is over.
+
+        """
+
+        return self._playing
+
     def notify(self, event):
         """
         Called by an event in the message queue.
