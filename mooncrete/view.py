@@ -78,6 +78,9 @@ ARCADE_SPRITE_SIZE = (
     ARCADE_POS.width // (model.ARCADE_WIDTH / model.BLOCK_PADDING),
     ARCADE_POS.height // (model.ARCADE_HEIGHT / model.BLOCK_PADDING))
 
+# Game messages live inside a message panel
+MESSAGE_POS = pygame.Rect(SCORE_BOX.left + SCORE_BOX.width, 0, 500, 100)
+
 
 class MoonView(object):
     """
@@ -139,6 +142,7 @@ class MoonView(object):
                 self.panels['score'].show()
                 self.panels['puzzle'].show()
                 self.panels['results'].hide()
+                self.panels['messages'].show()
                 arcade_panel = self.panels['arcade']
                 arcade_panel.scale((300, 225))
                 arcade_panel.show_position = (0, 375)
@@ -146,6 +150,7 @@ class MoonView(object):
             elif event.state in (STATE_PHASE3, STATE_REPRIEVE):
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
+                self.panels['messages'].hide()
                 arcade_panel = self.panels['arcade']
                 arcade_panel.scale(ARCADE_POS.size)
                 arcade_panel.show_position = ARCADE_POS.topleft
@@ -160,12 +165,13 @@ class MoonView(object):
                 self.panels['score'].hide()
                 self.panels['puzzle'].hide()
                 self.panels['results'].hide()
+                self.panels['messages'].hide()
 
             # display game messages
             if event.state == STATE_PHASE1:
-                self.create_message('mix your mooncrete', color.lighter_green)
+                self.create_message('mix mooncrete', color.lighter_green)
             elif event.state == STATE_PHASE2:
-                self.create_message('build your base', color.lighter_blue)
+                self.create_message('construct base', color.lighter_blue)
             elif event.state == STATE_PHASE3:
                 self.create_message('alert: asteroids incoming!', color.lighter_yellow)
             elif event.state == STATE_REPRIEVE:
@@ -341,6 +347,14 @@ class MoonView(object):
         results_panel.hide(instant=True)
         self.panels['results'] = results_panel
 
+        msg_panel = Panel(MESSAGE_POS.size, DRAW_AREA)
+        msg_panel.border_image = pygame.image.load(data.load('messages.png')).convert()
+        msg_panel.border_image.set_colorkey(color.magenta)
+        msg_panel.show_position = MESSAGE_POS.topleft
+        msg_panel.hide_position = DRAW_AREA.topright
+        msg_panel.hide(instant=True)
+        self.panels['messages'] = msg_panel
+
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
         self.fullscreen = self.fullscreen ^ True
@@ -397,7 +411,13 @@ class MoonView(object):
         if self.messages:
             message_sprite = self.messages[0]
             message_sprite.update(ticks)
-            message_sprite.draw(self.image)
+            # puzzle phases draw messages to a dedicated panel.
+            # otherwise they overlay on the main screen.
+            if state in (STATE_PHASE1, STATE_PHASE2):
+                self.panels['messages'].clear()
+                message_sprite.draw(self.panels['messages'].image)
+            else:
+                message_sprite.draw(self.image)
             if message_sprite.expired:
                 self.messages.remove(message_sprite)
 
@@ -412,17 +432,22 @@ class MoonView(object):
 
         # the current phase determines color and movement
         timeout = 5
-        origin = (ARCADE_POS.width / 2, -10)
-        destination = (origin[0], 0)
+        if self.model.state in (STATE_PHASE1, STATE_PHASE2):
+            origin = (MESSAGE_POS.width / 2, 0)
+            destination = (origin[0], (MESSAGE_POS.height - 60) / 2)
+        else:
+            origin = (ARCADE_POS.width / 2, 0)
+            destination = (origin[0], MESSAGE_POS.height / 2)
         sprite = MessageSprite(
             message=message,
             font=self.bigfont,
             timeout=timeout,
             forecolor=forecolor)
-        sprite.rect.center = origin
         # center the destination with the sprite image size
+        sprite.rect.center = origin
         sprite.destination = sprite.image.get_rect(midtop=destination).topleft
-        self.messages.append(sprite)
+        #self.messages.append(sprite)
+        self.messages = [sprite]
 
     def set_time_left(self, seconds):
         """
