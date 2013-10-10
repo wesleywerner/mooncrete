@@ -34,6 +34,11 @@ ARCADE_SPEEDS = (50, 46, 42, 38, 34, 30, 26, 22, 20)
 # puzzle game speed per game level.
 PUZZLE_SPEEDS = (1000, 950, 900, 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350)
 
+# a user event for ticker over the menu counter.
+# used for animating main menu score drawing.
+MENU_TICK_EVENT = pygame.USEREVENT + 0
+
+
 class MoonController(object):
     """
     Handles everything about user input: mouse and keyboard.
@@ -149,6 +154,9 @@ class MoonController(object):
                         pos = self.view.convert_screen_to_arcade(event.pos)
                         self.model.fire_missile(pos)
 
+                elif event.type == MENU_TICK_EVENT:
+                    self.view.menu_ticker_step()
+
         elif isinstance(event, StateEvent):
 
             # reset the time passed counter on state changes
@@ -161,6 +169,12 @@ class MoonController(object):
             # set the puzzle speed per level
             speed_index = helper.clamp(self.model.level - 1, 0, len(PUZZLE_SPEEDS) - 1)
             self.puzzle_update_freq = PUZZLE_SPEEDS[speed_index]
+
+            # set a menu timer for text animations
+            if event.state == STATE_MENU:
+                pygame.time.set_timer(MENU_TICK_EVENT, 1000)
+            else:
+                pygame.time.set_timer(MENU_TICK_EVENT, 0)
 
     def menu_keys(self, event):
 
