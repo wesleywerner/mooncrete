@@ -175,7 +175,8 @@ class MoonView(object):
             elif event.state == STATE_PHASE3:
                 self.create_message('alert: asteroids incoming!', color.lighter_yellow)
             elif event.state == STATE_REPRIEVE:
-                self.create_message('reinforcements arrived!', color.gold)
+                if self.model.isplaying:
+                    self.create_message('reinforcements arrived!', color.gold)
             elif event.state == STATE_LOSE:
                 self.create_message('moonbase destroyed!', color.lighter_red)
             elif event.state == STATE_LEVELDONE:
