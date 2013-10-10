@@ -309,9 +309,9 @@ class MoonView(object):
         """
 
         score_panel = Panel(SCORE_BOX.size, DRAW_AREA)
-        # the score panel is visible at the top-left of the screen
+        score_panel.border_image = pygame.image.load(data.load('puzzle_info.png')).convert()
+        score_panel.border_image.set_colorkey(color.magenta)
         score_panel.show_position = SCORE_BOX.topleft
-        # and it hides to the left
         score_panel.hide_position = (- SCORE_BOX.width, 0)
         score_panel.hide(instant=True)
         self.panels['score'] = score_panel
@@ -319,14 +319,14 @@ class MoonView(object):
         puzzle_panel = Panel(PUZZLE_POS.size, DRAW_AREA)
         puzzle_panel.border_image = pygame.image.load(data.load('puzzle.png')).convert()
         puzzle_panel.border_image.set_colorkey(color.magenta)
-        # puzle grid is visible at the top-left of the screen
         puzzle_panel.show_position = PUZZLE_POS.topleft
-        # and it hides to the right, off-screen
         puzzle_panel.hide_position = (DRAW_AREA.width, 0)
         puzzle_panel.hide(instant=True)
         self.panels['puzzle'] = puzzle_panel
 
         arcade_panel = Panel(ARCADE_POS.size, DRAW_AREA)
+        arcade_panel.border_image = pygame.image.load(data.load('arcade.png')).convert()
+        arcade_panel.border_image.set_colorkey(color.magenta)
         arcade_panel.hide_position = (0, ARCADE_POS.height)
         arcade_panel.hide(instant=True)
         self.panels['arcade'] = arcade_panel
