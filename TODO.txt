@@ -9,6 +9,7 @@ show list of high scores on the main screen.
 
 # MODEL
 
+on base hits let there be a chance of targetting going offline for a short period.
 add high score tracking.
 
 
