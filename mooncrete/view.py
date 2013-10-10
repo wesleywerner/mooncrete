@@ -685,7 +685,7 @@ class MoonView(object):
         if (self.model.state == STATE_PHASE3):
             if self.time_left:
                 arcade_image.blit(self.time_left,
-                    (10, ARCADE_POS.height - self.time_left.get_height()))
+                    (10, ARCADE_POS.height - self.time_left.get_height() - 5))
 
 
     def draw_firing_solution(self):
