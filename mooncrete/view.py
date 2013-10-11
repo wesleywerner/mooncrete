@@ -271,9 +271,9 @@ class MoonView(object):
         self.clock = pygame.time.Clock()
         pygame.display.set_caption('Mooncrete')
 
-        ## load music
-        #pygame.mixer.music.load(data.filepath('moon-defense.xm'))
-        #pygame.mixer.music.play()
+        # load music
+        pygame.mixer.music.load(data.filepath('moon-defense.xm'))
+        pygame.mixer.music.play(-1)
 
         # TODO custom cursor
         pygame.mouse.set_visible(True)
