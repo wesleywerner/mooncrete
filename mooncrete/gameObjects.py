@@ -77,6 +77,14 @@ class Asteroid(object):
     def id(self):
         return id(self)
 
+    @property
+    def x(self):
+        return self.position[0]
+
+    @property
+    def y(self):
+        return self.position[1]
+
 
 class Turret(object):
     """
@@ -86,7 +94,7 @@ class Turret(object):
 
     def __init__(self, position):
         self.position = position
-        self.max_charge = 50
+        self.max_charge = 40
         self.charge = self.max_charge
 
     def recharge(self):
@@ -150,7 +158,7 @@ class Explosion(object):
         self.radius = 0.0
 
     def update(self):
-        if self.radius < 8:
+        if self.radius < 6:
             self.radius += 0.2
             return True
 
