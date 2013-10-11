@@ -86,8 +86,8 @@ class Turret(object):
 
     def __init__(self, position):
         self.position = position
-        self.charge = 20
-        self.max_charge = 20
+        self.max_charge = 50
+        self.charge = self.max_charge
 
     def recharge(self):
         if self.charge < self.max_charge:
