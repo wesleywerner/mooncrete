@@ -198,6 +198,11 @@ TETRIS_SHAPES = [
     [[7, 7],
      [7, 0]]
     ]
+
+# asteroids within this safe zone cannot be destroyed by explosions.
+ASTEROID_SAFE_ZONE = int(ARCADE_HEIGHT * 0.1)
+
+
 class MoonModel(object):
     """
     Handles game logic. Everything data lives in here.
@@ -1278,11 +1283,12 @@ class MoonModel(object):
                 self._evman.Post(ExplosionGrowEvent(explosion))
                 # check for collisions with asteroids
                 for asteroid in self._asteroids:
-                    dist = helper.distance(* asteroid.position + explosion.position)
-                    if (dist < explosion.radius * 4):
-                        self.asteroids_destroyed += 1
-                        asteroid_remove_list.append(asteroid)
-                        new_explosions.append(asteroid)
+                    if asteroid.y > ASTEROID_SAFE_ZONE:
+                        dist = helper.distance(* asteroid.position + explosion.position)
+                        if (dist < explosion.radius * 4):
+                            self.asteroids_destroyed += 1
+                            asteroid_remove_list.append(asteroid)
+                            new_explosions.append(asteroid)
             else:
                 explosion_remove_list.append(explosion)
 
