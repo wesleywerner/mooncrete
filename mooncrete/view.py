@@ -82,6 +82,8 @@ ARCADE_SPRITE_SIZE = (
 # Game messages live inside a message panel
 MESSAGE_POS = pygame.Rect(SCORE_BOX.left + SCORE_BOX.width, 0, 500, 100)
 
+DRAW_SPRITES = True
+
 
 class MoonView(object):
     """
@@ -99,6 +101,8 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
+        # stores the game sprites
+        self.spritesheet = None
         # message sprite overlays
         self.messages = []
         # moonbase sprites (crete, radars, turrets)
@@ -298,6 +302,7 @@ class MoonView(object):
             data.filepath('BLADRMF_.TTF'), 20)
         self.bigfont = pygame.font.Font(
             data.filepath('BLADRMF_.TTF'), 42)
+        self.spritesheet = pygame.image.load(data.filepath('sprites.png')).convert()
 
         # load a random title screen image
         background_filename = 'title-screen-%s.png' % random.randint(1, 4)
@@ -373,6 +378,16 @@ class MoonView(object):
         msg_panel.hide_position = DRAW_AREA.topright
         msg_panel.hide(instant=True)
         self.panels['messages'] = msg_panel
+
+    def load_sprites(self, target):
+        """
+        Loads sprite images into the target.
+
+        """
+
+        if type(target) is MooncreteSprite:
+            rect = (7, 80, 33, 33)
+            target.image = self.spritesheet.subsurface(rect)
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
@@ -668,28 +683,54 @@ class MoonView(object):
 
     def draw_puzzle_blocks(self):
         pan = self.panels['puzzle']
-        #pan.image.fill(color.darker_gray)
         pan.clear()
         for x, y, v in self.model.puzzle_board_data():
             if v:
-                rect = pygame.Rect(
+                position = pygame.Rect(
                     self.convert_puzzle_to_panel((x, y)),
                     PUZZLE_BLOCK_SIZE
                     )
+                sprite_loc = None
                 block_color = (128, 128, 128)
-                if v == model.BLOCK_CALCIUM_BARREL:
+
+                if v == model.BLOCK_EMPTY_BARREL:
+                    block_color = (32, 32, 32)
+                    sprite_loc = pygame.Rect(33, 99, 33, 33)
+
+                elif v == model.BLOCK_MOONROCKS:
+                    block_color = (32, 32, 32)
+                    sprite_loc = pygame.Rect(33, 66, 33, 33)
+
+                elif v == model.BLOCK_CALCIUM_BARREL:
                     block_color = (0, 128, 0)
-                if v == model.BLOCK_WATER_BARREL:
+                    sprite_loc = pygame.Rect(33, 132, 33, 33)
+
+                elif v == model.BLOCK_WATER_BARREL:
                     block_color = (0, 64, 0)
-                if v == model.BLOCK_RADAR_BITS:
+                    sprite_loc = pygame.Rect(33, 165, 33, 33)
+
+                elif v == model.BLOCK_RADAR_BITS:
                     block_color = (128, 0, 0)
-                if v == model.BLOCK_RADAR_DISH:
+                    sprite_loc = pygame.Rect(33, 198, 33, 33)
+
+                elif v == model.BLOCK_RADAR_DISH:
                     block_color = (64, 0, 0)
-                if v == model.BLOCK_TURRET_AMMO:
+                    sprite_loc = pygame.Rect(33, 231, 33, 33)
+
+                elif v == model.BLOCK_TURRET_AMMO:
                     block_color = (0, 0, 128)
-                if v == model.BLOCK_TURRET_BASE:
+                    sprite_loc = pygame.Rect(33, 297, 33, 33)
+
+                elif v == model.BLOCK_TURRET_BASE:
                     block_color = (0, 0, 64)
-                pygame.draw.rect(pan.image, block_color, rect)
+                    sprite_loc = pygame.Rect(33, 264, 33, 33)
+
+                if DRAW_SPRITES and sprite_loc:
+                    pan.image.blit(
+                        self.spritesheet.subsurface(sprite_loc),
+                        position)
+                else:
+                    pygame.draw.rect(pan.image, block_color, position)
 
     def placeholder_pix(self, size, acolor):
         pix = pygame.Surface(size)
