@@ -726,9 +726,10 @@ class MoonView(object):
                     sprite_loc = pygame.Rect(33, 264, 33, 33)
 
                 if DRAW_SPRITES and sprite_loc:
-                    pan.image.blit(
-                        self.spritesheet.subsurface(sprite_loc),
-                        position)
+                    #resized = pygame.transform.scale(
+                        #self.spritesheet.subsurface(sprite_loc),
+                        #PUZZLE_BLOCK_SIZE)
+                    pan.image.blit(self.spritesheet.subsurface(sprite_loc), position)
                 else:
                     pygame.draw.rect(pan.image, block_color, position)
 
