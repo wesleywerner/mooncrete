@@ -84,6 +84,18 @@ MESSAGE_POS = pygame.Rect(SCORE_BOX.left + SCORE_BOX.width, 0, 500, 100)
 
 DRAW_SPRITES = True
 
+# assign a color for each block when not drawing sprites
+BLOCK_COLOR = {
+    model.BLOCK_EMPTY_BARREL: (16, 16, 16),
+    model.BLOCK_MOONROCKS: (16, 16, 16),
+    model.BLOCK_CALCIUM_BARREL: (128, 128, 128),
+    model.BLOCK_WATER_BARREL: (0, 0, 128),
+    model.BLOCK_RADAR_BITS: (0, 128, 0),
+    model.BLOCK_RADAR_DISH: (0, 128, 128),
+    model.BLOCK_TURRET_AMMO: (128, 0, 0),
+    model.BLOCK_TURRET_BASE: (128, 128, 0),
+    }
+
 
 class MoonView(object):
     """
@@ -101,8 +113,8 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
-        # stores the game sprites
-        self.spritesheet = None
+        # stores the sprite images
+        self.sprite_images = None
         # message sprite overlays
         self.messages = []
         # moonbase sprites (crete, radars, turrets)
@@ -296,13 +308,13 @@ class MoonView(object):
             (self.screen.get_width() - DRAW_AREA.width) / 2,
              (self.screen.get_height() - DRAW_AREA.height) / 2,)
 
-        # load resources
+        # load font and sprites
+        self.load_sprites()
         self.image = pygame.Surface(DRAW_AREA.size)
         self.smallfont = pygame.font.Font(
             data.filepath('BLADRMF_.TTF'), 20)
         self.bigfont = pygame.font.Font(
             data.filepath('BLADRMF_.TTF'), 42)
-        self.spritesheet = pygame.image.load(data.filepath('sprites.png')).convert()
 
         # load a random title screen image
         background_filename = 'title-screen-%s.png' % random.randint(1, 4)
@@ -313,6 +325,30 @@ class MoonView(object):
 
         # we are done
         self.isinitialized = True
+
+    def load_sprites(self):
+        """
+        Loads the sprites from the spritemap.
+        They are rescaled to our view dimentia.
+
+        """
+
+        sprite_sheet = pygame.image.load(data.filepath('sprites.png')).convert()
+        sprite_map = []
+        self.sprite_images = {}
+        sprite_map.append((model.BLOCK_EMPTY_BARREL, (50, 100, 50, 50)))
+        sprite_map.append((model.BLOCK_MOONROCKS, (50, 50, 50, 50)))
+        sprite_map.append((model.BLOCK_CALCIUM_BARREL, (50, 150, 50, 50)))
+        sprite_map.append((model.BLOCK_WATER_BARREL, (50, 200, 50, 50)))
+        sprite_map.append((model.BLOCK_RADAR_BITS, (50, 250, 50, 50)))
+        sprite_map.append((model.BLOCK_RADAR_DISH, (50, 300, 50, 50)))
+        sprite_map.append((model.BLOCK_TURRET_AMMO, (50, 400, 50, 50)))
+        sprite_map.append((model.BLOCK_TURRET_BASE, (50, 350, 50, 50)))
+
+        for block_type, location in sprite_map:
+            self.sprite_images[block_type] = pygame.transform.scale(
+                        sprite_sheet.subsurface(location),
+                        PUZZLE_BLOCK_SIZE)
 
     def flash_screen(self, color_list, duration):
         """
@@ -378,16 +414,6 @@ class MoonView(object):
         msg_panel.hide_position = DRAW_AREA.topright
         msg_panel.hide(instant=True)
         self.panels['messages'] = msg_panel
-
-    def load_sprites(self, target):
-        """
-        Loads sprite images into the target.
-
-        """
-
-        if type(target) is MooncreteSprite:
-            rect = (7, 80, 33, 33)
-            target.image = self.spritesheet.subsurface(rect)
 
     def toggle_fullscreen(self):
         trace.write('toggling fullscreen')
@@ -682,56 +708,22 @@ class MoonView(object):
         self.image.blit(pix, (20, DRAW_AREA.height - 30))
 
     def draw_puzzle_blocks(self):
-        pan = self.panels['puzzle']
-        pan.clear()
-        for x, y, v in self.model.puzzle_board_data():
-            if v:
+        panel = self.panels['puzzle']
+        panel.clear()
+        for x, y, block_type in self.model.puzzle_board_data():
+            if block_type:
                 position = pygame.Rect(
                     self.convert_puzzle_to_panel((x, y)),
-                    PUZZLE_BLOCK_SIZE
-                    )
-                sprite_loc = None
-                block_color = (128, 128, 128)
-
-                if v == model.BLOCK_EMPTY_BARREL:
-                    block_color = (32, 32, 32)
-                    sprite_loc = pygame.Rect(33, 99, 33, 33)
-
-                elif v == model.BLOCK_MOONROCKS:
-                    block_color = (32, 32, 32)
-                    sprite_loc = pygame.Rect(33, 66, 33, 33)
-
-                elif v == model.BLOCK_CALCIUM_BARREL:
-                    block_color = (0, 128, 0)
-                    sprite_loc = pygame.Rect(33, 132, 33, 33)
-
-                elif v == model.BLOCK_WATER_BARREL:
-                    block_color = (0, 64, 0)
-                    sprite_loc = pygame.Rect(33, 165, 33, 33)
-
-                elif v == model.BLOCK_RADAR_BITS:
-                    block_color = (128, 0, 0)
-                    sprite_loc = pygame.Rect(33, 198, 33, 33)
-
-                elif v == model.BLOCK_RADAR_DISH:
-                    block_color = (64, 0, 0)
-                    sprite_loc = pygame.Rect(33, 231, 33, 33)
-
-                elif v == model.BLOCK_TURRET_AMMO:
-                    block_color = (0, 0, 128)
-                    sprite_loc = pygame.Rect(33, 297, 33, 33)
-
-                elif v == model.BLOCK_TURRET_BASE:
-                    block_color = (0, 0, 64)
-                    sprite_loc = pygame.Rect(33, 264, 33, 33)
-
-                if DRAW_SPRITES and sprite_loc:
-                    #resized = pygame.transform.scale(
-                        #self.spritesheet.subsurface(sprite_loc),
-                        #PUZZLE_BLOCK_SIZE)
-                    pan.image.blit(self.spritesheet.subsurface(sprite_loc), position)
+                    PUZZLE_BLOCK_SIZE)
+                if DRAW_SPRITES:
+                    panel.image.blit(
+                                    self.sprite_images[block_type],
+                                    position)
                 else:
-                    pygame.draw.rect(pan.image, block_color, position)
+                    pygame.draw.rect(
+                                    panel.image,
+                                    BLOCK_COLOR[block_type],
+                                    position)
 
     def placeholder_pix(self, size, acolor):
         pix = pygame.Surface(size)
