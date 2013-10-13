@@ -780,7 +780,7 @@ class MoonView(object):
 
         for key, sprite in self.moonbase_sprites.items():
             sprite.update(ticks)
-            arcade_image.blit(sprite.image, sprite.rect)
+            sprite.draw(arcade_image)
 
         # draw the pre-rendered moon surface
         if self.moon_surface:
