@@ -273,25 +273,25 @@ class TurretSprite(MoonbaseSprite):
             2)
         self.turret_images.append(timage)
 
-    def subsurface_base_images(self, surface, rect_list):
-        """
-        Set all the base images from a list of rects and a source surface.
+    #def subsurface_base_images(self, surface, rect_list):
+        #"""
+        #Set all the base images from a list of rects and a source surface.
 
-        """
+        #"""
 
-        self.base_images = []
-        for rect in rect_list:
-            self.base_images.append(surface.subsurface(rect))
+        #self.base_images = []
+        #for rect in rect_list:
+            #self.base_images.append(surface.subsurface(rect))
 
-    def subsurface_turret_images(self, surface, rect_list):
-        """
-        Set all the turret images from a list of rects and a source surface.
+    #def subsurface_turret_images(self, surface, rect_list):
+        #"""
+        #Set all the turret images from a list of rects and a source surface.
 
-        """
+        #"""
 
-        self.turret_images = []
-        for rect in rect_list:
-            self.turret_images.append(surface.subsurface(rect))
+        #self.turret_images = []
+        #for rect in rect_list:
+            #self.turret_images.append(surface.subsurface(rect))
 
     def update(self, ticks):
         """
