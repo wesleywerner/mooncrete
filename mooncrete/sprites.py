@@ -235,63 +235,14 @@ class TurretSprite(MoonbaseSprite):
         super(TurretSprite, self).__init__()
         self.name = 'turret'
         self.rect = rect
-        # the position to draw the current image
-        self.rect = rect
-        # the current image to draw with
-        self.image = None
-
-        # have multiple base images
-        self.base_images = []
-        self.base_images_current = 0
-        # a way to animate base images with optional loop
-        self.base_images_loop = 0
-
-        # have multiple turret images
-        self.turret_images = []
-        self.turret_images_current = 0
-        # a way to animate turret images with optional loop
-        self.turret_images_loop = 0
-
-        # have an angle which to rotate the turret
+        self.image = pygame.Surface(rect.size)
+        self.image.set_colorkey(color.magenta)
+        self.base_image = None
+        self.turret_image = None
         self.turret_angle = 0
-        # limit the angle with a min and max
         self.turret_angle_range = (0, 360)
-        # a way to cycle the angle between a range
-        self.turret_angle_auto_cycle = 0
-        # a way to override the angle
-        self.turrent_angle_override = -1
-
-        # for testing build a placeholder turret image
-        timage = pygame.Surface(rect.size)
-        timage.set_colorkey(color.magenta)
-        timage.fill(color.magenta)
-        pygame.draw.line(
-            timage,
-            color.white,
-            (0, self.rect.height / 2),
-            (self.rect.width, self.rect.height / 2),
-            2)
-        self.turret_images.append(timage)
-
-    #def subsurface_base_images(self, surface, rect_list):
-        #"""
-        #Set all the base images from a list of rects and a source surface.
-
-        #"""
-
-        #self.base_images = []
-        #for rect in rect_list:
-            #self.base_images.append(surface.subsurface(rect))
-
-    #def subsurface_turret_images(self, surface, rect_list):
-        #"""
-        #Set all the turret images from a list of rects and a source surface.
-
-        #"""
-
-        #self.turret_images = []
-        #for rect in rect_list:
-            #self.turret_images.append(surface.subsurface(rect))
+        #self.turret_angle_auto_cycle = 0
+        #self.turrent_angle_override = -1
 
     def update(self, ticks):
         """
@@ -301,25 +252,18 @@ class TurretSprite(MoonbaseSprite):
         """
 
         self.move_sprite()
-
         if self.can_update(ticks):
-
-            if self.turret.ready:
-                self.image.fill(color.gold)
-                # angle the turret
-                if self.turrent_angle_override > -1:
-                    angled_pix = pygame.transform.rotate(
-                        self.turret_images[self.turret_images_current],
-                        self.turrent_angle_override)
-                    self.image.blit(angled_pix, (0, 0))
-                    #self.image.blit(self.turret_images[self.turret_images_current], (0, 0))
-            else:
-                self.image.fill(color.gray)
-                # draw a recharge bar
+            self.image.fill(color.magenta)
+            angled_turret = pygame.transform.rotate(
+                self.turret_image,
+                self.turret_angle)
+            self.image.blit(angled_turret, (0, 0))
+            self.image.blit(self.base_image, (0, 0))
+            if not self.turret.ready:
                 charge_ratio = self.turret.charge / float(self.turret.max_charge)
-                charged = int(self.rect.height * charge_ratio)
-                bar = pygame.Rect(0, self.rect.height - charged, 4, charged)
-                pygame.draw.rect(self.image, color.white, bar)
+                charged = int(10 * charge_ratio)
+                bar = pygame.Rect(16, 28 - charged, 6, charged)
+                pygame.draw.rect(self.image, color.red, bar)
 
 
 class MessageSprite(MoonbaseSprite):

@@ -113,6 +113,7 @@ class MoonView(object):
         self.clock = None
         self.font = None
         self.image = None
+        self.sprite_sheet = None
         # stores the sprite images
         self.sprite_images = None
         # message sprite overlays
@@ -333,7 +334,8 @@ class MoonView(object):
 
         """
 
-        sprite_sheet = pygame.image.load(data.filepath('sprites.png')).convert()
+        self.sprite_sheet = pygame.image.load(data.filepath('sprites.png')).convert()
+        self.sprite_sheet.set_colorkey(color.magenta)
         sprite_map = []
         self.sprite_images = {}
         sprite_map.append((model.BLOCK_EMPTY_BARREL, (50, 100, 50, 50)))
@@ -347,7 +349,7 @@ class MoonView(object):
 
         for block_type, location in sprite_map:
             self.sprite_images[block_type] = pygame.transform.scale(
-                        sprite_sheet.subsurface(location),
+                        self.sprite_sheet.subsurface(location),
                         PUZZLE_BLOCK_SIZE)
 
     def flash_screen(self, color_list, duration):
@@ -820,7 +822,7 @@ class MoonView(object):
                     sprite.rect.center,
                     pygame.mouse.get_pos()
                     )
-                sprite.turrent_angle_override = angle
+                sprite.turret_angle = angle
 
     def moonbase_sprite_origin(self):
         """
@@ -889,7 +891,11 @@ class MoonView(object):
         sprite = TurretSprite(self.moonbase_sprite_origin())
         sprite.turret = turret
         sprite.destination = destination
-        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.gold)
+        #sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.gold)
+        sprite.base_image = self.sprite_sheet.subsurface(
+            pygame.Rect((400, 150), ARCADE_SPRITE_SIZE))
+        sprite.turret_image = self.sprite_sheet.subsurface(
+            pygame.Rect((400, 180), ARCADE_SPRITE_SIZE))
         self.moonbase_sprites[turret.id] = sprite
 
     def destroy_turret_sprite(self, turret):
