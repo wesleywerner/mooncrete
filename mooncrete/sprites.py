@@ -239,10 +239,16 @@ class TurretSprite(MoonbaseSprite):
         self.image.set_colorkey(color.magenta)
         self.base_image = None
         self.turret_image = None
-        self.turret_angle = 0
-        self.turret_angle_range = (0, 360)
-        #self.turret_angle_auto_cycle = 0
-        #self.turrent_angle_override = -1
+        self._turret_angle = 0
+        self.turret_angle_range = (30, 150)
+
+    @property
+    def turret_angle(self):
+        return self._turret_angle
+
+    @turret_angle.setter
+    def turret_angle(self, value):
+        self._turret_angle = helper.clamp(value, *self.turret_angle_range)
 
     def update(self, ticks):
         """
@@ -256,7 +262,7 @@ class TurretSprite(MoonbaseSprite):
             self.image.fill(color.magenta)
             angled_turret = pygame.transform.rotate(
                 self.turret_image,
-                self.turret_angle)
+                self._turret_angle)
             # get the angled rect and center it against the original image rect
             angled_rect = angled_turret.get_rect(center=self.turret_image.get_rect().center)
             self.image.blit(angled_turret, angled_rect)
