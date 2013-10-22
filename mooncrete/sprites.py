@@ -257,7 +257,9 @@ class TurretSprite(MoonbaseSprite):
             angled_turret = pygame.transform.rotate(
                 self.turret_image,
                 self.turret_angle)
-            self.image.blit(angled_turret, (0, 0))
+            # get the angled rect and center it against the original image rect
+            angled_rect = angled_turret.get_rect(center=self.turret_image.get_rect().center)
+            self.image.blit(angled_turret, angled_rect)
             self.image.blit(self.base_image, (0, 0))
             if not self.turret.ready:
                 charge_ratio = self.turret.charge / float(self.turret.max_charge)
