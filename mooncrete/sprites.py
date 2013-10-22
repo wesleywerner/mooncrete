@@ -241,7 +241,8 @@ class TurretSprite(MoonbaseSprite):
         self.turret_image = None
         self._turret_angle = 90
         self._turret_target_angle = 90
-        self.turret_angle_range = (30, 150)
+        self._turret_angle_range = (30, 150)
+        self._turret_y_offset = 0
 
     @property
     def turret_angle(self):
@@ -249,7 +250,7 @@ class TurretSprite(MoonbaseSprite):
 
     @turret_angle.setter
     def turret_angle(self, value):
-        self._turret_target_angle = helper.clamp(value, *self.turret_angle_range)
+        self._turret_target_angle = helper.clamp(value, *self._turret_angle_range)
 
     def update(self, ticks):
         """
@@ -269,8 +270,17 @@ class TurretSprite(MoonbaseSprite):
                 self.turret_image,
                 self._turret_angle)
 
+            # offset turret on fire
+            if not self.turret.ready:
+                if self._turret_y_offset < 6:
+                    self._turret_y_offset += 2
+            else:
+                if self._turret_y_offset > 0:
+                    self._turret_y_offset -= 2
+
             # get the angled rect and center it against the original image rect
             angled_rect = angled_turret.get_rect(center=self.turret_image.get_rect().center)
+            angled_rect.top += self._turret_y_offset
             self.image.blit(angled_turret, angled_rect)
             self.image.blit(self.base_image, (0, 0))
 
