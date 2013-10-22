@@ -460,9 +460,8 @@ class MoonView(object):
         elif state in (STATE_PHASE3, STATE_LOSE, STATE_REPRIEVE):
             self.clear_arcade()
             self.draw_moonbase(ticks)
-            self.angle_turrets()
             self.draw_missiles_and_asteroids(ticks)
-            self.draw_firing_solution()
+            self.angle_turrets_with_firing_solution()
 
         # render game panels
         self.transitioning = False
@@ -794,35 +793,31 @@ class MoonView(object):
                     (10, ARCADE_POS.height - self.time_left.get_height() - 5))
 
 
-    def draw_firing_solution(self):
+    def angle_turrets_with_firing_solution(self):
         """
-        Draws a firing solution from the closest ready turret to the cursor.
+        Angle the closest ready turret towards the mouse cursor.
 
         """
 
+        # get the mouse position converted to arcade coordinates.
+        # if there is a ready turret draw a firing solution towards it.
         mouse_pos = pygame.mouse.get_pos()
         arcade_pos = self.convert_screen_to_arcade(mouse_pos)
-        turret = self.model.closest_ready_turret(arcade_pos)
-        if turret:
-            turret_pos = self.convert_arcade_to_screen(turret.position)
-            # center the origin x
+        active_turret = self.model.closest_ready_turret(arcade_pos)
+        if active_turret:
+            turret_pos = self.convert_arcade_to_screen(active_turret.position)
             turret_pos = (turret_pos[0] + ARCADE_SPRITE_SIZE[0] / 2, turret_pos[1])
             image = self.panels['arcade'].image
-            pygame.draw.line(image, color.darkest_green, mouse_pos, turret_pos)
+            pygame.draw.line(image, color.darker_gray, mouse_pos, turret_pos)
 
-    def angle_turrets(self):
-        """
-        Angle turrets towards the cursor.
-
-        """
-
-        for key, sprite in self.moonbase_sprites.items():
-            if isinstance(sprite, TurretSprite):
+            # set turret angle
+            turret_sprite = self.moonbase_sprites[active_turret.id]
+            if turret_sprite:
                 angle = helper.angle(
-                    sprite.rect.center,
+                    turret_sprite.rect.center,
                     pygame.mouse.get_pos()
                     )
-                sprite.turret_angle = angle
+                turret_sprite.turret_angle = angle
 
     def moonbase_sprite_origin(self):
         """
