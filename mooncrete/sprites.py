@@ -239,7 +239,8 @@ class TurretSprite(MoonbaseSprite):
         self.image.set_colorkey(color.magenta)
         self.base_image = None
         self.turret_image = None
-        self._turret_angle = 0
+        self._turret_angle = 90
+        self._turret_target_angle = 90
         self.turret_angle_range = (30, 150)
 
     @property
@@ -248,7 +249,7 @@ class TurretSprite(MoonbaseSprite):
 
     @turret_angle.setter
     def turret_angle(self, value):
-        self._turret_angle = helper.clamp(value, *self.turret_angle_range)
+        self._turret_target_angle = helper.clamp(value, *self.turret_angle_range)
 
     def update(self, ticks):
         """
@@ -260,13 +261,20 @@ class TurretSprite(MoonbaseSprite):
         self.move_sprite()
         if self.can_update(ticks):
             self.image.fill(color.magenta)
+
+            # adjust the angle to match the target angle
+            diff = self._turret_angle - self._turret_target_angle
+            self._turret_angle -= diff // 5
             angled_turret = pygame.transform.rotate(
                 self.turret_image,
                 self._turret_angle)
+
             # get the angled rect and center it against the original image rect
             angled_rect = angled_turret.get_rect(center=self.turret_image.get_rect().center)
             self.image.blit(angled_turret, angled_rect)
             self.image.blit(self.base_image, (0, 0))
+
+            # draw a recharge bar
             if not self.turret.ready:
                 charge_ratio = self.turret.charge / float(self.turret.max_charge)
                 charged = int(10 * charge_ratio)
