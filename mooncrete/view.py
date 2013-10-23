@@ -855,7 +855,8 @@ class MoonView(object):
             ARCADE_SPRITE_SIZE)
         sprite = MooncreteSprite(self.moonbase_sprite_origin())
         sprite.destination = destination
-        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.dark_gray)
+        sprite_rect = pygame.Rect((400, 60), ARCADE_SPRITE_SIZE)
+        sprite.image = self.subsurface_random_sprite(sprite_rect, 2)
         self.moonbase_sprites[mooncrete.id] = sprite
 
     def destroy_mooncrete_sprite(self, mooncrete):
