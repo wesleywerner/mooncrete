@@ -110,7 +110,7 @@ class AsteroidSprite(MoonbaseSprite):
         self.original_image = None
         self.image = None
         self.angle = 0.0
-        self.rotate_speed = random.randint(6, 25)
+        self.rotate_speed = random.randint(6, 15)
 
     def update(self, ticks):
         if self.can_update(ticks):
