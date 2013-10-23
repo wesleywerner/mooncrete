@@ -732,6 +732,23 @@ class MoonView(object):
         pix.fill(acolor)
         return pix
 
+    def subsurface_random_sprite(self, rect, count):
+        """
+        Get a random sprite from a count of sequencial images on the
+        sprite sheet. The result is scaled to the rect size.
+
+        """
+
+        index = random.randint(0, count - 1)
+        sprite_source = (
+            rect.left + (index * rect.width),
+            rect.top,
+            rect.width,
+            rect.height)
+        return pygame.transform.scale(
+                        self.sprite_sheet.subsurface(sprite_source),
+                        rect.size)
+
     def clear_lunar_landscape(self):
         """
         Clear the lunar landscape surface.
@@ -932,28 +949,12 @@ class MoonView(object):
 
         """
 
-        sprite_sources = (
-            (400, 30, 40, 30),
-            (440, 30, 40, 30),
-            (480, 30, 40, 30),
-            (520, 30, 40, 30),
-            (560, 30, 40, 30),
-            (600, 30, 40, 30),
-            (640, 30, 40, 30),
-            (680, 30, 40, 30),
-            (720, 30, 40, 30),
-            (760, 30, 40, 30),
-            )
-
-        sprite_source = random.choice(sprite_sources)
-
         position = self.convert_arcade_to_panel(asteroid.position)
         rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
         sprite = AsteroidSprite()
         sprite.rect = rect
-        sprite.image = pygame.transform.scale(
-                        self.sprite_sheet.subsurface(sprite_source),
-                        PUZZLE_BLOCK_SIZE)
+        sprite_rect = pygame.Rect((400, 30), ARCADE_SPRITE_SIZE)
+        sprite.image = self.subsurface_random_sprite(sprite_rect, 10)
         self.arcade_sprites[asteroid.id] = sprite
 
     def move_asteroid(self, asteroid):
