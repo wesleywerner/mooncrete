@@ -138,7 +138,7 @@ class Missile(object):
     def move(self):
         if self.trajectory:
             self.position = self.trajectory.pop()
-            self.trajectory = self.trajectory[:-2]
+            self.trajectory = self.trajectory[:-4]
             return True
 
     @property
