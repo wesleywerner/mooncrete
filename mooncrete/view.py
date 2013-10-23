@@ -940,6 +940,9 @@ class MoonView(object):
             (560, 30, 40, 30),
             (600, 30, 40, 30),
             (640, 30, 40, 30),
+            (680, 30, 40, 30),
+            (720, 30, 40, 30),
+            (760, 30, 40, 30),
             )
 
         sprite_source = random.choice(sprite_sources)
