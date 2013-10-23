@@ -932,16 +932,25 @@ class MoonView(object):
 
         """
 
+        sprite_sources = (
+            (400, 30, 40, 30),
+            (440, 30, 40, 30),
+            (480, 30, 40, 30),
+            (520, 30, 40, 30),
+            (560, 30, 40, 30),
+            (600, 30, 40, 30),
+            (640, 30, 40, 30),
+            )
+
+        sprite_source = random.choice(sprite_sources)
+
         position = self.convert_arcade_to_panel(asteroid.position)
         rect = pygame.Rect(position, ARCADE_SPRITE_SIZE)
         sprite = AsteroidSprite()
         sprite.rect = rect
-        sprite.image = self.placeholder_pix(ARCADE_SPRITE_SIZE, color.magenta)
-        pygame.draw.circle(
-            sprite.image,
-            color.white,
-            (ARCADE_SPRITE_SIZE[0] / 2, ARCADE_SPRITE_SIZE[1] / 2),
-            ARCADE_SPRITE_SIZE[0] / 3)
+        sprite.image = pygame.transform.scale(
+                        self.sprite_sheet.subsurface(sprite_source),
+                        PUZZLE_BLOCK_SIZE)
         self.arcade_sprites[asteroid.id] = sprite
 
     def move_asteroid(self, asteroid):
